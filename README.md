@@ -1,3 +1,3 @@
-#Simulator for pseudo-bulk RNAseq datasets
+# Simulator for pseudo-bulk RNAseq datasets
 
 
