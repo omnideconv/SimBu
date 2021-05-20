@@ -1,0 +1,204 @@
+---
+title: "R Notebook Master Thesis"
+output: html_notebook
+---
+```{r}
+library(data.table)
+library(ggplot2)
+```
+Look at distribution of reads between different cell-types. Do some types have more/reads(=more mRNA)?
+
+Dataset: Segerstolpe et al CMetabolism 10.1016/j.cmet.2016.08.020 
+```{r}
+meta_runs <- fread("Data/Segerstolpe/filereport_read_run_PRJEB15401_tsv.txt")[,c("sample_accession","read_count")]
+meta_cells <- fread("Data/Segerstolpe/E-MTAB-5061.sdrf.txt")[,c("Comment[BioSD_SAMPLE]", "Characteristics[cell type]")]
+meta <- merge(meta_cells,meta_runs, by.x='Comment[BioSD_SAMPLE]', by.y = 'sample_accession')
+colnames(meta) <- c("id","cell_type","n_reads")
+meta[,cell_count:=.N, by="cell_type"]
+
+ggplot(meta, aes(x=cell_type,y=n_reads))+
+  geom_boxplot()+
+  coord_flip()+
+  ggtitle("Number of reads per cell-type in placenta dataset.\n(total: 3514 cells)")
+
+```
+
+Dataset: Vento-Tormo et al Nature  https://doi.org/10.1038/s41586-018-0698-6
+```{r}
+meta_runs <- fread("Data/Vento-Tormo/filereport_read_run_PRJEB25794_tsv.txt")[,c("library_name","read_count")]
+meta_cells <- fread("Data/Vento-Tormo/meta_ss2.txt")[,c("V1","annotation")]
+meta_cells$ID <- gsub("#", "_", meta_cells$V1)
+meta_runs$library_name <- gsub("_p", "", meta_runs$library_name)
+meta <- merge(meta_cells,meta_runs, by.x="ID", by.y = "library_name")
+colnames(meta) <- c("id","id2","cell_type","n_reads")
+meta$cell_type <- gsub("Tcells", "T cells", meta$cell_type)
+meta$cell_type <- gsub("VCT", "villous cytotrophoblast", meta$cell_type)
+meta$cell_type <- gsub("SCT", "syncytiotrophoblast", meta$cell_type)
+meta$cell_type <- gsub("MO", "Monocytes", meta$cell_type)
+meta$cell_type <- gsub("ILC3", "innate lymphocyte cells", meta$cell_type)
+meta$cell_type <- gsub("HB", "Hoffbauer cells", meta$cell_type)
+meta$cell_type <- gsub("EVT", "extravillous trophoblast", meta$cell_type)
+meta$cell_type <- gsub("Endo L", "endothelial cells", meta$cell_type)
+meta$cell_type <- gsub("Endo (f)", "endothelial cells", meta$cell_type, fixed = T)
+meta$cell_type <- gsub("Endo (m)", "endothelial cells", meta$cell_type, fixed = T)
+meta$cell_type <- gsub("fFB2", "Fibroblasts", meta$cell_type)
+meta$cell_type <- gsub("fFB1", "Fibroblasts", meta$cell_type)
+meta$cell_type <- gsub("Epi1", "epithelial glandular cells", meta$cell_type)
+meta$cell_type <- gsub("Epi2", "epithelial glandular cells", meta$cell_type)
+meta$cell_type <- gsub("dS1", "decidual stromal cells", meta$cell_type)
+meta$cell_type <- gsub("dS2", "decidual stromal cells", meta$cell_type)
+meta$cell_type <- gsub("dS3", "decidual stromal cells", meta$cell_type)
+meta$cell_type <- gsub("dP1", "dP", meta$cell_type)
+meta$cell_type <- gsub("dP2", "dP", meta$cell_type)
+meta$cell_type <- gsub("dNK1", "decidual natural killer cells", meta$cell_type)
+meta$cell_type <- gsub("dNK2", "decidual natural killer cells", meta$cell_type)
+meta$cell_type <- gsub("dNK3", "decidual natural killer cells", meta$cell_type)
+meta$cell_type <- gsub("dNK p", "decidual natural killer cells", meta$cell_type)
+meta$cell_type <- gsub("dM1", "decidual macrophages", meta$cell_type)
+meta$cell_type <- gsub("dM2", "decidual macrophages", meta$cell_type)
+meta$cell_type <- gsub("dM3", "decidual macrophages", meta$cell_type)
+meta$cell_type <- gsub("DC1", "dendritic cells", meta$cell_type)
+meta$cell_type <- gsub("DC2", "dendritic cells", meta$cell_type)
+meta$cell_type <- gsub("NK CD16+", "NK cells", meta$cell_type, fixed=T)
+meta$cell_type <- gsub("NK CD16-", "NK cells", meta$cell_type, fixed=T)
+meta[,cell_count:=.N, by="cell_type"]
+vento <- meta
+
+#png(filename="Data/Vento-Tormo/Vento-Tormo_celltypes.png", width=800, height=600)
+ggplot(vento, aes(x=reorder(cell_type, n_reads),y=n_reads))+
+  geom_boxplot()+
+  coord_flip()+
+  ggtitle("Number of reads per cell-type in placenta dataset.\n(total: 5591 cells)")
+
+
+
+```
+
+
+Maynard Dataset:
+```{r}
+meta_runs <- fread("Data/Maynard/SRA_meta.txt")[,c("Run","AvgSpotLen","Bases")]
+meta_runs$n_reads <- meta_runs$Bases/meta_runs$AvgSpotLen
+meta_cells <- fread("Data/Maynard/annotation_obs.csv")[,c("Run","cell_type")]
+meta <- merge(meta_cells, meta_runs, by.x = "Run", by.y="Run")
+meta$highlight <- ifelse(meta$cell_type %in% c("Macrophage","T cell regulatory", "T cell CD4", "T cell CD8", "T cell dividing"), meta$cell_type, "other")
+
+png(filename="Data/Maynard/Maynard_celltypes.png", width=1800, height=1200)
+ggplot(meta, aes(x=cell_type, y=n_reads, fill=highlight))+
+  geom_boxplot()+
+  ggtitle("Number of reads per cell-type in Maynard dataset\n(17819 cells)")+
+  theme_minimal(base_size=22)+
+  coord_flip()
+
+```
+
+```{r}
+range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+
+my_merge <- function(df1, df2){                                
+  merge(df1, df2, by = "type")
+}
+```
+
+compare different scaling factors
+```{r}
+maynard <- fread("Data/Maynard/read_count_per_cell_type.csv")
+colnames(maynard) <- c("type","mRNA")
+#maynard$mRNA <- range01(maynard$mRNA)+0.1
+maynard$type <- c("Ciliated","Goblet","Epithelial cell other C4","Mesothelial","Alevolar cell type 2","Plasma cell","Epithelial cell other C5","Club","T cells","Fibroblasts1","Epithelial cell other C3","Basal","Endothelial cell lymphatic","Ionocyte","cDC2","Epithelial cell other C2","DC mature","other C21","Epithelial cell other C1","Mast cell","cDC1","Endothelial cell","Alevolar cell type 1","Macrophages","pDC","T regulatory cells","Smooth muscle cell","Pericyte" ,"Fibroblasts","B cells","other C33","other C29","NK cells","Monocyte non-conventional","T cells CD8","other C32","T cells CD4","Monocytes","DC Lagerhans","other C19","other C17","Epithelial cell dividing")
+
+quantiseq <- fread("Data/quanitseq.tsv")
+colnames(quantiseq) <- c("type","mRNA")
+#quantiseq$mRNA <- range01(quantiseq$mRNA)+0.1
+quantiseq$type <- c("B cells","Macrophages","MacrophagesM2","Monocytes","Neutrophils","NK cells","T cells CD4","T cells CD8","T regulatory cells","Dendritic cells")
+load("Data/epic.rda")
+epic <- data.frame(mRNA_cell_default)
+epic$type <- c("B cells","Macrophages","Monocytes","Neutrophils","NK cells" ,"T cells","T cells CD4","T cells CD8","T helper cells","T regulatory cells","otherCells","default")
+colnames(epic)<-c("mRNA","type")
+#epic$mRNA <- range01(epic$mRNA)+0.1
+miltenyi <- data.frame(type=c("B cells", "Hematopoietic progenitor cells", "Monocytes", "Myeloid dendritic cells", "Plasmacytoid dendritic cell","NK cells", "NKT cells", "T cells", "T helper cells", "Cytotoxic T cells", "T regulatory cells"),
+                       mRNA=c(0.4, 0.5, 1, 2.5, 0.7, 0.3, 0.6, 1, 0.6, 0.4, 0.3))
+miltenyi$mRNA <- range01(miltenyi$mRNA)+0.1
+# for vento-tormo run cell 2 above before
+vento_tormo <- vento[, mean(n_reads), by=cell_type]
+colnames(vento_tormo) <- c("type","mRNA")
+#vento_tormo$mRNA <- range01(vento_tormo$mRNA)+0.1
+
+wanted_types <- data.frame(type=c("B cells", "T cells", "T cells CD4", "T cells CD8","Monocytes", "Macrophages", "NK cells", "T regulatory cells", "Fibroblasts"))
+maynard_f <- merge(maynard, wanted_types, by="type", all.y = T)
+maynard_f$source <- rep("Maynard", length(wanted_types$type))
+#maynard_f$mRNA <- rescale(maynard_f$mRNA, to=c(0.1,1.1))
+quantiseq_f <- merge(quantiseq, wanted_types, by="type", all.y = T)
+quantiseq_f$source <- rep("quantiseq", length(wanted_types$type))
+#quantiseq_f$mRNA <- rescale(quantiseq_f$mRNA, to=c(0.1,1.1))
+epic_f <- merge(epic, wanted_types, by="type", all.y = T)
+epic_f$source <- rep("epic", length(wanted_types$type))
+#epic_f$mRNA <- rescale(epic_f$mRNA, to=c(0.1,1.1))
+miltenyi_f <- merge(miltenyi, wanted_types, by="type", all.y = T)
+miltenyi_f$source <- rep("miltenyi", length(wanted_types$type))
+#miltenyi_f$mRNA <- rescale(miltenyi_f$mRNA, to=c(0.1,1.1))
+vento_tormo_f <- merge(vento_tormo, wanted_types, by="type", all.y = T)
+vento_tormo_f$source <- rep("vento_tormo", length(wanted_types$type))
+#vento_tormo_f$mRNA <- rescale(vento_tormo_f$mRNA, to=c(0.1,1.1))
+
+data_lst <- list(maynard_f, quantiseq_f, epic_f, miltenyi_f, vento_tormo_f)
+full <- rbindlist(data_lst)
+
+ggplot(full, aes(x=source, y=mRNA, fill=source))+
+  geom_bar(stat = "identity")+
+  facet_wrap(~type)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ylab("Scaling factor")+
+  ggtitle("Different scaling factors (all re-scaled between 0.1 and 1.1)\n for mRNA levels of 9 cell-types")
+
+```
+
+```{r}
+full <- rbindlist(data_lst)
+sources <- unique(full$source)
+combinations <- expand.grid(sources, sources)
+combinations <- combinations[(combinations$Var1 != combinations$Var2),]
+combinations$combi_name <- paste0(combinations$Var1," vs. ",combinations$Var2)
+tmp<-merge(full, combinations, by.x="source", by.y="Var1", all.x=T, allow.cartesian=TRUE)
+tmp2<-merge(tmp, full, by.x="Var2", by.y="source", allow.cartesian = T)
+final <- tmp2[(tmp2$type.x == tmp2$type.y),]
+colnames(final) <- c("Source_x", "Source_y", "type_y", "mRNA_y", "combi_name","type_x","mRNA_x")
+
+cbp2 <- c("#000000", "#E69F00", "#56B4E9", "#009E73",
+          "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#FC4E07")
+
+png(filename="Data/scaling_factors.png", width=1800, height=1200)
+ggplot(final, aes(x=mRNA_y, y=mRNA_x, color=type_x))+
+  geom_point(aes(size=6))+
+  facet_wrap(~combi_name, scales = "free")+
+  ggtitle("Pairwise comparison of scaling factors for cell-types of different sources. First source-name in panel caption is x-axis, second is y-axis.")+
+  xlab("Scaling factor of 1st source")+
+  ylab("Scaling factor of 2nd source")+
+  scale_color_discrete(name = "Cell type")+
+  scale_colour_manual(values=cbp2)+
+  scale_size(guide="none")+
+  theme(axis.text.x = element_text(angle = 90),
+        axis.text=element_text(size=15),
+        axis.title=element_text(size=15,face="bold"),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=15, face="bold"),
+        legend.key.size = unit(1,"cm"),
+        strip.text.x = element_text(size=15),
+        plot.title = element_text(size=20, face="bold"))
+```
+ 
+```{r}
+full <- rbindlist(data_lst)
+reference_type = "Monocytes"
+custom_func <- function(x){
+  return(x$mRNA/x[x$type==reference_type,]$mRNA)
+}
+
+full[, mRNA:=custom_func(.SD), by=source]
+ggplot(full, aes(x=source, y=mRNA, fill=source))+
+  geom_bar(stat = "identity")+
+  facet_wrap(~type)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ylab("Scaling factor")+
+  ggtitle("Different scaling factors (all re-scaled to reference cell-type Monocytes)\n for mRNA levels of 9 cell-types")
+```
