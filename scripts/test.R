@@ -116,6 +116,8 @@ p3<-ggscatter(data, x="fraction_quantiseq",y="fraction_facs", shape="dataset",
             scales="free", palette = "jco", conf.int = T, size=4.5, 
             title="Celltype fractions for two PBMC datasets (quantiseq vs FACS)")
 p3<-p3+geom_smooth(method = "lm", se=F, color="black")+geom_abline(color="lightgrey",linetype="dashed")
+ggsave("plots/Finotello_Hoek_fractions.png",plot = p3, scale = 2)
+
 
 ##### work with immunedeconv results #####
 
