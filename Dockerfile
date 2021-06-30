@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
 RUN R -e "install.packages(c('BiocManager'))"
 RUN R -e "BiocManager::install(c('GEOquery', 'quantiseqr'))"
 RUN R -e "install.packages(c('ggplot2','data.table','Seurat','Matrix','ggpubr'))"
+RUN R -e "BiocManager::install(c('monocle'))"
 
 
 
