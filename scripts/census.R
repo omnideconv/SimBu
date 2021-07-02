@@ -1,6 +1,6 @@
 library(parallel)
 
-census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0.1, ncores=1, method=c("monocle","paper")){
+census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0.1, ncores=1, method=c("monocle","paper","t_estimate")){
   ncuts <- dim(matrix)[2]/1000
   
   cuts<-split(seq_len(ncol(matrix)), cut(seq_len(ncol(matrix)), pretty(seq_len(ncol(matrix)), ncuts)))
@@ -9,11 +9,13 @@ census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0.1, ncores=1, 
   idx <- 1
   out <- unlist(mclapply(cuts, function(x){
     x <- unlist(x, use.names = F)
-    chunk <- mat[,x]
+    chunk <- matrix[,x]
     if(method == "monocle"){
       cen <- census_monocle(chunk, exp_capture_rate=exp_capture_rate, expr_threshold=expr_threshold)
     }else if (method == "paper"){
       cen <- census_paper(chunk, exp_capture_rate=exp_capture_rate, expr_threshold=expr_threshold)
+    }else if (method == "t_estimate"){
+      cen <- calc_xi(chunk, expr_threshold=expr_threshold)
     }
     
     progress <- 100*(round(idx/ncuts, digits=3))
@@ -24,6 +26,16 @@ census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0.1, ncores=1, 
   },mc.cores = ncores))
   
   return(out)
+}
+
+calc_xi <- function(expr_matrix, expr_threshold=0.1){
+  cells <- dim(expr_matrix)[2]
+  idx <- 1
+  total <- unlist(apply(expr_matrix, 2, function(x){
+    # Find the most commonly occuring (log-transformed) TPM value in each cell above a threshold
+    10^mean(dmode(log10(x[x > expr_threshold])))
+  }))
+  
 }
 
 
@@ -66,14 +78,14 @@ census_paper <- function(expr_matrix, exp_capture_rate=0.25, expr_threshold=0.1)
   # iterate over all cells
   total <- unlist(apply(expr_matrix, 2, function(x){
       # Find the most commonly occuring (log-transformed) TPM value in each cell above a threshold
-      x_star <- dmode(log10(x))
+      x_star <- dmode(log10(x[x>0]))
       
       # only consider genes with TPM > 0.1; below this, no mRNA is believed to be present
       x <- x[x > expr_threshold]
       # calculate cumulative distribution function of gene expression values in cell
       P <- ecdf(x)
       
-      F_x_star <- P(x_star) 
+      F_x_star <- P(x_star)
       F_x_epsilon <- P(expr_threshold)
       
       # find all genes with single mRNA

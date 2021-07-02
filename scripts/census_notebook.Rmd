@@ -1,0 +1,71 @@
+---
+title: "Census notebook"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+```{r}
+library(Seurat)
+library(data.table)
+library(Matrix)
+library(ggplot2)
+source("census.R")
+```
+
+
+## Load Data
+```{r}
+#mat <- Read10X("/home/data/CITEseq/RNA_3p/")
+#meta <- fread("/home/data/CITEseq/GSE164378_sc.meta.data_3P.csv")
+#mat <- Read10X("/home/Data/Hao (CITEseq-PBMC)/hto_5p/")
+mat_r <- readMM("/home/Data/Hao (CITEseq-PBMC)/RNA_subset.mtx")
+```
+
+## Run Census (monocle version) on complete data
+
+```{r}
+#only works on norm
+#out_monocle <- as.data.frame(census(matrix = mat, ncores = 2, method = "monocle"))
+#colnames(out_monocle) <- c("census_counts")
+#df <- merge(out_monocle, meta, by.x=0, by.y="V1")
+df <- fread("../../Data/Hao (CITEseq-PBMC)/census_meta.tsv")
+
+```
+
+## Census counts per cell-type
+```{r}
+ggplot(df[!is.na(df$census_counts),], aes(y=census_counts,x=celltype.l1,fill=celltype.l1))+
+  geom_boxplot()+
+  ggtitle("Census counts per cell-type")
+```
+
+## Census produced ~50% NA values
+```{r}
+df$isNA <- is.na(df$census_counts)
+na_df <- df[,sum(isNA==T),by=celltype.l1]
+colnames(na_df) <- c("celltype","number_of_NA")
+total_df <- df[,.N,by=celltype.l1]
+colnames(total_df) <- c("celltype","number_of_cells")
+plot_df <- merge(na_df, total_df, by="celltype")
+
+ggplot(plot_df, aes(x=number_of_NA,y=number_of_cells,color=celltype))+
+  geom_point(size=3)+
+  ggtitle("Number of NA results by census per cell-type; \nperfect correlation with number of cells per type,\nwhich means its not cell-type specific")
+```
+
+## How are the NAs produced?
+(all shown on a 10k cells subset of the dataset)
+When calculating **x\*\_i** (they call it _t_estimate_ in their code), they log10 transform the expression values (counts in this case). The range of **x\*\_i** can be seen below (for 5k random cells). For the next steps, they only consider the genes with an expression value > 0.1. Later on, they calculate the number of single mRNA cells as all theses cells, which have a lower expression value than **x\*\_i**. This means if **x\*\_i** falls below 1, the formula finds no single mRNA cells (because they already removed all non-zero expression values from the cell) and we would have 0 as the numerator in the M\_i fraction. This cannot work and we get NaN as result.  
+
+I think because TPMs have smaller values, the function might make more sense on then.
+
+```{r}
+t_estimate <- census(matrix=mat_r, method="t_estimate", ncores=1)
+summary(t_estimate)
+```
+```{r}
+plot(density(t_estimate))
+```
+
+
