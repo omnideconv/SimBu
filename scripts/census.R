@@ -73,11 +73,11 @@ census_paper <- function(expr_matrix, exp_capture_rate=0.25, expr_threshold=0.1)
       # calculate cumulative distribution function of gene expression values in cell
       P <- ecdf(x)
       
-      F_x_star <- P(t_estimate) 
+      F_x_star <- P(x_star) 
       F_x_epsilon <- P(expr_threshold)
       
       # find all genes with single mRNA
-      num_single_copy_genes <- sum(x <= t_star)
+      num_single_copy_genes <- sum(x <= x_star)
       
       #progress
       #if(idx %% 1000 == 0){

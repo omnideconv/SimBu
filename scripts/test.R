@@ -144,22 +144,7 @@ ggplot(deconv, aes(x=value, y=sample,fill=cell_type))+
 source("scripts/census.R")
 matrix_dir = "/home/Data/Hao (CITEseq-PBMC)/hto_5p/"
 mat<-Read10X(matrix_dir)
-ncuts <- dim(mat)[2]/1000
-
-cuts<-split(seq_len(ncol(mat)), cut(seq_len(ncol(mat)), pretty(seq_len(ncol(mat)), ncuts)))
-names(cuts) <- NULL
-
-idx <- 1
-out <- unlist(mclapply(cuts, function(x){
-  x <- unlist(x, use.names = F)
-  chunk <- mat[,x]
-  cen <- census_function(chunk)
-  progress <- 100*(round(idx/ncuts, digits=3))
-  print(paste(progress,"%"))
-  idx <<- idx+1
-  
-  return(cen)
-},mc.cores = 2))
+out_paper <- census(matrix = mat, ncores = 1, method = "paper")
 
 
 
