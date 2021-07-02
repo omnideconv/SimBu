@@ -1,10 +1,33 @@
-library(monocle)
-library(Seurat)
+library(parallel)
 
-data_folder <- "/home/Data/Hao (CITEseq-PBMC)/hto_5p/"
-mat <- Read10X(data_folder)
+census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0.1, ncores=1, method=c("monocle","paper")){
+  ncuts <- dim(matrix)[2]/1000
+  
+  cuts<-split(seq_len(ncol(matrix)), cut(seq_len(ncol(matrix)), pretty(seq_len(ncol(matrix)), ncuts)))
+  names(cuts) <- NULL
+  
+  idx <- 1
+  out <- unlist(mclapply(cuts, function(x){
+    x <- unlist(x, use.names = F)
+    chunk <- mat[,x]
+    if(method == "monocle"){
+      cen <- census_monocle(chunk, exp_capture_rate=exp_capture_rate, expr_threshold=expr_threshold)
+    }else if (method == "paper"){
+      cen <- census_paper(chunk, exp_capture_rate=exp_capture_rate, expr_threshold=expr_threshold)
+    }
+    
+    progress <- 100*(round(idx/ncuts, digits=3))
+    print(paste(progress,"%"))
+    idx <<- idx+1
+    
+    return(cen)
+  },mc.cores = ncores))
+  
+  return(out)
+}
 
-census_function <- function(expr_matrix, exp_capture_rate=0.25, expr_threshold=0.1){
+
+census_monocle <- function(expr_matrix, exp_capture_rate=0.25, expr_threshold=0.1){
   
   cells <- dim(expr_matrix)[2]
   idx <- 1
@@ -24,17 +47,48 @@ census_function <- function(expr_matrix, exp_capture_rate=0.25, expr_threshold=0
     num_single_copy_genes <- sum(x <= t_estimate)
 
     #progress
-    if(idx %% 1000 == 0){
-      progress <- round(idx / cells, digits=3)
-      print(paste(progress*100,"%..."))
-    }
-    idx <<- idx+1
+    #if(idx %% 1000 == 0){
+    #  progress <- round(idx / cells, digits=3)
+    #  print(paste(progress*100,"%..."))
+    #}
+    #idx <<- idx+1
     
     #final value (this is M_i)
     num_single_copy_genes / frac_x / exp_capture_rate
   }))
   
   return(total)
+}
+
+census_paper <- function(expr_matrix, exp_capture_rate=0.25, expr_threshold=0.1){
+  cells <- dim(expr_matrix)[2]
+  idx <- 1
+  # iterate over all cells
+  total <- unlist(apply(expr_matrix, 2, function(x){
+      # Find the most commonly occuring (log-transformed) TPM value in each cell above a threshold
+      x_star <- dmode(log10(x))
+      
+      # only consider genes with TPM > 0.1; below this, no mRNA is believed to be present
+      x <- x[x > expr_threshold]
+      # calculate cumulative distribution function of gene expression values in cell
+      P <- ecdf(x)
+      
+      F_x_star <- P(t_estimate) 
+      F_x_epsilon <- P(expr_threshold)
+      
+      # find all genes with single mRNA
+      num_single_copy_genes <- sum(x <= t_star)
+      
+      #progress
+      #if(idx %% 1000 == 0){
+      #  progress <- round(idx / cells, digits=3)
+      #  print(paste(progress*100,"%..."))
+      #}
+      #idx <<- idx+1
+      
+      #final value (this is M_i)
+      (1/exp_capture_rate) * (num_single_copy_genes / (F_x_star - F_x_epsilon))
+  }))
 }
 
 
@@ -48,5 +102,5 @@ dmode <- function(x, breaks="Sturges") {
 
 
 
-fractions <- census_function(mat)
+
 
