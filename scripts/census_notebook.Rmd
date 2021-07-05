@@ -10,6 +10,9 @@ library(Seurat)
 library(data.table)
 library(Matrix)
 library(ggplot2)
+library(GEOquery)
+library(tidyr)
+library(Hmisc)
 source("census.R")
 ```
 
@@ -22,7 +25,11 @@ source("census.R")
 mat_r <- readMM("/home/Data/Hao (CITEseq-PBMC)/RNA_subset.mtx")
 ```
 
-## Run Census (monocle version) on complete data
+## Run Census (monocle version) on complete data (160k PBMC cells)
+
+The counts were first re-scaled by library-size per cell. As the expression-cutoff i chose 0, since we are not yet sure how this factor works exactly and also I believe it is chosen on a TPM distribution and not relative expression counts (there are almost never counts with log10(count) > 0.1; 0.1=default in monocle for TPM/FPKM).
+
+I ran the algorithm with a expected capture rate of 0.25 (default) and 1 (has no effect on result) to see how it influences the end results. In the end i realised, that it simply scales the results by a factor of 4, probably to make the values more "realistic", but I am not sure about this. 
 
 ```{r}
 #only works on norm
@@ -34,13 +41,124 @@ df <- fread("../../Data/Hao (CITEseq-PBMC)/census_meta.tsv")
 ```
 
 ## Census counts per cell-type
+
+In the census count distribution per cell-type, we see that DC cells contain the most mRNA, followed by Monocytes. The other celltypes have mostly the same mRNA counts. 
 ```{r}
 ggplot(df[!is.na(df$census_counts),], aes(y=census_counts,x=celltype.l1,fill=celltype.l1))+
   geom_boxplot()+
   ggtitle("Census counts per cell-type")
 ```
+## Comparing census counts with FACS fractions
 
-## Census produced ~50% NA values
+The overall goal was to see if (or how good) census can estimate the mRNA counts from expression count data. For this, I am comparing the mean mRNA counts (=census counts) of each cell-type with the cell-type fractions in a FACS annotated bulk RNAseq dataset. 
+
+```{r}
+# get the bulk dataset
+GEOid <- "GSE107572"
+gds <- getGEO(GEOid)
+
+GEOinfo <- pData(gds[[1]])
+FACSdata <- data.frame(
+  B.cells = GEOinfo$`b cells:ch1`,
+  T.cells.CD4 = GEOinfo$`cd4+ t cells:ch1`,
+  T.cells.CD8 = GEOinfo$`cd8+ t cells:ch1`,
+  Monocytes = GEOinfo$`monocytes:ch1`,
+  Dendritic.cells = GEOinfo$`myeloid dendritic cells:ch1`,
+  NK.cells = GEOinfo$`natural killer cells:ch1`,
+  Neutrophils = GEOinfo$`neutrophils:ch1`,
+  Tregs = GEOinfo$`tregs:ch1`
+)
+FACSdata$Sample <- gsub(
+  "Blood-derived immune-cell mixture from donor ", "pbmc", GEOinfo$title
+)
+
+```
+
+First I compared the census counts with the mRNA counts provided by the paper:
+```{r}
+p1<-ggscatter(df,x="census_counts",y="nCount_RNA",color="celltype.l1",facet.by = "celltype.l2",cor.coef = T,palette = "jco", conf.int=T, alpha=0.8, title="Census mRNA counts vs mRNA counts from Hao et al (red dashed line show perfect correlation, black is linear model)",ylab = "Hao et al mRNA counts", cor.method="pearson")
+p1+geom_smooth(method="lm",se=F,color="black")+geom_abline(color="red",linetype="dashed")
+```
+Next, I calculated scaling factors out of the census counts (mean and median per cell) and compared it to other scaling factors, which were already looked upon earlier in the project (see plot_notebook):
+```{r}
+census_mean_counts <-df[,mean(census_counts),by=celltype.l1]
+census_mean_counts$source <- "census (mean)"
+colnames(census_mean_counts) <- c("type","mRNA","source")
+census_mean_counts$type <- c("T cells CD8","B cells","T cells CD4","Monocytes", "other", "NK cells", "Dendritic cells", "other T")
+census_median_counts <-df[,median(census_counts),by=celltype.l1]
+census_median_counts$source <- "census (median)"
+colnames(census_median_counts) <- c("type","mRNA","source")
+census_median_counts$type <- c("T cells CD8","B cells","T cells CD4","Monocytes", "other", "NK cells", "Dendritic cells", "other T")
+
+full <- rbindlist(data_lst)
+full <- rbind(full, census_mean_counts, census_median_counts)
+
+sources <- unique(full$source)
+c1 <- c(rep(sources[1],7), rep(sources[2],6), rep(sources[3],5), rep(sources[4],4), rep(sources[5],3), rep(sources[6],2), rep(sources[7],1))
+c2 <- c("quantiseq", "epic", "miltenyi", "vento_tormo", "monaco", "census (mean)", "census (median)", "epic", "miltenyi", "vento_tormo", "monaco", "census (mean)", "census (median)", "miltenyi", "vento_tormo", "monaco", "census (mean)", "census (median)", "vento_tormo", "monaco", "census (mean)", "census (median)","monaco","census (mean)", "census (median)","census (mean)", "census (median)", "census (median)")
+combinations <- data.frame(Var1=c1, Var2=c2)
+combinations$combi_name <- paste0(combinations$Var1," vs. ",combinations$Var2)
+
+tmp<-merge(full, combinations, by.x="source", by.y="Var1", all.x=T, allow.cartesian=TRUE)
+tmp2<-merge(tmp, full, by.x="Var2", by.y="source", allow.cartesian = T)
+final <- tmp2[(tmp2$type.x == tmp2$type.y),]
+colnames(final) <- c("Source_x", "Source_y", "type_y", "mRNA_y", "combi_name","type_x","mRNA_x")
+final[,pearson_cor:=cor(mRNA_y, mRNA_x, method="pearson", use="complete.obs"), by=combi_name]
+
+# actially I only need these combinations:
+final2 <- final[final$Source_x %in% c("census (mean)")]
+
+cbp2 <- c("#000000", "#E69F00", "#56B4E9", "#009E73",
+          "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#FC4E07")
+
+
+p<-ggplot(final2, aes(x=mRNA_y, y=mRNA_x, color=type_x))+
+  geom_point(size=9, alpha=0.8)+
+  facet_wrap(~combi_name, scales = "free")+
+  ggtitle("Pairwise comparison of scaling factors for cell-types of different sources. First source-name in panel caption is x-axis, second is y-axis.")+
+  xlab("Scaling factor of 1st source")+
+  ylab("Scaling factor of 2nd source")+
+  scale_color_discrete(name = "Cell type")+
+  scale_colour_brewer(palette="Paired")+
+  scale_size(guide="none")+
+  theme(axis.text.x = element_text(angle = 90),
+        axis.text=element_text(size=15),
+        axis.title=element_text(size=15,face="bold"),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=15, face="bold"),
+        legend.key.size = unit(1,"cm"),
+        strip.text.x = element_text(size=15),
+        plot.title = element_text(size=20, face="bold"))
+ggsave(filename="../plots/census_vs_scaling_factors.png",
+       p,device = "png", width=1800, height=1200, units = "px", scale=3)
+
+```
+Finally a correlation matrix for all the scaling values:
+```{r}
+tmp <- spread(full, key = source, value = mRNA)
+types <- tmp$type
+tmp$type <- NULL
+final_corr <- rcorr(as.matrix(tmp), type = "pearson")
+
+png(filename="../plots/census_correlation.png")
+corrplot(final_corr$r,
+         tl.col = "black")
+
+
+```
+
+
+```{r}
+d2<-facs[,mean(fraction),by=celltype]
+d1<-df[,median(census_counts),by=celltype.l1]
+d1$celltype.l1 <- c("T.cells.CD8","B.cells","T.cells.CD4","Monocytes","other","NK.cells","Dendritic.cells","other T")
+d <- merge(d1,d2,by.x="celltype.l1",by.y="celltype")
+ggplot(d, aes(x=V1.x,y=V1.y,color=celltype.l1))+
+  geom_point(size=3)
+```
+ 
+
+## Census produced ~50% NA values (for **raw** count data)
 ```{r}
 df$isNA <- is.na(df$census_counts)
 na_df <- df[,sum(isNA==T),by=celltype.l1]
