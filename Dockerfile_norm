@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
 
 RUN R -e "install.packages(c('BiocManager'))"
 RUN R -e "BiocManager::install(c('GEOquery', 'quantiseqr'))"
-RUN R -e "install.packages(c('ggplot2','data.table','Seurat','Matrix','ggpubr'))"
+RUN R -e "install.packages(c('ggplot2','data.table','Seurat','Matrix','ggpubr','R.utils'))"
 #RUN R -e "BiocManager::install(c('monocle'))"
 RUN R -e "BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats', 'limma', 'S4Vectors', 'SingleCellExperiment','SummarizedExperiment', 'batchelor', 'Matrix.utils'))"
 RUN R -e "install.packages('devtools')"

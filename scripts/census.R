@@ -70,16 +70,16 @@ census_monocle <- function(expr_matrix, exp_capture_rate=0.25, expr_threshold=0)
   return(total)
 }
 
-census_paper <- function(expr_matrix, exp_capture_rate=0.25, expr_threshold=0.1){
+census_paper <- function(expr_matrix, exp_capture_rate=0.25, expr_threshold=0){
   cells <- dim(expr_matrix)[2]
   idx <- 1
   # iterate over all cells
   total <- unlist(apply(expr_matrix, 2, function(x){
       tryCatch({
         # Find the most commonly occuring (log-transformed) TPM value in each cell above a threshold
-        x_star <- dmode(log10(x[x>0.1]))
+        x_star <- dmode(log10(x[x>expr_threshold]))
         # only consider genes with TPM > 0.1; below this, no mRNA is believed to be present
-        x <- x[x>0]
+        x <- x[x>expr_threshold]
         # calculate cumulative distribution function of gene expression values in cell
         P <- ecdf(x)
         

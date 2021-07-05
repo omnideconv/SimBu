@@ -69,3 +69,8 @@ plot(density(t_estimate))
 ```
 
 
+```{r}
+mat_rel <- mat_r/colSums(mat_r)
+census_rel <- census(mat_rel, method="paper",ncores = 1)
+```
+
