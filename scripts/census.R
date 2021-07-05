@@ -1,6 +1,6 @@
 library(parallel)
 
-census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0.1, ncores=1, method=c("monocle","paper","t_estimate")){
+census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1, method=c("monocle","paper","t_estimate")){
   ncuts <- dim(matrix)[2]/1000
   
   cuts<-split(seq_len(ncol(matrix)), cut(seq_len(ncol(matrix)), pretty(seq_len(ncol(matrix)), ncuts)))
@@ -28,7 +28,7 @@ census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0.1, ncores=1, 
   return(out)
 }
 
-calc_xi <- function(expr_matrix, expr_threshold=0.1){
+calc_xi <- function(expr_matrix, expr_threshold){
   cells <- dim(expr_matrix)[2]
   idx <- 1
   total <- unlist(apply(expr_matrix, 2, function(x){
@@ -39,10 +39,10 @@ calc_xi <- function(expr_matrix, expr_threshold=0.1){
 }
 
 
-census_monocle <- function(expr_matrix, exp_capture_rate=0.25, expr_threshold=0){
+census_monocle <- function(expr_matrix, exp_capture_rate, expr_threshold){
   
   cells <- dim(expr_matrix)[2]
-  idx <- 1
+  i <- 1
   # iterate over all cells
   total <- unlist(apply(expr_matrix, 2, function(x){
     tryCatch({
@@ -58,11 +58,12 @@ census_monocle <- function(expr_matrix, exp_capture_rate=0.25, expr_threshold=0)
       # find all genes with single mRNA
       num_single_copy_genes <- sum(x <= t_estimate)
       # counter
-      idx <<- idx+1
+      i <<- i+1
       #final value (this is M_i)
       num_single_copy_genes / frac_x / exp_capture_rate
     }, error=function(e){
-      print(idx)
+      print(x)
+      print(e)
       break
     })
   }))
@@ -70,7 +71,7 @@ census_monocle <- function(expr_matrix, exp_capture_rate=0.25, expr_threshold=0)
   return(total)
 }
 
-census_paper <- function(expr_matrix, exp_capture_rate=0.25, expr_threshold=0){
+census_paper <- function(expr_matrix, exp_capture_rate, expr_threshold){
   cells <- dim(expr_matrix)[2]
   idx <- 1
   # iterate over all cells
