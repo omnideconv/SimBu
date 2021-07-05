@@ -39,34 +39,32 @@ calc_xi <- function(expr_matrix, expr_threshold=0.1){
 }
 
 
-census_monocle <- function(expr_matrix, exp_capture_rate=0.25, expr_threshold=0.1){
+census_monocle <- function(expr_matrix, exp_capture_rate=0.25, expr_threshold=0){
   
   cells <- dim(expr_matrix)[2]
   idx <- 1
   # iterate over all cells
   total <- unlist(apply(expr_matrix, 2, function(x){
-    # Find the most commonly occuring (log-transformed) TPM value in each cell above a threshold
-    t_estimate <- 10^mean(dmode(log10(x[x > expr_threshold])))
-    
-    # only consider genes with TPM > 0.1; below this, no mRNA is believed to be present
-    x <- x[x > 0.1]
-    # calculate cumulative distribution function of gene expression values in cell
-    P <- ecdf(x)
-    # identify peak of distribution by looking at most common TPM value
-    frac_x <- P(t_estimate) 
-    
-    # find all genes with single mRNA
-    num_single_copy_genes <- sum(x <= t_estimate)
-
-    #progress
-    #if(idx %% 1000 == 0){
-    #  progress <- round(idx / cells, digits=3)
-    #  print(paste(progress*100,"%..."))
-    #}
-    #idx <<- idx+1
-    
-    #final value (this is M_i)
-    num_single_copy_genes / frac_x / exp_capture_rate
+    tryCatch({
+      # Find the most commonly occuring (log-transformed) TPM value in each cell above a threshold
+      t_estimate <- 10^mean(dmode(log10(x[x > expr_threshold])))
+      # only consider genes with TPM > 0.1; below this, no mRNA is believed to be present
+      #x <- x[x > 0.1]
+      x <- x[x > expr_threshold]
+      # calculate cumulative distribution function of gene expression values in cell
+      P <- ecdf(x)  
+      # identify peak of distribution by looking at most common TPM value
+      frac_x <- P(t_estimate) 
+      # find all genes with single mRNA
+      num_single_copy_genes <- sum(x <= t_estimate)
+      # counter
+      idx <<- idx+1
+      #final value (this is M_i)
+      num_single_copy_genes / frac_x / exp_capture_rate
+    }, error=function(e){
+      print(idx)
+      break
+    })
   }))
   
   return(total)
@@ -77,29 +75,27 @@ census_paper <- function(expr_matrix, exp_capture_rate=0.25, expr_threshold=0.1)
   idx <- 1
   # iterate over all cells
   total <- unlist(apply(expr_matrix, 2, function(x){
-      # Find the most commonly occuring (log-transformed) TPM value in each cell above a threshold
-      x_star <- dmode(log10(x[x>0]))
-      
-      # only consider genes with TPM > 0.1; below this, no mRNA is believed to be present
-      x <- x[x > expr_threshold]
-      # calculate cumulative distribution function of gene expression values in cell
-      P <- ecdf(x)
-      
-      F_x_star <- P(x_star)
-      F_x_epsilon <- P(expr_threshold)
-      
-      # find all genes with single mRNA
-      num_single_copy_genes <- sum(x <= x_star)
-      
-      #progress
-      #if(idx %% 1000 == 0){
-      #  progress <- round(idx / cells, digits=3)
-      #  print(paste(progress*100,"%..."))
-      #}
-      #idx <<- idx+1
-      
-      #final value (this is M_i)
-      (1/exp_capture_rate) * (num_single_copy_genes / (F_x_star - F_x_epsilon))
+      tryCatch({
+        # Find the most commonly occuring (log-transformed) TPM value in each cell above a threshold
+        x_star <- dmode(log10(x[x>0.1]))
+        # only consider genes with TPM > 0.1; below this, no mRNA is believed to be present
+        x <- x[x>0]
+        # calculate cumulative distribution function of gene expression values in cell
+        P <- ecdf(x)
+        
+        F_x_star <- P(x_star)
+        F_x_epsilon <- P(expr_threshold)
+        # find all genes with single mRNA
+        num_single_copy_genes <- sum(x <= x_star)
+        # counter
+        idx <<- idx +1
+        #final value (this is M_i)
+        (1/exp_capture_rate) * (num_single_copy_genes / (F_x_star - F_x_epsilon))
+      }, error=function(e){
+        print(idx)
+        print(e)
+        break
+      })
   }))
 }
 
