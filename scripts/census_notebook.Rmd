@@ -13,6 +13,7 @@ library(ggplot2)
 library(GEOquery)
 library(tidyr)
 library(Hmisc)
+library(ggpubr)
 source("census.R")
 ```
 
@@ -79,16 +80,22 @@ First I compared the census counts with the mRNA counts provided by the paper:
 p1<-ggscatter(df,x="census_counts",y="nCount_RNA",color="celltype.l1",facet.by = "celltype.l2",cor.coef = T,palette = "jco", conf.int=T, alpha=0.8, title="Census mRNA counts vs mRNA counts from Hao et al (red dashed line show perfect correlation, black is linear model)",ylab = "Hao et al mRNA counts", cor.method="pearson")
 p1+geom_smooth(method="lm",se=F,color="black")+geom_abline(color="red",linetype="dashed")
 ```
+```{r}
+p1<-ggscatter(df,x="census_counts",y="nCount_RNA",color="celltype.l1",cor.coef = T, conf.int=T, alpha=0.75, title="Census mRNA counts vs mRNA counts from Hao et al (red dashed line show perfect correlation, black is linear model)",ylab = "Hao et al mRNA counts", cor.method="pearson")
+p1<-p1+geom_smooth(method="lm",se=F,color="black")+geom_abline(color="red",linetype="dashed")
+ggsave(plot=p1,filename="../plots/census_vs_scaling_factors_ALL.png", device = "png",width=1200, height=800, units = "px",scale=3)
+```
+
 Next, I calculated scaling factors out of the census counts (mean and median per cell) and compared it to other scaling factors, which were already looked upon earlier in the project (see plot_notebook):
 ```{r}
-census_mean_counts <-df[,mean(census_counts),by=celltype.l1]
+census_mean_counts <-df[,mean(census_counts),by=celltype.l2]
 census_mean_counts$source <- "census (mean)"
 colnames(census_mean_counts) <- c("type","mRNA","source")
-census_mean_counts$type <- c("T cells CD8","B cells","T cells CD4","Monocytes", "other", "NK cells", "Dendritic cells", "other T")
-census_median_counts <-df[,median(census_counts),by=celltype.l1]
+census_mean_counts$type <- c("T cells CD8 effector memory","B cells","T cells CD4 central memory","Monocytes CD14", "T cells CD4", "Platelet", "T cells CD4 effector memory", "T cells CD8", "NK cells", "Monocytes CD 16", "B cells intermediate", "B cells memory", "conventional Dendritic cells 2", "T cells CD8 central memory", "HSPC", "T cells gamma delta", "NK cells CD56bright CD16+/-", "T cells CD4 cytotoxic activity", "Doublet", "plasmacytoid Dendritic cells", "MAI T cells", "T regulatory cells", "Plasma cells", "T cells CD4 proliferating", "ASDC", "NK cells proliferating", "innate lymphocyte cells", "T cells double negative", "conventional Dendritic cells 1", "Eryth", "T cells CD8 proliferating")
+census_median_counts <-df[,median(census_counts),by=celltype.l2]
 census_median_counts$source <- "census (median)"
 colnames(census_median_counts) <- c("type","mRNA","source")
-census_median_counts$type <- c("T cells CD8","B cells","T cells CD4","Monocytes", "other", "NK cells", "Dendritic cells", "other T")
+census_median_counts$type <- c("T cells CD8 effector memory","B cells","T cells CD4 central memory","Monocytes CD14", "T cells CD4", "Platelet", "T cells CD4 effector memory", "T cells CD8", "NK cells", "Monocytes CD 16", "B cells intermediate", "B cells memory", "conventional Dendritic cells 2", "T cells CD8 central memory", "HSPC", "T cells gamma delta", "NK cells CD56bright CD16+/-", "T cells CD4 cytotoxic activity", "Doublet", "plasmacytoid Dendritic cells", "MAI T cells", "T regulatory cells", "Plasma cells", "T cells CD4 proliferating", "ASDC", "NK cells proliferating", "innate lymphocyte cells", "T cells double negative", "conventional Dendritic cells 1", "Eryth", "T cells CD8 proliferating")
 
 full <- rbindlist(data_lst)
 full <- rbind(full, census_mean_counts, census_median_counts)
@@ -111,28 +118,31 @@ final2 <- final[final$Source_x %in% c("census (mean)")]
 cbp2 <- c("#000000", "#E69F00", "#56B4E9", "#009E73",
           "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#FC4E07")
 
+final2$combi_name_factor <- factor(final2$combi_name, levels = sort(unique(final2$combi_name)))
 
 p<-ggplot(final2, aes(x=mRNA_y, y=mRNA_x, color=type_x))+
-  geom_point(size=9, alpha=0.8)+
-  facet_wrap(~combi_name, scales = "free")+
+  geom_point(size=3, alpha=0.8)+
+  facet_wrap(~combi_name_factor, scales = "free")+
   ggtitle("Pairwise comparison of scaling factors for cell-types of different sources. First source-name in panel caption is x-axis, second is y-axis.")+
   xlab("Scaling factor of 1st source")+
   ylab("Scaling factor of 2nd source")+
-  scale_color_discrete(name = "Cell type")+
-  scale_colour_brewer(palette="Paired")+
-  scale_size(guide="none")+
-  theme(axis.text.x = element_text(angle = 90),
-        axis.text=element_text(size=15),
-        axis.title=element_text(size=15,face="bold"),
-        legend.text = element_text(size=20),
-        legend.title = element_text(size=15, face="bold"),
-        legend.key.size = unit(1,"cm"),
-        strip.text.x = element_text(size=15),
-        plot.title = element_text(size=20, face="bold"))
-ggsave(filename="../plots/census_vs_scaling_factors.png",
-       p,device = "png", width=1800, height=1200, units = "px", scale=3)
+  scale_color_discrete(name = "Cell type")
+  #scale_colour_brewer(palette="Paired")
+  #scale_size(guide="none")+
+  #theme(axis.text.x = element_text(angle = 90),
+  #      axis.text=element_text(size=15),
+  #      axis.title=element_text(size=15,face="bold"),
+  #      legend.text = element_text(size=20),
+  #      legend.title = element_text(size=15, face="bold"),
+  #      legend.key.size = unit(1,"cm"),
+  #      strip.text.x = element_text(size=15),
+  #      plot.title = element_text(size=20, face="bold"))
+#ggsave(filename="../plots/census_vs_scaling_factors.png",
+#       p,device = "png", width=1800, height=1200, units = "px", scale=3)
 
 ```
+
+
 Finally a correlation matrix for all the scaling values:
 ```{r}
 tmp <- spread(full, key = source, value = mRNA)
