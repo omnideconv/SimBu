@@ -6,6 +6,7 @@ output: html_notebook
 library(data.table)
 library(ggplot2)
 library(tidyr)
+library(plyr)
 ```
 Look at distribution of reads between different cell-types. Do some types have more/reads(=more mRNA)?
 
@@ -114,31 +115,45 @@ source("load_scaling_factors.R")
 ```
 
 create combined dataframe with wanted cell-types
+NOTE:
+  - quantiseq: T cells = mean(CD4, CD8, T reg)
+  - vento_tormo: (CD4, CD8, T reg) = T cells value
+  - Maynard: conventional Dendritic cells = mean(conventional Dendritic cells 1, conventional Dendritic cells 2)
 ```{r}
-wanted_types <- data.frame(type=c("B cells", "T cells", "T cells CD4", "T cells CD8", "T regulatory cells", "T cells CD8 central memory", "T cells CD4 central memory", "Monocytes", "Macrophages", "NK cells","NK cells CD56bright CD16+/-", "Fibroblasts", "Dendritic cells", "plasmacytoid Dendritic cells", "conventional Dendritic cells 1", "conventional Dendritic cells 2", "Neutrophils", "innate lymphocyte cells", "Plasma cells", "Endothelial cells L"))
-maynard_f <- merge(maynard, wanted_types, by="type", all.y = T)
-maynard_f$source <- rep("Maynard", length(wanted_types$type))
-#maynard_f$mRNA <- rescale(maynard_f$mRNA, to=c(0.1,1.1))
+wanted_types <- data.frame(type=c("B cells", "T cells", "T cells CD4", "T cells CD8", "T regulatory cells", "T cells CD8 central memory", "T cells CD4 central memory", "Monocytes", "Macrophages", "NK cells","NK cells CD56bright CD16+/-", "Fibroblasts", "Dendritic cells", "plasmacytoid Dendritic cells", "conventional Dendritic cells 1", "conventional Dendritic cells 2", "Neutrophils", "innate lymphocyte cells", "Plasma cells", "Endothelial cells L", "conventional Dendritic cells"))
+all_types <- data.frame(type=unique(unlist(c(maynard_census$type, quantiseq$type, epic$type, miltenyi$type, monaco$type, vento_census$type, hao$type))))
+wanted_types <- all_types
+maynard_reads_f <- merge(maynard_reads, wanted_types, by="type", all.y = T)
+maynard_reads_f$source <- rep("Maynard (reads)", length(wanted_types$type))
+maynard_census_f <- merge(maynard_census, wanted_types, by="type", all.y = T)
+maynard_census_f$source <- rep("Maynard (census)", length(wanted_types$type))
+
 quantiseq_f <- merge(quantiseq, wanted_types, by="type", all.y = T)
 quantiseq_f$source <- rep("quantiseq", length(wanted_types$type))
 #quantiseq_f$mRNA <- rescale(quantiseq_f$mRNA, to=c(0.1,1.1))
 quantiseq_f[quantiseq_f$type=="T cells",]$mRNA<-mean(quantiseq_f[quantiseq_f$type %in% c("T cells CD4", "T cells CD8", "T regulatory cells"),]$mRNA)
+
 epic_f <- merge(epic, wanted_types, by="type", all.y = T)
 epic_f$source <- rep("epic", length(wanted_types$type))
-#epic_f$mRNA <- rescale(epic_f$mRNA, to=c(0.1,1.1))
+
 miltenyi_f <- merge(miltenyi, wanted_types, by="type", all.y = T)
 miltenyi_f$source <- rep("miltenyi", length(wanted_types$type))
-#miltenyi_f$mRNA <- rescale(miltenyi_f$mRNA, to=c(0.1,1.1))
-vento_tormo_f <- merge(vento_tormo, wanted_types, by="type", all.y = T)
-vento_tormo_f$source <- rep("vento_tormo", length(wanted_types$type))
-#vento_tormo_f$mRNA <- rescale(vento_tormo_f$mRNA, to=c(0.1,1.1))
-vento_tormo_f[vento_tormo_f$type %in% c("T cells CD4", "T cells CD8", "T regulatory cells")]$mRNA <- vento_tormo_f[vento_tormo_f$type == "T cells"]$mRNA
+
+vento_tormo_reads_f <- merge(vento_reads, wanted_types, by="type", all.y = T)
+vento_tormo_reads_f$source <- rep("vento_tormo (reads)", length(wanted_types$type))
+vento_tormo_reads_f[vento_tormo_reads_f$type %in% c("T cells CD4", "T cells CD8", "T regulatory cells")]$mRNA <- vento_tormo_reads_f[vento_tormo_reads_f$type == "T cells"]$mRNA
+vento_tormo_census_f <- merge(vento_census, wanted_types, by="type", all.y = T)
+vento_tormo_census_f$source <- rep("vento_tormo (census)", length(wanted_types$type))
+vento_tormo_census_f[vento_tormo_census_f$type %in% c("T cells CD4", "T cells CD8", "T regulatory cells")]$mRNA <- vento_tormo_census_f[vento_tormo_census_f$type == "T cells"]$mRNA
+
+
 monaco_f <- merge(monaco, wanted_types, by="type", all.y = T)
 monaco_f$source <- rep("monaco", length(wanted_types$type))
-census_mean_counts_f <- merge(census_mean_counts, wanted_types,by="type", all.y=T)
-census_mean_counts_f$source <- rep("Hao (census)", length(wanted_types$type))
 
-data_lst <- list(maynard_f, quantiseq_f, epic_f, miltenyi_f, vento_tormo_f, monaco_f,census_mean_counts_f)
+hao_f <- merge(hao, wanted_types,by="type", all.y=T)
+hao_f$source <- rep("Hao (census)", length(wanted_types$type))
+
+data_lst <- list(maynard_reads_f, maynard_census_f, quantiseq_f, epic_f, miltenyi_f, vento_tormo_reads_f, vento_tormo_census_f, monaco_f,hao_f)
 full <- rbindlist(data_lst)
 
 # ggplot(full, aes(x=source, y=mRNA, fill=source))+
@@ -153,8 +168,11 @@ full <- rbindlist(data_lst)
 ```{r}
 full <- rbindlist(data_lst)
 sources <- unique(full$source)
-c1 <- c(rep(sources[1],6), rep(sources[2],5), rep(sources[3],4), rep(sources[4],3), rep(sources[5],2), rep(sources[6],1))
-c2 <- c("quantiseq", "epic", "miltenyi", "vento_tormo", "monaco", "Hao (census)", "epic", "miltenyi", "vento_tormo", "monaco", "Hao (census)", "miltenyi", "vento_tormo", "monaco", "Hao (census)", "vento_tormo", "monaco", "Hao (census)","monaco","Hao (census)","Hao (census)")
+
+comb <- combn(seq_along(sources), 2, simplify = F, FUN=function(i) sources[i])
+c1 <- unlist(lapply(comb, function(x) x[1]))
+c2 <- unlist(lapply(comb, function(x) x[2]))
+
 combinations <- data.frame(Var1=c1, Var2=c2)
 combinations$combi_name <- paste0(combinations$Var1," vs. ",combinations$Var2)
 
@@ -162,31 +180,52 @@ tmp<-merge(full, combinations, by.x="source", by.y="Var1", all.x=T, allow.cartes
 tmp2<-merge(tmp, full, by.x="Var2", by.y="source", allow.cartesian = T)
 final <- tmp2[(tmp2$type.x == tmp2$type.y),]
 colnames(final) <- c("Source_x", "Source_y", "type_y", "mRNA_y", "combi_name","type_x","mRNA_x")
+final <- subset(final, !is.na(mRNA_x) & !is.na(mRNA_y))
 final[,pearson_cor:=cor(mRNA_y, mRNA_x, method="pearson", use="complete.obs"), by=combi_name]
+cors <- unique(final[,c("combi_name","pearson_cor")])
 
 final$higher_level <- ifelse(startsWith(final$type_x, "T"),"T cell", "other")
 
 png(filename="../plots/scaling_factors_scatter.png", width=1800, height=1200)
-ggplot(final, aes(x=mRNA_y, y=mRNA_x, color=type_x))+
-  geom_point(aes(shape=higher_level),size=9, alpha=0.8)+
+ggplot(final, aes(x=mRNA_y, y=mRNA_x))+
+  geom_point(aes(color=type_x,shape=higher_level),size=6.5, alpha=0.8)+
   facet_wrap(~combi_name, scales = "free")+
-  #geom_text(aes(label=pearson_cor))+
   ggtitle("Pairwise comparison of scaling factors for cell-types of different sources. First source-name in panel caption is x-axis, second is y-axis.")+
   xlab("Scaling factor of 1st source")+
   ylab("Scaling factor of 2nd source")+
   scale_color_discrete(name = "Cell type")+
-  #scale_colour_brewer(palette="Paired")+
   scale_size(guide="none")+
+  geom_smooth(method="lm", se=F, color="gray", alpha=0.5)+
+  stat_cor()+
   theme(axis.text.x = element_text(angle = 90),
         axis.text=element_text(size=15),
         axis.title=element_text(size=15,face="bold"),
-        legend.text = element_text(size=20),
+        legend.text = element_text(size=10),
         legend.title = element_text(size=15, face="bold"),
         legend.key.size = unit(1,"cm"),
-        strip.text.x = element_text(size=15),
-        plot.title = element_text(size=20, face="bold"))
+        plot.title = element_text(size=20, face="bold"),
+        strip.text.x = element_text(size = 10))
+  
+  
 ```
- 
+A correlation matrix for all the scaling values:
+```{r}
+tmp <- spread(full, key = source, value = mRNA)
+types <- tmp$type
+tmp$type <- NULL
+final_corr <- rcorr(as.matrix(tmp), type = "pearson")
+
+png(filename="../plots/census_correlation.png", width = 800, height = 600)
+corrplot(final_corr$r,
+         tl.col = "black",
+         title = "Pairwise correlation between \nthe scaling factors of all cell-types present in both datasets/methods\n(p-values of correlation are written in circle)",
+         p.mat = final_corr$P,
+         insig = "p-value",sig.level = -1,
+         mar=c(0,0,3,0))
+
+
+```
+
 ```{r}
 full <- rbindlist(data_lst)
 reference_type = "Monocytes"

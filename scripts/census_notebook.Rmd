@@ -86,64 +86,8 @@ p1<-p1+geom_smooth(method="lm",se=F,color="black")+geom_abline(color="red",linet
 ggsave(plot=p1,filename="../plots/census_vs_scaling_factors_ALL.png", device = "png",width=1200, height=800, units = "px",scale=3)
 ```
 
-Next, I calculated scaling factors out of the census counts (mean and median per cell) and compared it to other scaling factors, which were already looked upon earlier in the project (see plot_notebook):
-```{r}
-census_mean_counts <-df[,mean(census_counts),by=celltype.l2]
-census_mean_counts$source <- "census (mean)"
-colnames(census_mean_counts) <- c("type","mRNA","source")
-census_mean_counts$type <- c("T cells CD8 effector memory","B cells","T cells CD4 central memory","Monocytes CD14", "T cells CD4", "Platelet", "T cells CD4 effector memory", "T cells CD8", "NK cells", "Monocytes CD 16", "B cells intermediate", "B cells memory", "conventional Dendritic cells 2", "T cells CD8 central memory", "HSPC", "T cells gamma delta", "NK cells CD56bright CD16+/-", "T cells CD4 cytotoxic activity", "Doublet", "plasmacytoid Dendritic cells", "MAI T cells", "T regulatory cells", "Plasma cells", "T cells CD4 proliferating", "ASDC", "NK cells proliferating", "innate lymphocyte cells", "T cells double negative", "conventional Dendritic cells 1", "Eryth", "T cells CD8 proliferating")
-census_median_counts <-df[,median(census_counts),by=celltype.l2]
-census_median_counts$source <- "census (median)"
-colnames(census_median_counts) <- c("type","mRNA","source")
-census_median_counts$type <- c("T cells CD8 effector memory","B cells","T cells CD4 central memory","Monocytes CD14", "T cells CD4", "Platelet", "T cells CD4 effector memory", "T cells CD8", "NK cells", "Monocytes CD 16", "B cells intermediate", "B cells memory", "conventional Dendritic cells 2", "T cells CD8 central memory", "HSPC", "T cells gamma delta", "NK cells CD56bright CD16+/-", "T cells CD4 cytotoxic activity", "Doublet", "plasmacytoid Dendritic cells", "MAI T cells", "T regulatory cells", "Plasma cells", "T cells CD4 proliferating", "ASDC", "NK cells proliferating", "innate lymphocyte cells", "T cells double negative", "conventional Dendritic cells 1", "Eryth", "T cells CD8 proliferating")
 
-full <- rbindlist(data_lst)
-full <- rbind(full, census_mean_counts, census_median_counts)
-
-sources <- unique(full$source)
-c1 <- c(rep(sources[1],7), rep(sources[2],6), rep(sources[3],5), rep(sources[4],4), rep(sources[5],3), rep(sources[6],2), rep(sources[7],1))
-c2 <- c("quantiseq", "epic", "miltenyi", "vento_tormo", "monaco", "census (mean)", "census (median)", "epic", "miltenyi", "vento_tormo", "monaco", "census (mean)", "census (median)", "miltenyi", "vento_tormo", "monaco", "census (mean)", "census (median)", "vento_tormo", "monaco", "census (mean)", "census (median)","monaco","census (mean)", "census (median)","census (mean)", "census (median)", "census (median)")
-combinations <- data.frame(Var1=c1, Var2=c2)
-combinations$combi_name <- paste0(combinations$Var1," vs. ",combinations$Var2)
-
-tmp<-merge(full, combinations, by.x="source", by.y="Var1", all.x=T, allow.cartesian=TRUE)
-tmp2<-merge(tmp, full, by.x="Var2", by.y="source", allow.cartesian = T)
-final <- tmp2[(tmp2$type.x == tmp2$type.y),]
-colnames(final) <- c("Source_x", "Source_y", "type_y", "mRNA_y", "combi_name","type_x","mRNA_x")
-final[,pearson_cor:=cor(mRNA_y, mRNA_x, method="pearson", use="complete.obs"), by=combi_name]
-
-# actially I only need these combinations:
-final2 <- final[final$Source_x %in% c("census (mean)")]
-
-cbp2 <- c("#000000", "#E69F00", "#56B4E9", "#009E73",
-          "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#FC4E07")
-
-final2$combi_name_factor <- factor(final2$combi_name, levels = sort(unique(final2$combi_name)))
-
-p<-ggplot(final2, aes(x=mRNA_y, y=mRNA_x, color=type_x))+
-  geom_point(size=3, alpha=0.8)+
-  facet_wrap(~combi_name_factor, scales = "free")+
-  ggtitle("Pairwise comparison of scaling factors for cell-types of different sources. First source-name in panel caption is x-axis, second is y-axis.")+
-  xlab("Scaling factor of 1st source")+
-  ylab("Scaling factor of 2nd source")+
-  scale_color_discrete(name = "Cell type")
-  #scale_colour_brewer(palette="Paired")
-  #scale_size(guide="none")+
-  #theme(axis.text.x = element_text(angle = 90),
-  #      axis.text=element_text(size=15),
-  #      axis.title=element_text(size=15,face="bold"),
-  #      legend.text = element_text(size=20),
-  #      legend.title = element_text(size=15, face="bold"),
-  #      legend.key.size = unit(1,"cm"),
-  #      strip.text.x = element_text(size=15),
-  #      plot.title = element_text(size=20, face="bold"))
-#ggsave(filename="../plots/census_vs_scaling_factors.png",
-#       p,device = "png", width=1800, height=1200, units = "px", scale=3)
-
-```
-
-
-Finally a correlation matrix for all the scaling values:
+A correlation matrix for all the scaling values:
 ```{r}
 tmp <- spread(full, key = source, value = mRNA)
 types <- tmp$type
@@ -156,6 +100,40 @@ corrplot(final_corr$r,
 
 
 ```
+
+## Census for Maynard dataset (TPMs calculated with salmon)
+```{r}
+tpm <- fread("../../Data/Maynard/datasets_annotated/maynard_2020_annotated_fine/X_tpm.csv")
+mat <- Matrix(as.matrix(tpm), sparse = T)
+rm(tpm)
+genes <- fread("../../Data/Maynard/datasets_annotated/maynard_2020_annotated_fine/var.csv")
+cells <- fread("../../Data/Maynard/datasets_annotated/maynard_2020_annotated_fine/obs.csv")
+cellnames <- cells$Run
+genenames <- genes$symbol
+dimnames(mat)<-list(cellnames, genenames)
+
+maynard_census <- census(t(mat), expr_threshold = 0.1,ncores=1, method="monocle")
+```
+
+Compare Maynard census counts with number of reads in cells
+```{r}
+meta_runs <- fread("../../Data/Maynard/SRA_meta.txt")[,c("Run","AvgSpotLen","Bases")]
+meta_runs$n_reads <- meta_runs$Bases/meta_runs$AvgSpotLen
+meta_cells <- fread("../../Data/Maynard/annotation_obs.csv")[,c("Run","cell_type")]
+maynard_reads <- merge(meta_cells, meta_runs, by.x = "Run", by.y="Run")
+
+maynard_both <- merge(maynard_census, maynard_reads, by.x="cell", by.y="Run")
+
+png(filename="../plots/maynard_census_vs_reads.png", width=1800, height=1200)
+ggplot(maynard_both, aes(x=census, y=n_reads))+
+  geom_point(aes(color=cell_type), alpha=0.75)+
+  facet_wrap(~cell_type, scales="free")+
+  geom_smooth(method="lm", se=F, color="black")+
+  stat_cor()+
+  theme(legend.position = "none")+
+  geom_abline(color="red", linetype="dashed")
+```
+
 
 
 ```{r}
