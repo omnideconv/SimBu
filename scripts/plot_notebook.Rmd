@@ -7,6 +7,10 @@ library(data.table)
 library(ggplot2)
 library(tidyr)
 library(plyr)
+library(Hmisc)
+library(corrplot)
+library(ggpubr)
+library(Matrix)
 ```
 Look at distribution of reads between different cell-types. Do some types have more/reads(=more mRNA)?
 
@@ -110,7 +114,7 @@ my_merge <- function(df1, df2){
 compare different scaling factors
 -> rename them to have uniform names
 ```{r}
-source("load_scaling_factors.R")
+suppressWarnings(source("load_scaling_factors.R"))
 
 ```
 
@@ -140,28 +144,38 @@ miltenyi_f <- merge(miltenyi, wanted_types, by="type", all.y = T)
 miltenyi_f$source <- rep("miltenyi", length(wanted_types$type))
 
 vento_tormo_reads_f <- merge(vento_reads, wanted_types, by="type", all.y = T)
-vento_tormo_reads_f$source <- rep("vento_tormo (reads)", length(wanted_types$type))
+vento_tormo_reads_f$source <- rep("Vento-tormo (reads)", length(wanted_types$type))
 vento_tormo_reads_f[vento_tormo_reads_f$type %in% c("T cells CD4", "T cells CD8", "T regulatory cells")]$mRNA <- vento_tormo_reads_f[vento_tormo_reads_f$type == "T cells"]$mRNA
 vento_tormo_census_f <- merge(vento_census, wanted_types, by="type", all.y = T)
-vento_tormo_census_f$source <- rep("vento_tormo (census)", length(wanted_types$type))
+vento_tormo_census_f$source <- rep("Vento-tormo (census)", length(wanted_types$type))
 vento_tormo_census_f[vento_tormo_census_f$type %in% c("T cells CD4", "T cells CD8", "T regulatory cells")]$mRNA <- vento_tormo_census_f[vento_tormo_census_f$type == "T cells"]$mRNA
+
+vento_tormo_psmb2_f <- merge(vento_psmb2, wanted_types, by="type",all.y = T)
+vento_tormo_psmb2_f$source <- rep("Vento-tormo (PSMB2)", length(wanted_types$type))
+vento_tormo_psmb2_f[vento_tormo_psmb2_f$type %in% c("T cells CD4", "T cells CD8", "T regulatory cells")]$mRNA <- vento_tormo_psmb2_f[vento_tormo_psmb2_f$type == "T cells"]$mRNA
+
+# vento_tormo_decidua_reads_f <- merge(vento_decidua_reads, wanted_types, by="type", all.y = T)
+# vento_tormo_decidua_reads_f$source <- rep("vento_tormo (reads)", length(wanted_types$type))
+# vento_tormo_decidua_reads_f[vento_tormo_decidua_reads_f$type %in% c("T cells CD4", "T cells CD8", "T regulatory cells")]$mRNA <- vento_tormo_decidua_reads_f[vento_tormo_decidua_reads_f$type == "T cells"]$mRNA
+# vento_tormo_decidua_census_f <- merge(vento_decidua_census, wanted_types, by="type", all.y = T)
+# vento_tormo_decidua_census_f$source <- rep("vento_tormo (census)", length(wanted_types$type))
+# vento_tormo_decidua_census_f[vento_tormo_decidua_census_f$type %in% c("T cells CD4", "T cells CD8", "T regulatory cells")]$mRNA <- vento_tormo_decidua_census_f[vento_tormo_decidua_census_f$type == "T cells"]$mRNA
 
 
 monaco_f <- merge(monaco, wanted_types, by="type", all.y = T)
 monaco_f$source <- rep("monaco", length(wanted_types$type))
 
-hao_f <- merge(hao, wanted_types,by="type", all.y=T)
-hao_f$source <- rep("Hao (census)", length(wanted_types$type))
+hao_reads_f <- merge(hao_reads, wanted_types,by="type", all.y=T)
+hao_reads_f$source <- rep("Hao (reads)", length(wanted_types$type))
+hao_census_f <- merge(hao_census, wanted_types,by="type", all.y=T)
+hao_census_f$source <- rep("Hao (census)", length(wanted_types$type))
 
-data_lst <- list(maynard_reads_f, maynard_census_f, quantiseq_f, epic_f, miltenyi_f, vento_tormo_reads_f, vento_tormo_census_f, monaco_f,hao_f)
+hao_psmb2_f <- merge(hao_psmb2, wanted_types, by="type",all.y=T)
+hao_psmb2_f$source <- rep("Hao (PSMB2)", length(wanted_types$type))
+
+data_lst <- list(maynard_reads_f, maynard_census_f, quantiseq_f, epic_f, miltenyi_f, vento_tormo_reads_f, vento_tormo_census_f, vento_tormo_psmb2_f, monaco_f,hao_reads_f,hao_census_f,hao_psmb2_f)
 full <- rbindlist(data_lst)
 
-# ggplot(full, aes(x=source, y=mRNA, fill=source))+
-#   geom_bar(stat = "identity")+
-#   facet_wrap(~type)+
-#   theme(axis.text.x = element_text(angle = 90))+
-#   ylab("Scaling factor")+
-#   ggtitle("Different scaling factors (all re-scaled between 0.1 and 1.1)\n for mRNA levels of 9 cell-types")
 ```
 
 
@@ -214,9 +228,10 @@ tmp <- spread(full, key = source, value = mRNA)
 types <- tmp$type
 tmp$type <- NULL
 final_corr <- rcorr(as.matrix(tmp), type = "pearson")
+corr <- final_corr$r-0.000001
 
-png(filename="../plots/census_correlation.png", width = 800, height = 600)
-corrplot(final_corr$r,
+png(filename="/home/simulator/plots/census_correlation.png", width = 800, height = 600)
+corrplot(corr,
          tl.col = "black",
          title = "Pairwise correlation between \nthe scaling factors of all cell-types present in both datasets/methods\n(p-values of correlation are written in circle)",
          p.mat = final_corr$P,

@@ -12,10 +12,11 @@ RUN apt-get update && apt-get install -y \
 
 RUN R -e "install.packages(c('BiocManager'))"
 RUN R -e "BiocManager::install(c('GEOquery', 'quantiseqr'))"
-RUN R -e "install.packages(c('ggplot2','data.table','Seurat','Matrix','ggpubr'))"
+#RUN R -e "install.packages(c('Seurat'))"
 RUN R -e "BiocManager::install(c('monocle'))"
-RUN R -e "install.packages(c('hdf5r'))"
-
+RUN R -e "install.packages(c('hdf5r','ggplot2','data.table','Matrix','ggpubr','Hmisc','R.utils'))"
+RUN R -e "install.packages(c('Seurat','Rcpp','remotes'))"
+RUN R -e "remotes::install_github('mojaveazure/seurat-disk')"
 
 
 #docker run --rm -d -p 127.0.0.1:9999:8787 -v /home/alex/Documents/Studium_Bioinformatik/Master/Masterarbeit/Data:/home/Data -v /home/alex/Documents/Studium_Bioinformatik/Master/Masterarbeit/simulator:/home/simulator -e ROOT=TRUE -e PASSWORD=123456 --name rstudio9999 r_simulator
