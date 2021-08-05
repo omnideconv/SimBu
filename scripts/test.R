@@ -147,4 +147,6 @@ mat<-Read10X(matrix_dir)
 out_paper <- census(matrix = mat, ncores = 1, method = "paper")
 
 
+##### Trivaglini dataset ######
 
+counts_file <- "/home/Data/Travaglini/Travaglini_Krasnow_2020_Lung_SS2.h5seurat"

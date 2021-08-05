@@ -1,5 +1,143 @@
 source("/home/simulator/scripts/census.R")
 
+load_trivaglini <- function(){
+  meta_file <- "/home/Data/Travaglini/obs_extended.csv"
+  
+  meta <- fread(meta_file)
+  meta$free_annotation[meta$free_annotation=="Adventitial Fibroblast_P1"] <- "Fibroblast"
+  meta$free_annotation[meta$free_annotation=="Adventitial Fibroblast_P2"] <- "Fibroblast"
+  meta$free_annotation[meta$free_annotation=="Adventitial Fibroblast_P3"] <- "Fibroblast"
+  meta$free_annotation[meta$free_annotation=="Airway Smooth Muscle_P1"] <- "Smooth muscle cell Airway"
+  meta$free_annotation[meta$free_annotation=="Airway Smooth Muscle_P2"] <- "Smooth muscle cell Airway"
+  meta$free_annotation[meta$free_annotation=="Airway Smooth Muscle_P3"] <- "Smooth muscle cell Airway"
+  meta$free_annotation[meta$free_annotation=="Alveolar Epithelial Type 1_P1"] <- "Epithelial cell Alveolar 1"
+  meta$free_annotation[meta$free_annotation=="Alveolar Epithelial Type 1_P2"] <- "Epithelial cell Alveolar 1"
+  meta$free_annotation[meta$free_annotation=="Alveolar Epithelial Type 1_P3"] <- "Epithelial cell Alveolar 1"
+  meta$free_annotation[meta$free_annotation=="Alveolar Epithelial Type 2_P1"] <- "Epithelial cell Alveolar 2"
+  meta$free_annotation[meta$free_annotation=="Alveolar Epithelial Type 2_P2"] <- "Epithelial cell Alveolar 2"
+  meta$free_annotation[meta$free_annotation=="Alveolar Epithelial Type 2_P3"] <- "Epithelial cell Alveolar 2"
+  meta$free_annotation[meta$free_annotation=="Alveolar Fibroblast_P1"] <- "Fibroblast"
+  meta$free_annotation[meta$free_annotation=="Alveolar Fibroblast_P2"] <- "Fibroblast"
+  meta$free_annotation[meta$free_annotation=="Alveolar Fibroblast_P3"] <- "Fibroblast"
+  meta$free_annotation[meta$free_annotation=="Artery_P1"] <- "Artery 1"
+  meta$free_annotation[meta$free_annotation=="Artery_P2"] <- "Artery 2"
+  meta$free_annotation[meta$free_annotation=="Artery_P3"] <- "Artery 3"
+  meta$free_annotation[meta$free_annotation=="B_P1"] <- "B cells"
+  meta$free_annotation[meta$free_annotation=="B_P2"] <- "B cells"
+  meta$free_annotation[meta$free_annotation=="B_P3"] <- "B cells"
+  meta$free_annotation[meta$free_annotation=="Basal_P1"] <- "Basal"
+  meta$free_annotation[meta$free_annotation=="Basal_P2"] <- "Basal"
+  meta$free_annotation[meta$free_annotation=="Basal_P3"] <- "Basal"
+  meta$free_annotation[meta$free_annotation=="Basophil/Mast 1_P1"] <- "Mast cells"
+  meta$free_annotation[meta$free_annotation=="Basophil/Mast 1_P2"] <- "Mast cells"
+  meta$free_annotation[meta$free_annotation=="Basophil/Mast 1_P3"] <- "Mast cells"
+  meta$free_annotation[meta$free_annotation=="Bronchial Vessel 1_P1"] <- "Bronchial Vessel"
+  meta$free_annotation[meta$free_annotation=="Capillary Aerocyte_P1"] <- "Capillary Aerocyte 1"
+  meta$free_annotation[meta$free_annotation=="Capillary Aerocyte_P2"] <- "Capillary Aerocyte 2"
+  meta$free_annotation[meta$free_annotation=="Capillary Aerocyte_P3"] <- "Capillary Aerocyte 3"
+  meta$free_annotation[meta$free_annotation=="Capillary Intermediate 1_P2"] <- "Capillary Intermediate"
+  meta$free_annotation[meta$free_annotation=="Capillary_P1"] <- "Capillary 1"
+  meta$free_annotation[meta$free_annotation=="Capillary_P2"] <- "Capillary 2"
+  meta$free_annotation[meta$free_annotation=="Capillary_P3"] <- "Capillary 3"
+  meta$free_annotation[meta$free_annotation=="CD4+ Memory/Effector T_P1"] <- "T cells CD4 central memory"
+  meta$free_annotation[meta$free_annotation=="CD4+ Naive T_P1"] <- "T cells CD4"
+  meta$free_annotation[meta$free_annotation=="CD4+ Naive T_P2"] <- "T cells CD4"
+  meta$free_annotation[meta$free_annotation=="CD8+ Memory/Effector T_P1"] <- "T cells CD8 central memory"
+  meta$free_annotation[meta$free_annotation=="CD8+ Naive T_P1"] <- "T cells CD8"
+  meta$free_annotation[meta$free_annotation=="CD8+ Naive T_P2"] <- "T cells CD8"
+  meta$free_annotation[meta$free_annotation=="Ciliated_P1"] <- "Ciliated"
+  meta$free_annotation[meta$free_annotation=="Ciliated_P2"] <- "Ciliated"
+  meta$free_annotation[meta$free_annotation=="Ciliated_P3"] <- "Ciliated"
+  meta$free_annotation[meta$free_annotation=="Classical Monocyte_P1"] <- "Monocytes"
+  meta$free_annotation[meta$free_annotation=="Club_P1"] <- "Club cells"
+  meta$free_annotation[meta$free_annotation=="Club_P2"] <- "Club cells"
+  meta$free_annotation[meta$free_annotation=="Club_P3"] <- "Club cells"
+  meta$free_annotation[meta$free_annotation=="Dendritic_P1"] <- "Dendritic cells"
+  meta$free_annotation[meta$free_annotation=="Differentiating Basal_P3"] <- "Differentiating Basal"
+  meta$free_annotation[meta$free_annotation=="Fibromyocyte_P3"] <- "Fibromyocyte"
+  meta$free_annotation[meta$free_annotation=="Goblet_P1"] <- "Goblet"
+  meta$free_annotation[meta$free_annotation=="Goblet_P2"] <- "Goblet"
+  meta$free_annotation[meta$free_annotation=="Goblet_P3"] <- "Goblet"
+  meta$free_annotation[meta$free_annotation=="IGSF21+ Dendritic_P2"] <- "Dendritic cells IGSF21+ 1"
+  meta$free_annotation[meta$free_annotation=="IGSF21+ Dendritic_P3"] <- "Dendritic cells IGSF21+ 2"
+  meta$free_annotation[meta$free_annotation=="Intermediate Monocyte_P2"] <- "Monocyte intermediate 1"
+  meta$free_annotation[meta$free_annotation=="Intermediate Monocyte_P3"] <- "Monocyte intermediate 2"
+  meta$free_annotation[meta$free_annotation=="Ionocyte_P3"] <- "Ionocyte"
+  meta$free_annotation[meta$free_annotation=="Lipofibroblast_P1"] <- "Lipofibroblast"
+  meta$free_annotation[meta$free_annotation=="Lymphatic_P1"] <- "Lymphatic 1"
+  meta$free_annotation[meta$free_annotation=="Lymphatic_P2"] <- "Lymphatic 2"
+  meta$free_annotation[meta$free_annotation=="Lymphatic_P3"] <- "Lymphatic 3"
+  meta$free_annotation[meta$free_annotation=="Macrophage_P2"] <- "Macrophages"
+  meta$free_annotation[meta$free_annotation=="Macrophage_P3"] <- "Macrophages"
+  meta$free_annotation[meta$free_annotation=="Myeloid Dendritic Type 2_P3"] <- "Dendritic cells conventional"
+  meta$free_annotation[meta$free_annotation=="Myofibroblast_P2"] <- "Myofibroblast 1"
+  meta$free_annotation[meta$free_annotation=="Myofibroblast_P3"] <- "Myofibroblast 2"
+  meta$free_annotation[meta$free_annotation=="Natural Killer T_P2"] <- "NK cells T"
+  meta$free_annotation[meta$free_annotation=="Natural Killer T_P3"] <- "NK cells T"
+  meta$free_annotation[meta$free_annotation=="Natural Killer_P1"] <- "NK cells"
+  meta$free_annotation[meta$free_annotation=="Natural Killer_P2"] <- "NK cells"
+  meta$free_annotation[meta$free_annotation=="Natural Killer_P3"] <- "NK cells"
+  meta$free_annotation[meta$free_annotation=="Neuroendocrine_P1"] <- "Neuroendocrine 1"
+  meta$free_annotation[meta$free_annotation=="Neuroendocrine_P3"] <- "Neuroendocrine 2"
+  meta$free_annotation[meta$free_annotation=="Neutrophil_P1"] <- "Neutrophils"
+  meta$free_annotation[meta$free_annotation=="Neutrophil_P2"] <- "Neutrophils"
+  meta$free_annotation[meta$free_annotation=="Neutrophil_P3"] <- "Neutrophils"
+  meta$free_annotation[meta$free_annotation=="Nonclassical Monocyte_P1"] <- "Monocyte non-conventional"
+  meta$free_annotation[meta$free_annotation=="Nonclassical Monocyte_P2"] <- "Monocyte non-conventional"
+  meta$free_annotation[meta$free_annotation=="Pericyte_P1"] <- "Pericyte"
+  meta$free_annotation[meta$free_annotation=="Pericyte_P2"] <- "Pericyte"
+  meta$free_annotation[meta$free_annotation=="Pericyte_P3"] <- "Pericyte"
+  meta$free_annotation[meta$free_annotation=="Plasma_P3"] <- "Plasma cells"
+  meta$free_annotation[meta$free_annotation=="Plasmacytoid Dendritic_P1"] <- "Dendritic cells plasmacytoid"
+  meta$free_annotation[meta$free_annotation=="Plasmacytoid Dendritic_P2"] <- "Dendritic cells plasmacytoid"
+  meta$free_annotation[meta$free_annotation=="Plasmacytoid Dendritic_P3"] <- "Dendritic cells plasmacytoid"
+  meta$free_annotation[meta$free_annotation=="Proliferating NK/T_P2"] <- "NK cells proliferating"
+  meta$free_annotation[meta$free_annotation=="Proliferating NK/T_P3"] <- "NK cells proliferating"
+  meta$free_annotation[meta$free_annotation=="Signaling Alveolar Epithelial Type 2_P1"] <- "Epithelial cell singaling Alveolar"
+  meta$free_annotation[meta$free_annotation=="Signaling Alveolar Epithelial Type 2_P3"] <- "Epithelial cell singaling Alveolar"
+  meta$free_annotation[meta$free_annotation=="Vascular Smooth Muscle_P1"] <- "Smooth muscle cell Muscle"
+  meta$free_annotation[meta$free_annotation=="Vascular Smooth Muscle_P2"] <- "Smooth muscle cell Muscle"
+  meta$free_annotation[meta$free_annotation=="Vascular Smooth Muscle_P3"] <- "Smooth muscle cell Muscle"
+  meta$free_annotation[meta$free_annotation=="Vein_P2"] <- "Vein"
+  
+  trivaglini_reads <- meta[,mean(nReads),by="free_annotation"]
+  colnames(trivaglini_reads) <-c("type","mRNA")
+  trivaglini_reads <- rbind(trivaglini_reads, list("T cells", mean(trivaglini_reads[trivaglini_reads$type %in% c("T cells CD4 central memory","T cells CD8 central memory","T cells CD4","T cells CD8"),]$mRNA)))
+  
+  trivaglini_spike <- meta[,mean(percent.ercc),by="free_annotation"]
+  colnames(trivaglini_spike) <-c("type","mRNA")
+  trivaglini_spike <- rbind(trivaglini_spike, list("T cells", mean(trivaglini_spike[trivaglini_spike$type %in% c("T cells CD4 central memory","T cells CD8 central memory","T cells CD4","T cells CD8"),]$mRNA)))
+  
+  ercc_cols <- grep("ERCC-",colnames(meta))
+  meta_red <- data.frame(meta)[ercc_cols]
+  meta_red$ercc_sum <- apply(meta_red,1,sum)
+  meta_red$type <-meta$free_annotation
+  meta_red$total_reads <- meta$nReads
+  meta_red$genes <- meta$nGene
+  meta_red <- as.data.table(meta_red)
+  # i am adding a pseudocount of +1 here, to not have 0 in the Zähler for most of the cell-types
+  meta_scaling <- meta_red[,lapply(.SD, function(x){mean(genes/na.omit(x+1))}),.SDcols=grep("ERCC",colnames(meta_red)), by="type"]
+  
+  # remove spike-ins with 0 counts
+  meta_scaling <- as.data.frame(meta_scaling)[,colSums(meta_scaling!=0)>0]
+  
+  trivaglini_ercc_total <- meta_red[,mean(ercc_sum),by="type"]
+  colnames(trivaglini_ercc_total) <-c("type","mRNA")
+  trivaglini_ercc_total <- rbind(trivaglini_ercc_total, list("T cells", mean(trivaglini_ercc_total[trivaglini_ercc_total$type %in% c("T cells CD4 central memory","T cells CD8 central memory","T cells CD4","T cells CD8"),]$mRNA)))
+  
+  
+  trivaglini_genes_per_ercc <- meta_red[,mean(genes/ercc_sum), by="type"]
+  colnames(trivaglini_genes_per_ercc) <-c("type","mRNA")
+  trivaglini_genes_per_ercc <- rbind(trivaglini_genes_per_ercc, list("T cells", mean(trivaglini_genes_per_ercc[trivaglini_genes_per_ercc$type %in% c("T cells CD4 central memory","T cells CD8 central memory","T cells CD4","T cells CD8"),]$mRNA)))
+  
+  
+  return(list(trivaglini_reads=trivaglini_reads,
+              trivaglini_spike=trivaglini_spike,
+              trivaglini_ercc=meta_scaling,
+              trivaglini_ercc_total=trivaglini_ercc_total,
+              trivaglini_genes_per_ercc=trivaglini_genes_per_ercc))
+}
+
 load_maynard <- function(){
   maynard_reads_fractions <- fread("/home/Data/Maynard/read_count_per_cell_type.csv")
   colnames(maynard_reads_fractions) <- c("type","mRNA")
@@ -30,10 +168,14 @@ load_maynard <- function(){
   final$type <- c("Ciliated", "Goblet", "Epithelial cell other C4", "Mesothelial", "Alevolar cell type 2", "Plasma cells", "Epithelial cell other C5", "Club cells", "T cells dividing", "Fibroblast adventitial", "Epithelial cell other C3", "Basal", "Endothelial cells L", "Ionocyte", "conventional Dendritic cells 2", "Epithelial cell other C2", "Dendritic cells", "other C21", "Epithelial cell other C1", "Mast cells", "conventional Dendritic cells 1", "Endothelial cell", "Alevolar cell type 1", "Macrophages", "plasmacytoid Dendritic cells", "T regulatory cells", "Smooth muscle cells", "Pericyte", "Fibroblast alevolar", "B cells", "other C33", "other C29", "NK cells", "Monocyte non-conventional", "T cells CD8", "other C32", "T cells CD4", "Monocytes", "Dendritic cells Langerhans", "other C19", "other C17", "Epithelial cell dividing")
   
   maynard_census_fractions <- final[,c("type","frac")]
-  maynard_census_fractions[maynard_census_fractions$type=="conventional Dendritic cells",]$frac<-mean(maynard_census_fractions[maynard_census_fractions$type %in% c("conventional Dendritic cells 2", "conventional Dendritic cells 1"),]$frac)
   colnames(maynard_census_fractions) <- c("type","mRNA")
+  maynard_census_fractions <- rbind(maynard_census_fractions, list("convetional Dendritic cells", mean(maynard_census_fractions[maynard_census_fractions$type %in% c("conventional Dendritic cells 1", "conventional Dendritic cells 2"),]$mRNA)))
+  maynard_census_fractions <- rbind(maynard_census_fractions, list("Fibroblasts", mean(maynard_census_fractions[maynard_census_fractions$type %in% c("Fibroblast adventitial", "Fibroblast alevolar"),]$mRNA)))
+  
+  
   maynard_reads_fractions <- final[,c("type","mRNA")]
-  maynard_census_fractions[maynard_census_fractions$type=="conventional Dendritic cells",]$mRNA<-mean(maynard_census_fractions[maynard_census_fractions$type %in% c("conventional Dendritic cells 2", "conventional Dendritic cells 1"),]$mRNA)
+  maynard_reads_fractions <- rbind(maynard_reads_fractions, list("convetional Dendritic cells", mean(maynard_reads_fractions[maynard_reads_fractions$type %in% c("conventional Dendritic cells 2", "conventional Dendritic cells 1"),]$mRNA)))
+  maynard_reads_fractions <- rbind(maynard_reads_fractions, list("Fibroblasts", mean(maynard_reads_fractions[maynard_reads_fractions$type %in% c("Fibroblast adventitial", "Fibroblast alevolar"),]$mRNA)))
   
   
   rm(mat)
@@ -49,6 +191,8 @@ load_quantiseq <- function(){
   colnames(quantiseq) <- c("type","mRNA")
   quantiseq$type <- c("B cells","Macrophages","MacrophagesM2","Monocytes","Neutrophils","NK cells","T cells CD4","T cells CD8","T regulatory cells","Dendritic cells")
   
+  quantiseq <- rbind(quantiseq, list("T cells", mean(quantiseq[quantiseq$type %in% c("T cells CD4", "T cells CD8", "T regulatory cells"),]$mRNA)))
+
   return(quantiseq)
 }
 
@@ -90,41 +234,17 @@ load_vento_tormo <- function(){
   colnames(vento_tormo_reads) <- c("type","mRNA")
   vento_tormo_reads <- vento_tormo_reads[order(type)]
   vento_tormo_reads$type <- ordered_types
-
+  vento_tormo_reads<-rbind(vento_tormo_reads, list("NK cells", mean(vento_tormo_reads[vento_tormo_reads$type %in% c("NK cells CD16 -", "NK cells CD56bright CD16+/-","NK cells proliferating"),]$mRNA)))
+  vento_tormo_reads<-rbind(vento_tormo_reads, list("Fibroblasts", mean(vento_tormo_reads[vento_tormo_reads$type %in% c("Fibroblasts 1", "Fibroblasts 2"),]$mRNA)))
+  vento_tormo_reads<-rbind(vento_tormo_reads, list("Dendritic cells", mean(vento_tormo_reads[vento_tormo_reads$type %in% c("conventional Dendritic cells 1", "conventional Dendritic cells 2"),]$mRNA)))
+  
   vento_tormo_census <- meta[, mean(census), by=cell_type]
   colnames(vento_tormo_census) <- c("type","mRNA")
   vento_tormo_census <- vento_tormo_census[order(type)]
   vento_tormo_census$type <- ordered_types
-  
-  
-  # meta_blood <- meta[meta$location=="Blood"]
-  # meta_decidua <- meta[meta$location=="Decidua"]
-  
-  #separate calculations of mean for both tissues
-  # vento_tormo_blood_reads <- meta_blood[, mean(n_reads), by=cell_type]
-  # colnames(vento_tormo_blood_reads) <- c("type","mRNA")
-  # vento_tormo_blood_reads <- vento_tormo_blood_reads[order(type)]
-  # vento_tormo_blood_reads$type <- ordered_types_blood
-  # 
-  # vento_tormo_blood_census <- meta_blood[, mean(census), by=cell_type]
-  # colnames(vento_tormo_blood_census) <- c("type","mRNA")
-  # vento_tormo_blood_census <- vento_tormo_blood_census[order(type)]
-  # vento_tormo_blood_census$type <- ordered_types_blood
-  # 
-  # vento_tormo_decidua_reads <- meta_decidua[, mean(n_reads), by=cell_type]
-  # colnames(vento_tormo_decidua_reads) <- c("type","mRNA")
-  # vento_tormo_decidua_reads <- vento_tormo_decidua_reads[order(type)]
-  # vento_tormo_decidua_reads$type <- ordered_types_decidua
-  # 
-  # vento_tormo_decidua_census <- meta_decidua[, mean(census), by=cell_type]
-  # colnames(vento_tormo_decidua_census) <- c("type","mRNA")
-  # vento_tormo_decidua_census <- vento_tormo_decidua_census[order(type)]
-  # vento_tormo_decidua_census$type <- ordered_types_decidua
-  # 
-  # return(list(vento_tormo_blood_census=vento_tormo_blood_census,
-  #             vento_tormo_blood_reads=vento_tormo_blood_reads,
-  #             vento_tormo_decidua_census=vento_tormo_decidua_census,
-  #             vento_tormo_decidua_reads=vento_tormo_decidua_reads))
+  vento_tormo_census<-rbind(vento_tormo_census, list("NK cells", mean(vento_tormo_census[vento_tormo_census$type %in% c("NK cells CD16 -", "NK cells CD56bright CD16+/-","NK cells proliferating"),]$mRNA)))
+  vento_tormo_census<-rbind(vento_tormo_census, list("Fibroblasts", mean(vento_tormo_census[vento_tormo_census$type %in% c("Fibroblasts 1", "Fibroblasts 2"),]$mRNA)))
+  vento_tormo_census<-rbind(vento_tormo_census, list("Dendritic cells", mean(vento_tormo_census[vento_tormo_census$type %in% c("conventional Dendritic cells 1", "conventional Dendritic cells 2"),]$mRNA)))
   
   return(list(vento_tormo_census=vento_tormo_census,
               vento_tormo_reads=vento_tormo_reads))
@@ -156,6 +276,10 @@ load_vento_tormo_gene <- function(query_gene="ENSG00000126067"){
     colnames(expression_by_type) <- c("type","mRNA")
     expression_by_type <- expression_by_type[order(type)]
     expression_by_type$type <- ordered_types
+    expression_by_type<-rbind(expression_by_type, list("NK cells", mean(expression_by_type[expression_by_type$type %in% c("NK cells CD16 -", "NK cells CD56bright CD16+/-","NK cells proliferating"),]$mRNA)))
+    expression_by_type<-rbind(expression_by_type, list("Fibroblasts", mean(expression_by_type[expression_by_type$type %in% c("Fibroblasts 1", "Fibroblasts 2"),]$mRNA)))
+    expression_by_type<-rbind(expression_by_type, list("Dendritic cells", mean(expression_by_type[expression_by_type$type %in% c("conventional Dendritic cells 1", "conventional Dendritic cells 2"),]$mRNA)))
+    
     
     return(vento_tormo_query_gene=expression_by_type)
   }
@@ -218,6 +342,10 @@ load_hao <- function(){
   hao_reads$type <- ordered_types
   hao_census$type <- ordered_types
   
+  hao_reads <- rbind(hao_reads, list("Monocytes", mean(hao_reads[hao_reads$type %in% c("Monocytes CD14", "Monocytes CD16"),]$mRNA)))
+  hao_census <- rbind(hao_census, list("Monocytes", mean(hao_census[hao_census$type %in% c("Monocytes CD14", "Monocytes CD16"),]$mRNA)))
+  
+    
   return(list(hao_reads=hao_reads,
               hao_census=hao_census))
 }
@@ -262,6 +390,10 @@ load_hao_psmb2 <- function(){
       "plasmacytoid Dendritic cells"
     )
   mean_expr$type <- ordered_types
+  
+  mean_expr <- rbind(mean_expr, list("Monocytes", mean(mean_expr[mean_expr$type %in% c("Monocytes CD14", "Monocytes CD16"),]$mRNA)))
+  
+  
   return(hao_gene=mean_expr)
 }
 
@@ -292,5 +424,10 @@ hao_census <- hao$hao_census
 
 hao_psmb2 <- load_hao_psmb2()
 
-
+trivaglini <- load_trivaglini()
+trivaglini_reads <- trivaglini$trivaglini_reads
+trivaglini_spike <- trivaglini$trivaglini_spike
+trivaglini_ercc <- trivaglini$trivaglini_ercc
+trivaglini_ercc_total <- trivaglini$trivaglini_ercc_total
+trivaglini_genes_per_ercc <- trivaglini$trivaglini_genes_per_ercc
 
