@@ -152,7 +152,7 @@ cors <- unique(final[,c("combi_name","pearson_cor")])
 
 final$higher_level <- ifelse(startsWith(final$type_x, "T"),"T cell", "other")
 
-png(filename="../plots/scaling_factors_scatter.png", width=1800, height=1200)
+png(filename="../plots/scaling_factors_scatter.png", width=5000, height=3000)
 ggplot(final, aes(x=mRNA_y, y=mRNA_x))+
   geom_point(aes(color=type_x,shape=higher_level),size=6.5, alpha=0.8)+
   facet_wrap(~combi_name, scales = "free")+
@@ -197,7 +197,7 @@ corrplot(corr,
 
 
 ```{r}
-reference_type = "Monocytes"
+reference_type = "NK cells"
 custom_func <- function(x){
   return(x$mRNA/x[x$type==reference_type,]$mRNA)
 }

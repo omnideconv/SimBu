@@ -1,8 +1,10 @@
 library(parallel)
 
+# needs sparse matrix with cells in rows, genes in cols
 census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1, method=c("monocle","paper","t_estimate")){
   ncuts <- dim(matrix)[2]/1000
   
+  #split matrix into cuts, each cut is a fractions of genes wich are analyzed over all cells
   cuts<-split(seq_len(ncol(matrix)), cut(seq_len(ncol(matrix)), pretty(seq_len(ncol(matrix)), ncuts)))
   names(cuts) <- NULL
   
