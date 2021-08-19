@@ -36,8 +36,11 @@ setMethod(
     anno_df <- data.frame(cell_ID = new_ids, 
                           cell_ID.old = cells_m, 
                           cell_type = annotation[["cell_type"]],
-                          spike_in = ifelse(!is.null(spike_in_col), annotation[[spike_in_col]], NULL),
                           count_type = count_type)
+    
+    if(!is.null(spike_in_col)){
+      anno_df <- cbind(anno_df, spike_in=annotation[[spike_in_col]])
+    }
     
     .Object@annotation <- anno_df
     .Object@counts <- count_matrix
@@ -71,6 +74,7 @@ dataset <- function(annotation, count_matrix, name, count_type="TPM", spike_in_c
 dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in_col=NULL){
   
   #TODO check for valid file
+  h5ad_file <- normalizePath(h5ad_file)
   
   file_type <- file_ext(h5ad_file)
   if(file_type == "h5ad"){

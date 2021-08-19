@@ -61,7 +61,7 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
       spike_in_vector <- data@annotation[["spike_in"]]
       names(spike_in_vector) <- data@annotation$cell_ID
       spike_in_vector <- spike_in_vector[simulated_annotation$values]
-      
+      m <- t(t(m) * spike_in_vector)
     }
   }else if(scaling_factor == "custom"){
     #TODO
@@ -69,6 +69,7 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 
   # calculate the mean count/TPM value per gene to get a single pseudo-bulk sample
   simulated_count_vector <- rowMeans(m)
+  print("Finished sample ..")
   
   return(simulated_count_vector = simulated_count_vector)
   
@@ -83,12 +84,12 @@ simulate_bulk <- function(data,
                           scenario=c("noisy"), 
                           scaling_factor=c("NONE","census","spike-in","custom"), 
                           nsamples=100, 
+                          ncells=1000,
                           ncores = 1){
   
   # each existing cell-type will be appearing in equal amounts
   if(scenario == "noisy"){
     all_types <- unique(data@annotation[["cell_type"]])
-    n_cells <- 1000 #TODO make this an option
     simulation_vector <- rep(1/length(all_types), length(all_types))
     names(simulation_vector) <- all_types
     # duplicate this nsamples amount of times
@@ -99,15 +100,23 @@ simulate_bulk <- function(data,
   }
   
   # sample cells and generate pseudo-bulk profiles
+  idx <- 1
   bulk <- do.call(cbind, mclapply(simulation_vector_list, function(x){
-    simulate_sample(data=data, 
-                    scaling_factor = scaling_factor,
-                    simulation_vector = x,
-                    total_cells = n_cells,
-                    ncores=ncores)
+    sample<-simulate_sample(data=data, 
+                            scaling_factor = scaling_factor,
+                            simulation_vector = x,
+                            total_cells = n_cells,
+                            ncores=ncores)
+    
+    progress <- 100*(round(idx/length(simulation_vector_list), digits=3))
+    print(paste(progress,"%"))
+    idx <<- idx+1
+    
+    return(sample)
   }, mc.cores=ncores))
   
   colnames(bulk) <- sample_names
+
   
   return(list(pseudo_bulk = bulk,
               cell_fractions = simulation_vector_list))
@@ -116,40 +125,37 @@ simulate_bulk <- function(data,
 
 #### tests #####
 
-# tpm <- fread("/home/Data/Maynard/datasets_annotated/maynard_2020_annotated_fine/X_tpm.csv")
-# mat <- Matrix(as.matrix(tpm), sparse = T)
-# rm(tpm)
-# genes <- fread("/home/Data/Maynard/datasets_annotated/maynard_2020_annotated_fine/var.csv")
-# cells <- fread("/home/Data/Maynard/datasets_annotated/maynard_2020_annotated_fine/obs.csv")
-# cellnames <- cells$Run
-# genenames <- genes$symbol
-# dimnames(mat)<-list(cellnames, genenames)
-# mat <- t(mat)
-# 
-# meta_cells <- fread("/home/Data/Maynard/annotation_obs.csv")[,c("Run","cell_type")]
-# colnames(meta_cells) <- c("ID", "cell_type")
+counts_maynard <- Matrix(as.matrix(fread("~/ma/data/Maynard/X_tpm.csv")), sparse = T)
+genes <- fread("~/ma/data/Maynard/var.csv")
+cells <- fread("~/ma/data/Maynard/obs.csv")
+cellnames <- cells$Run
+genenames <- genes$symbol
+dimnames(counts_maynard)<-list(cellnames, genenames)
+counts_maynard <- t(counts_maynard)
 
-#ds1 <- dataset(meta_cells, mat, name = "Maynard1", count_type = "TPM")
-#ds2 <- dataset(meta_cells, mat, name = "Maynard2", count_type = "TPM")
-#ds3 <- dataset(meta_cells, mat, name = "Maynard3", count_type = "TPM")
+annotation_maynard <- fread("~/ma/data/Maynard/annotation_obs.csv")[,c("Run","cell_type")]
+colnames(annotation_maynard) <- c("ID", "cell_type")
 
-#db <- database(list(ds1,ds2,ds3))
+ds_m <- dataset(annotation_maynard, counts_maynard, name = "Maynard", count_type = "TPM")
 
-# annotation_travaglini <- fread("/home/Data/Travaglini/obs_extended.csv")
-# counts_travaglini <- "/home/Data/Travaglini/Travaglini_Krasnow_2020_Lung_SS2.h5ad"
-# 
-# ercc_cols <- grep("ERCC-",colnames(annotation_travaglini))
-# meta_red <- data.frame(annotation_travaglini)[ercc_cols]
-# meta_red$ercc_sum <- apply(meta_red,1,sum)
-# meta_red$cell_type <-annotation_travaglini$free_annotation
-# meta_red$total_reads <- annotation_travaglini$nReads
-# meta_red$genes <- annotation_travaglini$nGene
-# meta_red$ID <- annotation_travaglini$index
-# meta_red <- as.data.table(meta_red)
-# 
-# ds <- dataset_h5ad(meta_red, counts_travaglini, name = "Travaglini", spike_in_col = "ercc_sum")
+annotation_travaglini <- fread("~/ma/data/Travaglini/obs_extended.csv")
+counts_travaglini <- "~/ma/data/Travaglini/Travaglini_Krasnow_2020_Lung_SS2.h5ad"
 
-sim<-simulate_bulk(ds, scenario = "noisy", scaling_factor="spike_in",ncores=1)
+ercc_cols <- grep("ERCC-",colnames(annotation_travaglini))
+meta_red <- data.frame(annotation_travaglini)[ercc_cols]
+meta_red$ercc_sum <- apply(meta_red,1,sum)
+meta_red$cell_type <-annotation_travaglini$free_annotation
+meta_red$total_reads <- annotation_travaglini$nReads
+meta_red$genes <- annotation_travaglini$nGene
+meta_red$ID <- annotation_travaglini$index
+meta_red <- as.data.table(meta_red)
+
+ds_t <- dataset_h5ad(meta_red, counts_travaglini, name = "Travaglini", spike_in_col = "ercc_sum")
+
+
+db <- database(list(ds_m, ds_t))
+
+sim<-simulate_bulk(db, scenario = "noisy", scaling_factor="census",ncores=4, ncells=5000) 
 
 # sim$pseudo_bulk %>%
 #   as.data.frame() %>%

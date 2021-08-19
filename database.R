@@ -31,7 +31,12 @@ setMethod(
     count_matrix <- do.call(cbind, count_matrices)
     
     # combine all annotation dataframes to a single dataframe
-    anno_df <- rbindlist(lapply(dataset_list, function(x){x@annotation}))
+    anno_df <- rbindlist(lapply(dataset_list, function(x){x@annotation}), fill = T)
+    
+    # check if there is a spike-in value for each sample; else cannot use it
+    if(sum(is.na(anno_df[["spike_in"]])) > 0){
+      anno_df[["spike_in"]] <- NULL
+    }
     
     #TODO make cell-type names uniform over all datasets
     
@@ -53,4 +58,8 @@ database <- function(dataset_list){
 # add a single dataset to an existing database
 add_dataset <- function(database, dataset){
   #TODO
+}
+
+merge_cell_types <- function(database){
+  
 }
