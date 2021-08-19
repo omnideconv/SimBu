@@ -17,6 +17,12 @@ RUN R -e "BiocManager::install(c('monocle'))"
 RUN R -e "install.packages(c('hdf5r','ggplot2','data.table','Matrix','ggpubr','Hmisc','R.utils'))"
 RUN R -e "install.packages(c('Seurat','Rcpp','remotes'))"
 RUN R -e "remotes::install_github('mojaveazure/seurat-disk')"
+RUN R -e "install.packages('anndata')"
+RUN R -e "reticulate::install_miniconda()"
+RUN R -e "anndata::install_anndata()"
+
+RUN chmod 777 /root
+RUN chown -R rstudio:rstudio /root
 
 
 #docker run --rm -d -p 127.0.0.1:9999:8787 -v /home/alex/Documents/Studium_Bioinformatik/Master/Masterarbeit/Data:/home/Data -v /home/alex/Documents/Studium_Bioinformatik/Master/Masterarbeit/simulator:/home/simulator -e ROOT=TRUE -e PASSWORD=123456 --name rstudio9999 r_simulator

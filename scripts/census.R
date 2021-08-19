@@ -1,10 +1,10 @@
 library(parallel)
 
-# needs sparse matrix with cells in rows, genes in cols
+# needs sparse matrix with cells in cols, genes in rows
 census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1, method=c("monocle","paper","t_estimate")){
   ncuts <- dim(matrix)[2]/1000
   
-  #split matrix into cuts, each cut is a fractions of genes wich are analyzed over all cells
+  #split matrix into cuts, each cut is a fractions of genes which are analyzed over all cells
   cuts<-split(seq_len(ncol(matrix)), cut(seq_len(ncol(matrix)), pretty(seq_len(ncol(matrix)), ncuts)))
   names(cuts) <- NULL
   
@@ -43,12 +43,12 @@ calc_xi <- function(expr_matrix, expr_threshold){
 
 census_monocle <- function(expr_matrix, exp_capture_rate, expr_threshold){
   
-  cells <- dim(expr_matrix)[2]
+  cells <- dim(expr_matrix)[1]
   i <- 1
   # iterate over all cells
   total <- unlist(apply(expr_matrix, 2, function(x){
     tryCatch({
-      # Find the most commonly occuring (log-transformed) TPM value in each cell above a threshold
+      # Find the most commonly occurring (log-transformed) TPM value in each cell above a threshold
       t_estimate <- 10^mean(dmode(log10(x[x > expr_threshold])))
       # only consider genes with TPM > 0.1; below this, no mRNA is believed to be present
       #x <- x[x > 0.1]
@@ -113,5 +113,5 @@ dmode <- function(x, breaks="Sturges") {
 
 
 
-
-
+#census(t(m), expr_threshold = 0.1,ncores=1, method="monocle")
+#maynard_census_1 <- census(t(mat), expr_threshold = 0.1,ncores=1, method="monocle")
