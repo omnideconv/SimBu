@@ -1,7 +1,7 @@
 ###### dataset ######
 
 # class for the dataset
-# annotation_db = a single dataframe with cell-type annotation of each cell in DB
+# annotation_db = a single dataframe with cell-type annotation of each cell in dataset
 # counts_db = a sparse matrix for the counts
 # name = name of the dataset
 setClass("dataset", slots=list(annotation="data.frame", 
@@ -94,4 +94,30 @@ dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in
       count_type=count_type, 
       spike_in_col=spike_in_col
   )
+}
+
+# constructor for dataset
+# seurat_obj = seurat object
+# annotation = dataframe; needs columns ID and cell_type
+#              ID needs to be equal to cell-name in mat
+# name = name of dataset, will be used for unique ID of cells
+# count_type = which types of counts are you providing? (TPM, gene_counts, RPKM, read_counts)
+dataset_seurat <- function(annotation, seurat_obj, name, count_type ="TPM",spike_in_col=NULL){
+  
+  tryCatch({
+    count_matrix <- seurat_obj@assays$RNA@counts
+  }, error=function(e){
+    stop(paste("Could not access counts or annotation from Seurat object: ", e))
+    return(NULL)
+  })
+  
+  new(Class="dataset", 
+      annotation=annotation, 
+      count_matrix=count_matrix, 
+      name=name, 
+      count_type=count_type, 
+      spike_in_col=spike_in_col
+  )
+  
+  
 }

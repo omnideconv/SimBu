@@ -81,11 +81,16 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 # scenario = pre-defined cell-type fractions
 # nsamples = number of pseudo-bulk samples to be generated
 simulate_bulk <- function(data, 
-                          scenario=c("noisy"), 
-                          scaling_factor=c("NONE","census","spike-in","custom"), 
+                          scenario=c("noisy","random","spike-in","spill-over"), 
+                          scaling_factor=c("NONE","census","spike-in","custom"),
+                          spike_in_cell_type = NULL,
+                          spike_in_amount = NULL,
+                          spillover_cell_type = NULL,
                           nsamples=100, 
                           ncells=1000,
                           ncores = 1){
+  
+  ##### different cell-type scenarios #####
   
   # each existing cell-type will be appearing in equal amounts
   if(scenario == "noisy"){
@@ -98,6 +103,66 @@ simulate_bulk <- function(data,
     sample_names <- paste0("noisy_sample",rep(1:nsamples))
     names(simulation_vector_list) <- sample_names
   }
+  # generate random cell-type fractions (depending on appearence in database)
+  if(scenario == "random"){
+    # generate 'nsamples' random samples
+    simulation_vector_list <- lapply(rep(1:nsamples), function(x){
+      # sample 'ncells' times from the different cell-types to get a random profile of all cell-types
+      simulation_vector <- table(sample(unique(data@annotation$cell_type), size = ncells, replace = T))/ncells
+      names <- names(simulation_vector)
+      simulation_vector <- as.vector(simulation_vector)
+      names(simulation_vector) <- names
+      return(simulation_vector)
+    })
+    sample_names <- paste0("random_sample", rep(1:nsamples))
+    names(simulation_vector_list) <- sample_names
+  }
+  # one cell-type will be highly over represented, the others are random
+  if(scenario == "spike-in"){
+    
+    if(is.null(spike_in_cell_type) || is.null(spike_in_amount)){
+      stop("The spike-in scenario requires you to select one cell-type which will be over represented")
+    }
+    if(spike_in_amount > 0.99 || spike_in_amount < 0){
+      stop("The spike-in cell-type fraction needs to be between 0 and 0.99.")
+    }
+    if(!spike_in_cell_type %in% unique(data@annotation$cell_type)){
+      stop("The spike-in cell-type could not be found in your dataset/database.")
+    }
+    
+    n_spike_in_cells <- ncells * spike_in_amount   # this is how many cells will be of type spike-in
+    random_cells <- ncells - n_spike_in_cells      # this is how many cells will be of type random
+    # generate random samples 
+    simulation_vector_list <- lapply(rep(1:nsamples), function(x){
+      # sample 'random_cells' times from the different cell-types to get a random profile of all cell-types except spike-in type
+      possible_cell_types <- setdiff(unique(data@annotation$cell_type), spike_in_cell_type)
+      simulation_vector <- (table(sample(possible_cell_types, size = random_cells, replace = T))/random_cells)*(1-spike_in_amount)
+      names <- names(simulation_vector)
+      simulation_vector <- as.vector(simulation_vector)
+      names(simulation_vector) <- names
+      simulation_vector <-c(simulation_vector, spike_in_amount)  
+      names(simulation_vector)[length(simulation_vector)] <- as.character(spike_in_cell_type)
+      return(simulation_vector) 
+    })
+    sample_names <- paste0("spike_in_sample", rep(1:nsamples))
+    names(simulation_vector_list) <- sample_names
+  }
+  # spill-over: only simulate a single cell-type
+  if(scenario == "spill-over"){
+    if(is.null(spillover_cell_type)){
+      stop("The spill-over scenario requires you to select a cell-type which will be simulated")
+    }
+    
+    simulation_vector_list <- lapply(rep(1:nsamples), function(x){
+      simulation_vector <- c(1)
+      names(simulation_vector) <- as.character(spillover_cell_type)
+      return(simulation_vector)
+    })
+    sample_names <- paste0("spillover_sample", rep(1:nsamples))
+    names(simulation_vector_list) <- sample_names
+  }
+  
+  ##### generate the samples #####
   
   # sample cells and generate pseudo-bulk profiles
   idx <- 1
@@ -105,7 +170,7 @@ simulate_bulk <- function(data,
     sample<-simulate_sample(data=data, 
                             scaling_factor = scaling_factor,
                             simulation_vector = x,
-                            total_cells = n_cells,
+                            total_cells = ncells,
                             ncores=ncores)
     
     progress <- 100*(round(idx/length(simulation_vector_list), digits=3))
@@ -152,10 +217,16 @@ meta_red <- as.data.table(meta_red)
 
 ds_t <- dataset_h5ad(meta_red, counts_travaglini, name = "Travaglini", spike_in_col = "ercc_sum")
 
-
 db <- database(list(ds_m, ds_t))
 
-sim<-simulate_bulk(db, scenario = "noisy", scaling_factor="census",ncores=4, ncells=5000) 
+sim<-simulate_bulk(db, 
+                   scenario = "spike-in", 
+                   scaling_factor="NONE", 
+                   spike_in_cell_type="B cell", 
+                   spike_in_amount = 0.5, 
+                   ncores=4, 
+                   ncells=500, 
+                   nsamples=100) 
 
 # sim$pseudo_bulk %>%
 #   as.data.frame() %>%
