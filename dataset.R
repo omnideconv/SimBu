@@ -12,7 +12,7 @@ setClass("dataset", slots=list(annotation="data.frame",
 setMethod(
   f="initialize",
   signature="dataset",
-  definition = function(.Object, annotation, count_matrix, name, count_type, spike_in_col){
+  definition = function(.Object, annotation, count_matrix, name, count_type, spike_in_col, whitelist){
     genes <- rownames(count_matrix)
     cells_m <- colnames(count_matrix)
     cells_a <- annotation[["ID"]]
@@ -26,6 +26,15 @@ setMethod(
     }
     if(!all(cells_a %in% cells_m)){
       stop("The cell IDs in the annotation and count matrix do not correspond.")
+    }
+    # remove all cells which are not in the whitelist of cell-types from annotation & count matrix
+    if(!is.null(whitelist)){
+      annotation <- annotation[annotation[["cell_type"]] %in% whitelist]
+      if(length(annotation) == 0){
+        stop("No cells are left after using this whitelist; please check that the correct names are used.")
+      }
+      remaining_cells <- annotation[["ID"]]
+      count_matrix <- count_matrix[,remaining_cells]
     }
     
     # generate new IDs for the cells and replace them in the count table
