@@ -64,13 +64,14 @@ setMethod(
 #              ID needs to be equal to cell-name in mat
 # name = name of dataset, will be used for unique ID of cells
 # count_type = which types of counts are you providing? (TPM, gene_counts, RPKM, read_counts)
-dataset <- function(annotation, count_matrix, name, count_type="TPM", spike_in_col=NULL){
+dataset <- function(annotation, count_matrix, name, count_type="TPM", spike_in_col=NULL, whitelist=NULL){
   new(Class="dataset", 
       annotation=annotation, 
       count_matrix=count_matrix, 
       name=name, 
       count_type=count_type, 
-      spike_in_col=spike_in_col
+      spike_in_col=spike_in_col,
+      whitelist=whitelist
      )
 }
 
@@ -80,7 +81,7 @@ dataset <- function(annotation, count_matrix, name, count_type="TPM", spike_in_c
 #              ID needs to be equal to cell-name in mat
 # name = name of dataset, will be used for unique ID of cells
 # count_type = which types of counts are you providing? (TPM, gene_counts, RPKM, read_counts)
-dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in_col=NULL){
+dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in_col=NULL, whitelist=NULL){
   
   #TODO check for valid file
   h5ad_file <- normalizePath(h5ad_file)
@@ -101,7 +102,8 @@ dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in
       count_matrix=X_mat, 
       name=name, 
       count_type=count_type, 
-      spike_in_col=spike_in_col
+      spike_in_col=spike_in_col,
+      whitelist=whitelist
   )
 }
 
@@ -111,7 +113,7 @@ dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in
 #              ID needs to be equal to cell-name in mat
 # name = name of dataset, will be used for unique ID of cells
 # count_type = which types of counts are you providing? (TPM, gene_counts, RPKM, read_counts)
-dataset_seurat <- function(annotation, seurat_obj, name, count_type ="TPM",spike_in_col=NULL){
+dataset_seurat <- function(annotation, seurat_obj, name, count_type ="TPM",spike_in_col=NULL, whitelist=NULL){
   
   tryCatch({
     count_matrix <- seurat_obj@assays$RNA@counts
@@ -125,7 +127,8 @@ dataset_seurat <- function(annotation, seurat_obj, name, count_type ="TPM",spike
       count_matrix=count_matrix, 
       name=name, 
       count_type=count_type, 
-      spike_in_col=spike_in_col
+      spike_in_col=spike_in_col,
+      whitelist=whitelist
   )
   
   

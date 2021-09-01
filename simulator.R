@@ -4,6 +4,7 @@ library(Matrix)
 library(Seurat)
 library(anndata)
 library(tools)
+library(Biobase)
 source("scripts/census.R")
 source("dataset.R")
 source("database.R")
@@ -69,7 +70,6 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 
   # calculate the mean count/TPM value per gene to get a single pseudo-bulk sample
   simulated_count_vector <- rowMeans(m)
-  print("Finished sample ..")
   
   return(simulated_count_vector = simulated_count_vector)
   
@@ -108,7 +108,7 @@ simulate_bulk <- function(data,
     # generate 'nsamples' random samples
     simulation_vector_list <- lapply(rep(1:nsamples), function(x){
       # sample 'ncells' times from the different cell-types to get a random profile of all cell-types
-      simulation_vector <- table(sample(unique(data@annotation$cell_type), size = ncells, replace = T))/ncells
+      simulation_vector <- table(sample(unique(data@annotation[["cell_type"]]), size = ncells, replace = T))/ncells
       names <- names(simulation_vector)
       simulation_vector <- as.vector(simulation_vector)
       names(simulation_vector) <- names
@@ -126,7 +126,7 @@ simulate_bulk <- function(data,
     if(spike_in_amount > 0.99 || spike_in_amount < 0){
       stop("The spike-in cell-type fraction needs to be between 0 and 0.99.")
     }
-    if(!spike_in_cell_type %in% unique(data@annotation$cell_type)){
+    if(!spike_in_cell_type %in% unique(data@annotation[["cell_type"]])){
       stop("The spike-in cell-type could not be found in your dataset/database.")
     }
     
@@ -135,7 +135,7 @@ simulate_bulk <- function(data,
     # generate random samples 
     simulation_vector_list <- lapply(rep(1:nsamples), function(x){
       # sample 'random_cells' times from the different cell-types to get a random profile of all cell-types except spike-in type
-      possible_cell_types <- setdiff(unique(data@annotation$cell_type), spike_in_cell_type)
+      possible_cell_types <- setdiff(unique(data@annotation[["cell_type"]]), spike_in_cell_type)
       simulation_vector <- (table(sample(possible_cell_types, size = random_cells, replace = T))/random_cells)*(1-spike_in_amount)
       names <- names(simulation_vector)
       simulation_vector <- as.vector(simulation_vector)
@@ -166,72 +166,38 @@ simulate_bulk <- function(data,
   
   # sample cells and generate pseudo-bulk profiles
   idx <- 1
-  bulk <- do.call(cbind, mclapply(simulation_vector_list, function(x){
+  cell_fractions <- data.frame(types=unique(data@annotation[["cell_type"]]))
+  bulk <- do.call(cbind, lapply(simulation_vector_list, function(x){
     sample<-simulate_sample(data=data, 
                             scaling_factor = scaling_factor,
                             simulation_vector = x,
                             total_cells = ncells,
                             ncores=ncores)
+    # # add a new column to cell fractions dataframe for this sample
+    cell_fractions <<- suppressWarnings(merge(cell_fractions, as.data.frame(x), all=T, by.x = "types", by.y=0))
     
     progress <- 100*(round(idx/length(simulation_vector_list), digits=3))
     print(paste(progress,"%"))
     idx <<- idx+1
     
     return(sample)
-  }, mc.cores=ncores))
+  }))
   
   colnames(bulk) <- sample_names
+  
+  rownames(cell_fractions) <- cell_fractions[["types"]]
+  cell_fractions[["types"]] <- NULL
+  colnames(cell_fractions) <- sample_names
+  cell_fractions <- data.frame(t(cell_fractions))
 
+  # build bioconductor expression set
+  expr_set <- ExpressionSet(assayData = bulk,
+                            phenoData = new("AnnotatedDataFrame", data=cell_fractions))
   
   return(list(pseudo_bulk = bulk,
-              cell_fractions = simulation_vector_list))
+              cell_fractions = cell_fractions,
+              expression_set = expr_set))
   
 }
 
-#### tests #####
 
-counts_maynard <- Matrix(as.matrix(fread("~/ma/data/Maynard/X_tpm.csv")), sparse = T)
-genes <- fread("~/ma/data/Maynard/var.csv")
-cells <- fread("~/ma/data/Maynard/obs.csv")
-cellnames <- cells$Run
-genenames <- genes$symbol
-dimnames(counts_maynard)<-list(cellnames, genenames)
-counts_maynard <- t(counts_maynard)
-
-annotation_maynard <- fread("~/ma/data/Maynard/annotation_obs.csv")[,c("Run","cell_type")]
-colnames(annotation_maynard) <- c("ID", "cell_type")
-
-ds_m <- dataset(annotation_maynard, counts_maynard, name = "Maynard", count_type = "TPM")
-
-annotation_travaglini <- fread("~/ma/data/Travaglini/obs_extended.csv")
-counts_travaglini <- "~/ma/data/Travaglini/Travaglini_Krasnow_2020_Lung_SS2.h5ad"
-
-ercc_cols <- grep("ERCC-",colnames(annotation_travaglini))
-meta_red <- data.frame(annotation_travaglini)[ercc_cols]
-meta_red$ercc_sum <- apply(meta_red,1,sum)
-meta_red$cell_type <-annotation_travaglini$free_annotation
-meta_red$total_reads <- annotation_travaglini$nReads
-meta_red$genes <- annotation_travaglini$nGene
-meta_red$ID <- annotation_travaglini$index
-meta_red <- as.data.table(meta_red)
-
-ds_t <- dataset_h5ad(meta_red, counts_travaglini, name = "Travaglini", spike_in_col = "ercc_sum")
-
-db <- database(list(ds_m, ds_t))
-
-sim<-simulate_bulk(db, 
-                   scenario = "spike-in", 
-                   scaling_factor="NONE", 
-                   spike_in_cell_type="B cell", 
-                   spike_in_amount = 0.5, 
-                   ncores=4, 
-                   ncells=500, 
-                   nsamples=100) 
-
-# sim$pseudo_bulk %>%
-#   as.data.frame() %>%
-#   rownames_to_column("gene") %>%
-#   pivot_longer(-c(gene), names_to = "samples", values_to = "counts") %>%
-#   ggplot(aes(x=samples,y=gene,fill=counts))+
-#   geom_raster()+
-#   scale_fill_viridis_c()
