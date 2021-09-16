@@ -142,8 +142,7 @@ dataset_seurat <- function(annotation, seurat_obj, name, count_type ="TPM",spike
 # annotation_column = name of column in annotation with cell-types
 dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="TPM", 
                            spike_in_col=NULL, whitelist=NULL, 
-                           annotation_column= "cell_ontology_class", 
-                           id_column ="cell"){
+                           annotation_column, id_column){
   
   if(is.null(sfaira_setup)){
     warning(paste0("You need to setup sfaira first; please use setup_sfaira() to do so."))
@@ -166,7 +165,7 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="TPM",
 
 
 # check for correct column names in annotation file and replace them if neccesary 
-check_annotation <- function(annotation, cell_column="cell_type", id_column="ID"){
+check_annotation <- function(annotation, cell_column="cell_type", id_column=1){
   
   # check the ID column
   if(id_column == 1){

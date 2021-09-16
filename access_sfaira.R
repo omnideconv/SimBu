@@ -42,12 +42,49 @@ download_sfaira <- function(setup_list, id, force=F){
       warning("The downloaded dataset has no annotation; you can force the download regardless with force=TRUE.")
       return(NULL)
     }
-    adata <- ds$adata
+    #streamline features & meta-data
+    ds$adata
+    ds$datasets[[id]]$streamline_features(match_to_reference=list("human"= "Homo_sapiens.GRCh38.102", "mouse"= "Mus_musculus.GRCm38.102"))
+    ds$datasets[[id]]$streamline_metadata(schema="sfaira")
     return(adata)
   }, error = function(e){
-    print(paste0("Could not download dataset for id: ", id))
+    message(paste0("Could not download dataset for id: ", id))
     print(e$message)
     return(NULL)
   })
 
+}
+
+download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, assays=NULL, force=F){
+  sfaira <- setup_list[["sfaira"]]
+  ds <- sfaira$data$Universe(data_path = setup_list[["rawdir"]],
+                             meta_path = setup_list[["metadir"]],
+                             cache_path = setup_list[["cachedir"]])
+  
+  tryCatch({
+    
+    # apply filters on sfaira database
+    if(all(is.null(c(organism, tissue, assay)))) stop("You must specify at least one filter.", call.=F)
+    if(!is.null(organism)) {ds$subset(key="organism", value=organisms)}
+    if(!is.null(assays)) {ds$subset(key="assay_sc", value=assays)}
+    if(!is.null(tissues)) {ds$subset(key="organ", value=tissues)}
+    if(length(ds$datasets) == 0){stop("No datasets found with these filters; please check again", call.=F)}
+    
+    # only proceed with datasets with cell-type annotation
+    if(!force){
+      has_annotation <- lapply(ds$datasets, function(i){i$annotated})
+      annotated_sets <- names(has_annotation[which(as.logical(has_annotation))])
+      #TODO subset by annotation
+    }else{
+      warning("Some or all of the downloaded datasets have no annotation; this might get you into issues down the road.")
+    }
+
+    #streamline features and meta-data
+    ds$streamline_features(match_to_reference = )
+    
+  }, error=function(e){
+    message(paste0("Could not download all datasets for specified filters."))
+    print(e$message)
+    return(NULL)
+  })
 }
