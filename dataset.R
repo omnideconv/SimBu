@@ -35,6 +35,8 @@ setMethod(
       }
       remaining_cells <- annotation[["ID"]]
       count_matrix <- count_matrix[,remaining_cells]
+      cells_m <- colnames(count_matrix)
+      genes <- rownames(count_matrix)
     }
     
     # generate new IDs for the cells and replace them in the count table

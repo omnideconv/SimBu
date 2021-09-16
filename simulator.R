@@ -5,10 +5,13 @@ library(Seurat)
 library(anndata)
 library(tools)
 library(Biobase)
+library(reticulate)
+library(tidyr)
 source("scripts/census.R")
 source("dataset.R")
 source("database.R")
 #library(tidyverse)
+# needs python library sfaira
 
 
 ###### simulation ######
@@ -50,6 +53,7 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
   # apply selected scaling factor on each cell in matrix
   # this calculates a scaling vector (one value per cell) which will be applied to the matrix
   if(scaling_factor == "census"){
+    # TODO: does it make sense to calc census for all bulk samples combined? or keep it like this
     census_vector <- census(m, ncores = ncores, method="monocle", expr_threshold = 0.1)
     m <- t(t(m)/census_vector)
   }else if(scaling_factor == "spike_in"){
@@ -69,7 +73,7 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
   }
 
   # calculate the mean count/TPM value per gene to get a single pseudo-bulk sample
-  simulated_count_vector <- rowMeans(m)
+  simulated_count_vector <- rowMeans(as.matrix(m))
   
   return(simulated_count_vector = simulated_count_vector)
   
@@ -103,7 +107,7 @@ simulate_bulk <- function(data,
     sample_names <- paste0("noisy_sample",rep(1:nsamples))
     names(simulation_vector_list) <- sample_names
   }
-  # generate random cell-type fractions (depending on appearence in database)
+  # generate random cell-type fractions (depending on appearance in database)
   if(scenario == "random"){
     # generate 'nsamples' random samples
     simulation_vector_list <- lapply(rep(1:nsamples), function(x){
@@ -189,6 +193,9 @@ simulate_bulk <- function(data,
   cell_fractions[["types"]] <- NULL
   colnames(cell_fractions) <- sample_names
   cell_fractions <- data.frame(t(cell_fractions))
+  
+  # normalize count matrix to have TPM-like values
+  bulk <- tpm_normalize(bulk)
 
   # build bioconductor expression set
   expr_set <- ExpressionSet(assayData = bulk,
@@ -200,4 +207,12 @@ simulate_bulk <- function(data,
   
 }
 
+
+# normalize samples to one million -> TPM
+tpm_normalize <- function(matrix){
+  m <- t(1e6*t(matrix)/colSums(matrix))
+  m <- replace_na(m, 0)
+  
+  return(m)
+}
 
