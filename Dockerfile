@@ -20,9 +20,12 @@ RUN R -e "remotes::install_github('mojaveazure/seurat-disk')"
 RUN R -e "install.packages('anndata')"
 RUN R -e "reticulate::install_miniconda()"
 RUN R -e "anndata::install_anndata()"
+RUN R -e "install.packages(c('tidyr'))"
+RUN R -e "BiocManager::install('Biobase')"
 
-RUN chmod 777 /root
-RUN chown -R rstudio:rstudio /root
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir sfaira
 
+CMD ["/bin/bash"]
 
-#docker run --rm -d -p 127.0.0.1:9999:8787 -v /home/alex/Documents/Studium_Bioinformatik/Master/Masterarbeit/Data:/home/Data -v /home/alex/Documents/Studium_Bioinformatik/Master/Masterarbeit/simulator:/home/simulator -e ROOT=TRUE -e PASSWORD=123456 --name rstudio9999 r_simulator
+#docker run --rm -v /home/alex/Documents/Studium_Bioinformatik/Master/Masterarbeit/Data:/home/Data -v /home/alex/Documents/Studium_Bioinformatik/Master/Masterarbeit/simulator:/home/simulator --name r_simulator r_simulator

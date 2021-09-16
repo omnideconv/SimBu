@@ -132,6 +132,68 @@ dataset_seurat <- function(annotation, seurat_obj, name, count_type ="TPM",spike
       spike_in_col=spike_in_col,
       whitelist=whitelist
   )
+}
+
+
+# constructor for a dataset using a sfaira IDs
+# sfaira_id = ID of a dataset in the sfaira data-zoo
+# name      = name of dataset
+# ...
+# annotation_column = name of column in annotation with cell-types
+dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="TPM", 
+                           spike_in_col=NULL, whitelist=NULL, 
+                           annotation_column= "cell_ontology_class", 
+                           id_column ="cell"){
   
+  if(is.null(sfaira_setup)){
+    warning(paste0("You need to setup sfaira first; please use setup_sfaira() to do so."))
+    return(NULL)
+  }
+  adata <- download_sfaira(sfaira_setup, sfaira_id)
+  count_matrix <- Matrix::t(adata$X)
+  annotation <- check_annotation(adata$obs, cell_column = annotation_column, id_column=id_column)
   
+  new(Class="dataset", 
+      annotation=annotation, 
+      count_matrix=count_matrix, 
+      name=name, 
+      count_type=count_type, 
+      spike_in_col=spike_in_col,
+      whitelist=whitelist
+  )
+  
+}
+
+
+# check for correct column names in annotation file and replace them if neccesary 
+check_annotation <- function(annotation, cell_column="cell_type", id_column="ID"){
+  
+  # check the ID column
+  if(id_column == 1){
+    print("Using rownames for cell-IDs.")
+    annotation$ID <- rownames(annotation)
+  }else if(!"ID" %in% colnames(annotation)){
+    print("No \'ID\' column in the annotation file. Will use the supplied id_column name.")
+    if(!id_column %in% colnames(annotation)){
+      warning("Supplied id_column name does not exist in annotation. Possible column names are:")
+      print(colnames(annotation))
+      return(NULL)
+    }else{
+      colnames(annotation)[which(colnames(annotation) == id_column)] <- "ID"
+    }
+  }
+  
+  # check the cell_type column
+  if(!"cell_type" %in% colnames(annotation)){
+    print("No \'cell_type\' column in the annotation file. Will use the supplied cell_column name.")
+    if(!cell_column %in% colnames(annotation)){
+      warning("Supplied cell_column name does not exist in annotation. Possible column names are:")
+      print(colnames(annotation))
+      return(NULL)
+    }else{
+      colnames(annotation)[which(colnames(annotation) == cell_column)] <- "cell_type"
+    }
+  }
+  
+  return(annotation)
 }
