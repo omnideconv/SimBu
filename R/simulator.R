@@ -1,12 +1,14 @@
-library(parallel)
-library(data.table)
-library(Matrix)
-library(Seurat)
-library(anndata)
-library(tools)
-library(Biobase)
-library(reticulate)
-library(tidyr)
+require(parallel)
+require(data.table)
+require(Matrix)
+require(Seurat)
+require(anndata)
+require(tools)
+require(Biobase)
+require(reticulate)
+require(tidyr)
+require(tools)
+require(methods)
 #source("R/scripts/census.R")
 #source("R/dataset.R")
 #source("R/database.R")
@@ -51,7 +53,7 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 
   # annotation
   names(sampled_cells) <- names(simulation_vector)
-  simulated_annotation <- stack(sampled_cells)
+  simulated_annotation <- utils::stack(sampled_cells)
 
   # get the corresponding columns from the count matrix in the data
   m <- data@counts[, unlist(sampled_cells)]

@@ -78,7 +78,7 @@ setMethod(
 #'
 #' @examples
 dataset <- function(annotation, count_matrix, name, count_type="TPM", spike_in_col=NULL, whitelist=NULL){
-  new(Class="dataset",
+  methods::new(Class="dataset",
       annotation=annotation,
       count_matrix=count_matrix,
       name=name,
@@ -117,7 +117,7 @@ dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in
     stop("No valid file type; only h5ad is permitted")
   }
 
-  new(Class="dataset",
+  methods::new(Class="dataset",
       annotation=annotation,
       count_matrix=X_mat,
       name=name,
@@ -130,7 +130,7 @@ dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in
 #' constructor for dataset using a seurat object for the counts
 #'
 #' @param annotation dataframe; needs columns 'ID' and 'cell_type'; 'ID' needs to be equal with cell_names in count_matrix
-#' @param seurat_obj \code{\link{[Seurat]} object; needs to have counts at position assays$RNA$counts
+#' @param seurat_obj Seurat object; needs to have counts at position assays$RNA$counts
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
@@ -149,7 +149,7 @@ dataset_seurat <- function(annotation, seurat_obj, name, count_type ="TPM",spike
     return(NULL)
   })
 
-  new(Class="dataset",
+  methods::new(Class="dataset",
       annotation=annotation,
       count_matrix=count_matrix,
       name=name,
@@ -186,7 +186,7 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="TPM",
   count_matrix <- Matrix::t(adata$X)
   annotation <- check_annotation(adata$obs, cell_column = annotation_column, id_column=id_column)
 
-  new(Class="dataset",
+  methods::new(Class="dataset",
       annotation=annotation,
       count_matrix=count_matrix,
       name=name,

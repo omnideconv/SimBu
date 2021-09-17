@@ -44,7 +44,7 @@ setup_sfaira <- function(python_path, env_name, basedir){
 #' @return a anndata object, stores counts, metadata and other information on the dataset
 #' @export
 #'
-#' @examples download_sfaira(setup_list, 'mouse_pancreas_2019_smartseq2_pisco_029_10.1038/s41586-020-2496-1')
+#' @examples
 download_sfaira <- function(setup_list, id, force=F){
   sfaira <- setup_list[["sfaira"]]
   ds <- sfaira$data$Universe(data_path = setup_list[["rawdir"]],
@@ -66,7 +66,7 @@ download_sfaira <- function(setup_list, id, force=F){
     ds$adata
     ds$datasets[[id]]$streamline_features(match_to_reference=list("human"= "Homo_sapiens.GRCh38.102", "mouse"= "Mus_musculus.GRCm38.102"))
     ds$datasets[[id]]$streamline_metadata(schema="sfaira")
-    return(adata)
+    return(ds$datasets[[id]]$adata)
   }, error = function(e){
     message(paste0("Could not download dataset for id: ", id))
     print(e$message)
@@ -86,7 +86,7 @@ download_sfaira <- function(setup_list, id, force=F){
 #' @return
 #' @export
 #'
-#' @examples download_sfaira_multiple(setup_list, organisms = c("mouse"), tissues = c("pancreas","lung"), assays = c("10x sequencing"))
+#' @examples
 download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, assays=NULL, force=F){
   sfaira <- setup_list[["sfaira"]]
   ds <- sfaira$data$Universe(data_path = setup_list[["rawdir"]],

@@ -19,6 +19,3 @@ a anndata object, stores counts, metadata and other information on the dataset
 \description{
 download a specific dataset from sfaira by an ID
 }
-\examples{
-download_sfaira(setup_list, 'mouse_pancreas_2019_smartseq2_pisco_029_10.1038/s41586-020-2496-1')
-}

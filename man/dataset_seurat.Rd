@@ -16,6 +16,8 @@ dataset_seurat(
 \arguments{
 \item{annotation}{dataframe; needs columns 'ID' and 'cell_type'; 'ID' needs to be equal with cell_names in count_matrix}
 
+\item{seurat_obj}{Seurat object; needs to have counts at position assays$RNA$counts}
+
 \item{name}{name of the dataset; will be used for new unique IDs of cells}
 
 \item{count_type}{what type of counts are in the dataset; default is 'TPM'}

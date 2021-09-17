@@ -13,9 +13,9 @@ class for a database (multiple datasets)
 \section{Slots}{
 
 \describe{
-\item{\code{annotation}}{data.frame. a single dataframe with cell-type annotation of each cell in database}
-
 \item{\code{counts}}{Matrix. a sparse matrix for the counts}
+
+\item{\code{annotation}}{data.frame. a single dataframe with cell-type annotation of each cell in database}
 
 \item{\code{size}}{numeric. how many datasets are stored in the database object}
 }}

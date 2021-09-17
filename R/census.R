@@ -64,7 +64,7 @@ census_monocle <- function(expr_matrix, exp_capture_rate, expr_threshold){
       #x <- x[x > 0.1]
       x <- x[x > expr_threshold]
       # calculate cumulative distribution function of gene expression values in cell
-      P <- ecdf(x)
+      P <- stats::ecdf(x)
       # identify peak of distribution by looking at most common TPM value
       frac_x <- P(t_estimate)
       # find all genes with single mRNA
@@ -94,7 +94,7 @@ census_paper <- function(expr_matrix, exp_capture_rate, expr_threshold){
         # only consider genes with TPM > 0.1; below this, no mRNA is believed to be present
         x <- x[x>expr_threshold]
         # calculate cumulative distribution function of gene expression values in cell
-        P <- ecdf(x)
+        P <- stats::ecdf(x)
 
         F_x_star <- P(x_star)
         F_x_epsilon <- P(expr_threshold)

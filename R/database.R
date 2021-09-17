@@ -1,13 +1,12 @@
 #' class for a database (multiple datasets)
 #'
-#' @slot annotation data.frame. a single dataframe with cell-type annotation of each cell in database
 #' @slot counts Matrix. a sparse matrix for the counts
+#' @slot annotation data.frame. a single dataframe with cell-type annotation of each cell in database
 #' @slot size numeric. how many datasets are stored in the database object
 #'
 #' @return a database object
 #' @export
 #'
-#' @examples
 setClass("database", slots=list(annotation="data.frame",
                                 counts="Matrix",
                                 size="numeric"))
@@ -63,7 +62,7 @@ setMethod(
 #'
 #' @examples
 database <- function(dataset_list){
-  new(Class="database", dataset_list = dataset_list)
+  methods::new(Class="database", dataset_list = dataset_list)
 }
 
 

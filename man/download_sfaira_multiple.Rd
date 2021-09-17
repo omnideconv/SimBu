@@ -29,6 +29,3 @@ download_sfaira_multiple(
 \description{
 download multiple datasets from sfaira using filters for organism, tissue and/or assay; similar to the filters on the sfaira website (\url{https://theislab.github.io/sfaira-portal/Datasets})
 }
-\examples{
-download_sfaira_multiple(setup_list, organisms = c("mouse"), tissues = c("pancreas","lung"), assays = c("10x sequencing"))
-}
