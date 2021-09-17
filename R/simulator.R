@@ -7,9 +7,9 @@ library(tools)
 library(Biobase)
 library(reticulate)
 library(tidyr)
-source("R/scripts/census.R")
-source("R/dataset.R")
-source("R/database.R")
+#source("R/scripts/census.R")
+#source("R/dataset.R")
+#source("R/database.R")
 # needs python library sfaira
 
 
