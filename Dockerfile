@@ -23,8 +23,14 @@ RUN R -e "anndata::install_anndata()"
 RUN R -e "install.packages(c('tidyr'))"
 RUN R -e "BiocManager::install('Biobase')"
 
+# install sfaira dev version; release does not work currently, will have to check again at later point
+WORKDIR /opt
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir sfaira
+    git clone https://github.com/theislab/sfaira.git && \
+    cd sfaira && \
+    git checkout dev && \
+    git pull && \
+    pip install -e .
 
 CMD ["/bin/bash"]
 

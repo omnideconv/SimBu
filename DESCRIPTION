@@ -1,0 +1,15 @@
+Package: simulator
+Title: Simulate bulk RNA-seq datasets from single-cell datasets
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Alexander",
+           family = "Dietrich",
+           role = c("aut", "cre"),
+           email = "dietrich.alexander1310@gmail.com")
+Description: This package can be used to simulate bulk RNA-seq datasets. 
+You can either use your own single-cell study for the simulation or the sfaira database.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
