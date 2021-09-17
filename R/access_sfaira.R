@@ -35,6 +35,16 @@ setup_sfaira <- function(python_path, env_name, basedir){
 
 # download from sfaira
 # force = force function to return, even though no annotation exists
+#' download a specific dataset from sfaira by an ID
+#'
+#' @param setup_list the sfaira setup; given by \code{\link{setup_sfaira}}
+#' @param id the ID of the datasets
+#' @param force logical; TRUE if you want to force the download, even though no cell-type annotation exists for this dataset. Default if FALSE
+#'
+#' @return a anndata object, stores counts, metadata and other information on the dataset
+#' @export
+#'
+#' @examples download_sfaira(setup_list, 'mouse_pancreas_2019_smartseq2_pisco_029_10.1038/s41586-020-2496-1')
 download_sfaira <- function(setup_list, id, force=F){
   sfaira <- setup_list[["sfaira"]]
   ds <- sfaira$data$Universe(data_path = setup_list[["rawdir"]],
@@ -65,6 +75,18 @@ download_sfaira <- function(setup_list, id, force=F){
 
 }
 
+#' download multiple datasets from sfaira using filters for organism, tissue and/or assay; similar to the filters on the sfaira website (\url{https://theislab.github.io/sfaira-portal/Datasets})
+#'
+#' @param setup_list the sfaira setup; given by \code{\link{setup_sfaira}}
+#' @param organisms list of organisms (only human and mouse available)
+#' @param tissues list of tissues
+#' @param assays list of assays
+#' @param force logical; TRUE if you want to force to download all datasets, otherwise only the ones with cell-type annotation will be returned. Default if FALSE
+#'
+#' @return
+#' @export
+#'
+#' @examples download_sfaira_multiple(setup_list, organisms = c("mouse"), tissues = c("pancreas","lung"), assays = c("10x sequencing"))
 download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, assays=NULL, force=F){
   sfaira <- setup_list[["sfaira"]]
   ds <- sfaira$data$Universe(data_path = setup_list[["rawdir"]],

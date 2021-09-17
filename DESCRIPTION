@@ -6,8 +6,7 @@ Authors@R:
            family = "Dietrich",
            role = c("aut", "cre"),
            email = "dietrich.alexander1310@gmail.com")
-Description: This package can be used to simulate bulk RNA-seq datasets. 
-You can either use your own single-cell study for the simulation or the sfaira database.
+Description: This package can be used to simulate bulk RNA-seq datasets. You can either use your own single-cell study for the simulation or the sfaira database.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
