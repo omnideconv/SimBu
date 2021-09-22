@@ -21,7 +21,7 @@ census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1, me
   idx <- 1
   out <- unlist(mclapply(cuts, function(x){
     x <- unlist(x, use.names = F)
-    chunk <- matrix[,x]
+    chunk <- Matrix(matrix[,x])
     if(method == "monocle"){
       cen <- census_monocle(chunk, exp_capture_rate=exp_capture_rate, expr_threshold=expr_threshold)
     }else if (method == "paper"){

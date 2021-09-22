@@ -62,8 +62,8 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
   # this calculates a scaling vector (one value per cell) which will be applied to the matrix
   if(scaling_factor == "census"){
     # TODO: does it make sense to calc census for all bulk samples combined? or keep it like this
-    census_vector <- census(m, ncores = ncores, method="monocle", expr_threshold = 0.1)
-    m <- t(t(m)/census_vector)
+    census_vector <- census(m, ncores = ncores, method="monocle", expr_threshold = 1)
+    m <- m*(census_vector/10e6)
   }else if(scaling_factor == "spike_in"){
     # if you want to transform your counts by spike-in data, an additional column in the annotation table is needed
     # with name "spike-in"; the matrix counts will then be transformed accordingly
@@ -95,7 +95,7 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 #' simulate whole pseudo-bulk RNAseq dataset
 #'
 #' @param data \code{\link{database}} or \code{\link{dataset}} object
-#' @param scenario select on of the pre-defined cell-type fraction scenarios; possible are: \code{noisy},\code{random},\code{spike-in},\code{spill-over}
+#' @param scenario select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{spike-in},\code{spill-over}
 #' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{custom}
 #' @param spike_in_cell_type name of cell-type used for \code{spike-in} scenario
 #' @param spike_in_amount fraction of cell-type used for \code{spike-in} scenario; must be between \code{0} and \code{0.99}
@@ -111,7 +111,7 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 #'
 #' @examples
 simulate_bulk <- function(data,
-                          scenario=c("noisy","random","spike-in","spill-over"),
+                          scenario=c("uniform","random","spike-in","spill-over"),
                           scaling_factor=c("NONE","census","spike-in","custom"),
                           spike_in_cell_type = NULL,
                           spike_in_amount = NULL,
@@ -123,14 +123,14 @@ simulate_bulk <- function(data,
   ##### different cell-type scenarios #####
 
   # each existing cell-type will be appearing in equal amounts
-  if(scenario == "noisy"){
+  if(scenario == "uniform"){
     all_types <- unique(data@annotation[["cell_type"]])
     simulation_vector <- rep(1/length(all_types), length(all_types))
     names(simulation_vector) <- all_types
     # duplicate this nsamples amount of times
     simulation_vector_list <- lapply(rep(1:nsamples), function(x){return(simulation_vector)})
     # give each sample a name
-    sample_names <- paste0("noisy_sample",rep(1:nsamples))
+    sample_names <- paste0("uniform_sample",rep(1:nsamples))
     names(simulation_vector_list) <- sample_names
   }
   # generate random cell-type fractions (depending on appearance in database)
@@ -196,29 +196,24 @@ simulate_bulk <- function(data,
 
   # sample cells and generate pseudo-bulk profiles
   idx <- 1
-  cell_fractions <- data.frame(types=unique(data@annotation[["cell_type"]]))
-  bulk <- do.call(cbind, lapply(simulation_vector_list, function(x){
+  bulk <- do.call(cbind, mclapply(simulation_vector_list, function(x){
     sample<-simulate_sample(data=data,
                             scaling_factor = scaling_factor,
                             simulation_vector = x,
                             total_cells = ncells,
                             ncores=ncores)
-    # # add a new column to cell fractions dataframe for this sample
-    cell_fractions <<- suppressWarnings(merge(cell_fractions, as.data.frame(x), all=T, by.x = "types", by.y=0))
 
     progress <- 100*(round(idx/length(simulation_vector_list), digits=3))
     print(paste(progress,"%"))
     idx <<- idx+1
 
     return(sample)
-  }))
+  }, mc.cores = ncores))
+
 
   colnames(bulk) <- sample_names
 
-  rownames(cell_fractions) <- cell_fractions[["types"]]
-  cell_fractions[["types"]] <- NULL
-  colnames(cell_fractions) <- sample_names
-  cell_fractions <- data.frame(t(cell_fractions))
+  cell_fractions <- data.frame(t(data.frame(simulation_vector_list)))
 
   # normalize count matrix to have TPM-like values
   bulk <- tpm_normalize(bulk)
@@ -242,3 +237,6 @@ tpm_normalize <- function(matrix){
   return(m)
 }
 
+save_simulation <- function(simulation, filename){
+  write.table(exprs(simulation$expression_set), filename, quote = F, sep="\t")
+}

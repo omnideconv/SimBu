@@ -8,6 +8,7 @@
 #' @export
 #'
 #' @examples
+#setup_list<-setup_sfaira("/nfs/home/students/adietrich/.conda/envs/sfaira/bin/python3","sfaira","/nfs/home/students/adietrich/ma/data/sfaira")
 setup_sfaira <- function(python_path, env_name, basedir){
   tryCatch({
     # check if sfaira is installed in environment
@@ -40,12 +41,14 @@ setup_sfaira <- function(python_path, env_name, basedir){
 #' @param setup_list the sfaira setup; given by \code{\link{setup_sfaira}}
 #' @param id the ID of the datasets
 #' @param force logical; TRUE if you want to force the download, even though no cell-type annotation exists for this dataset. Default if FALSE
+#' @param synapse_user character; username for synapse portal (https://www.synapse.org)
+#' @param synapse_pw character; password for synapse portal (https://www.synapse.org)
 #'
 #' @return a anndata object, stores counts, metadata and other information on the dataset
 #' @export
 #'
 #' @examples
-download_sfaira <- function(setup_list, id, force=F){
+download_sfaira <- function(setup_list, id, force=F, synapse_user=NULL, synapse_pw=NULL){
   sfaira <- setup_list[["sfaira"]]
   ds <- sfaira$data$Universe(data_path = setup_list[["rawdir"]],
                              meta_path = setup_list[["metadir"]],
@@ -89,30 +92,40 @@ download_sfaira <- function(setup_list, id, force=F){
 #' @examples
 download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, assays=NULL, force=F){
   sfaira <- setup_list[["sfaira"]]
-  ds <- sfaira$data$Universe(data_path = setup_list[["rawdir"]],
-                             meta_path = setup_list[["metadir"]],
-                             cache_path = setup_list[["cachedir"]])
 
   tryCatch({
 
-    # apply filters on sfaira database
-    if(all(is.null(c(organism, tissue, assay)))) stop("You must specify at least one filter.", call.=F)
-    if(!is.null(organism)) {ds$subset(key="organism", value=organisms)}
-    if(!is.null(assays)) {ds$subset(key="assay_sc", value=assays)}
-    if(!is.null(tissues)) {ds$subset(key="organ", value=tissues)}
-    if(length(ds$datasets) == 0){stop("No datasets found with these filters; please check again", call.=F)}
-
-    # only proceed with datasets with cell-type annotation
-    if(!force){
-      has_annotation <- lapply(ds$datasets, function(i){i$annotated})
-      annotated_sets <- names(has_annotation[which(as.logical(has_annotation))])
-      #TODO subset by annotation
-    }else{
+    if(force){
       warning("Some or all of the downloaded datasets have no annotation; this might get you into issues down the road.")
+      ds <- sfaira$data$Universe(data_path = setup_list[["rawdir"]],
+                                 meta_path = setup_list[["metadir"]],
+                                 cache_path = setup_list[["cachedir"]])
+    }else{
+      # python code to subset sfaira universe by annotated datasets
+      print("Removing datasets without cell-type annotation...")
+      py_run_string("import sfaira")
+      py_run_string(paste0("ds = sfaira.data.Universe(data_path=\'",setup_list[["rawdir"]],
+                           "\', meta_path=\'",setup_list[["metadir"]],
+                           "\', cache_path=\'",setup_list[["cachedir"]],"\')"))
+      py_run_string("dsg = sfaira.data.DatasetGroup(datasets=dict([(k, v) for k, v in ds.datasets.items() if v.annotated]), collection_id='something')")
+      ds <- py$dsg
     }
 
+    # apply filters on sfaira database
+    if(all(is.null(c(organism, tissue, assay)))) stop("You must specify at least one filter.", call.=F)
+    if(!is.null(organism)) {ds$subset(key="organism", values=organisms)}
+    if(!is.null(assays)) {ds$subset(key="assay_sc", values=assays)}
+    if(!is.null(tissue)) {ds$subset(key="organ", values=tissue)}
+    if(length(ds$datasets) == 0){stop("No datasets found with these filters; please check again", call.=F)}
+
+    print("Downloading datasets...")
+    ds$download()
+    ds$load()
     #streamline features and meta-data
-    ds$streamline_features(match_to_reference = )
+    print("Streamlining features & meta-data...")
+    ds$streamline_features(match_to_reference=list("human"="Homo_sapiens.GRCh38.102", "mouse"="Mus_musculus.GRCm38.102"))
+    ds$streamline_metadata(schema = "sfaira")
+    return(ds$adata)
 
   }, error=function(e){
     message(paste0("Could not download all datasets for specified filters."))

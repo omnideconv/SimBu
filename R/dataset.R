@@ -33,6 +33,9 @@ setMethod(
     }
     # remove all cells which are not in the whitelist of cell-types from annotation & count matrix
     if(!is.null(whitelist)){
+      if(!all(whitelist %in% annotation[["cell_type"]])){
+        stop("Did not find all cell-types of whitelist in annotation.")
+      }
       annotation <- annotation[annotation[["cell_type"]] %in% whitelist]
       if(length(annotation) == 0){
         stop("No cells are left after using this whitelist; please check that the correct names are used.")
@@ -54,6 +57,9 @@ setMethod(
                           count_type = count_type)
 
     if(!is.null(spike_in_col)){
+      if(!spike_in_col %in% colnames(annotation)){
+        stop("Could not find spike-in column in annotation file.")
+      }
       anno_df <- cbind(anno_df, spike_in=annotation[[spike_in_col]])
     }
 
