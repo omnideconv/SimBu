@@ -16,6 +16,7 @@ Imports:
     anndata,
     Biobase,
     data.table,
+    dplyr,
     Matrix,
     methods,
     parallel,

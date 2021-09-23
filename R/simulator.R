@@ -9,6 +9,7 @@ require(reticulate)
 require(tidyr)
 require(tools)
 require(methods)
+require(dplyr)
 #source("R/scripts/census.R")
 #source("R/dataset.R")
 #source("R/database.R")
@@ -18,18 +19,20 @@ require(methods)
 ###### simulation ######
 
 #' function to sample cells according to given cell-type fractions
+#' Note: if total_read_counts is used, the cell-fractions are applied to the number of counts, not the number of cells!
 #'
 #' @param data \code{\link{database}} or \code{\link{dataset}} object
 #' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{custom}
 #' @param simulation_vector named vector with wanted cell-types and their fractions
 #' @param total_cells numeric; number of total cells for this simulation
+#' @param total_read_counts numeric; sets the total read count value for each sample
 #' @param ncores numeric; number of cores used to create simulation
 #'
 #' @return returns a vector with mean count/TPM values over all selected samples per gene
 #' @export
 #'
 #' @examples
-simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells, ncores){
+simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells, total_read_counts, ncores){
 
   if(!all(names(simulation_vector) %in% unique(data@annotation[["cell_type"]]))){
     stop("Some cell-types in the provided simulation vector are not in the annotation.")
@@ -45,9 +48,20 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
     cells_of_type_x <- data@annotation[data@annotation[["cell_type"]] == names(simulation_vector[x]),]
 
     # how many cells of this type do we need?
-    n_cells <- ceiling(total_cells * simulation_vector[x])
-
-    out <- sample(cells_of_type_x[["cell_ID"]], n_cells, replace = T)
+    if(is.null(total_read_counts)){
+      out <- sample_frac(cells_of_type_x, simulation_vector[x], replace = T)
+      out <- out[["cell_ID"]]
+    }else{
+      # fill sample with cells of current cell-type until total_read_counts value is reached
+      counts_per_cell_type <- ceiling(total_read_counts * simulation_vector[x]) # total count value that this cell-type can reach max
+      read_counts_current <- 0
+      out <- list()
+      while(read_counts_current < counts_per_cell_type){
+        sampled_cell <- sample_n(cells_of_type_x, 1)
+        read_counts_current <- read_counts_current + sampled_cell[["total_counts_custom"]]
+        out <- append(out, values = sampled_cell[["cell_ID"]])
+      }
+    }
     return(out)
   })
 
@@ -102,6 +116,7 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 #' @param spillover_cell_type name of cell-type used for \code{spill-over} scenario
 #' @param nsamples numeric; number of samples in pseudo-bulk RNAseq dataset
 #' @param ncells numeric; number of cells in each dataset
+#' @param total_read_counts numeric; sets the total read count value for each sample
 #' @param ncores numeric; number of cores to use
 #'
 #' @return named list; \code{pseudo_bulk} is a sparse matrix with the simulated counts;
@@ -118,6 +133,7 @@ simulate_bulk <- function(data,
                           spillover_cell_type = NULL,
                           nsamples=100,
                           ncells=1000,
+                          total_read_counts = NULL,
                           ncores = 1){
 
   ##### different cell-type scenarios #####
@@ -201,6 +217,7 @@ simulate_bulk <- function(data,
                             scaling_factor = scaling_factor,
                             simulation_vector = x,
                             total_cells = ncells,
+                            total_read_counts = total_read_counts,
                             ncores=ncores)
 
     progress <- 100*(round(idx/length(simulation_vector_list), digits=3))
@@ -217,6 +234,12 @@ simulate_bulk <- function(data,
 
   # normalize count matrix to have TPM-like values
   bulk <- tpm_normalize(bulk)
+
+  # remove non-unique features from simulated dataset
+  if(length(unique(rownames(bulk))) != dim(bulk)[1]){
+    un <- unique(rownames(bulk))
+    bulk <- bulk[un,]
+  }
 
   # build bioconductor expression set
   expr_set <- ExpressionSet(assayData = bulk,
@@ -237,6 +260,13 @@ tpm_normalize <- function(matrix){
   return(m)
 }
 
+#' Save the expression matrix of a simulated pseudo-bulk dataset to a file
+#'
+#' @param simulation the result of simulate_bulk()
+#' @param filename the filename where to save the expression matrix to
+#'
+#'
+#' @examples
 save_simulation <- function(simulation, filename){
   write.table(exprs(simulation$expression_set), filename, quote = F, sep="\t")
 }

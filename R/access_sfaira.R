@@ -8,7 +8,6 @@
 #' @export
 #'
 #' @examples
-#setup_list<-setup_sfaira("/nfs/home/students/adietrich/.conda/envs/sfaira/bin/python3","sfaira","/nfs/home/students/adietrich/ma/data/sfaira")
 setup_sfaira <- function(python_path, env_name, basedir){
   tryCatch({
     # check if sfaira is installed in environment
@@ -112,10 +111,10 @@ download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, a
     }
 
     # apply filters on sfaira database
-    if(all(is.null(c(organism, tissue, assay)))) stop("You must specify at least one filter.", call.=F)
-    if(!is.null(organism)) {ds$subset(key="organism", values=organisms)}
+    if(all(is.null(c(organism, tissues, assay)))) stop("You must specify at least one filter.", call.=F)
+    if(!is.null(organisms)) {ds$subset(key="organism", values=organisms)}
     if(!is.null(assays)) {ds$subset(key="assay_sc", values=assays)}
-    if(!is.null(tissue)) {ds$subset(key="organ", values=tissue)}
+    if(!is.null(tissues)) {ds$subset(key="organ", values=tissues)}
     if(length(ds$datasets) == 0){stop("No datasets found with these filters; please check again", call.=F)}
 
     print("Downloading datasets...")
@@ -123,7 +122,6 @@ download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, a
     ds$load()
     #streamline features and meta-data
     print("Streamlining features & meta-data...")
-    ds$streamline_features(match_to_reference=list("human"="Homo_sapiens.GRCh38.102", "mouse"="Mus_musculus.GRCm38.102"))
     ds$streamline_metadata(schema = "sfaira")
     return(ds$adata)
 

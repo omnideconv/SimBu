@@ -56,6 +56,9 @@ setMethod(
                           cell_type = annotation[["cell_type"]],
                           count_type = count_type)
 
+    # add additional column with total read counts/TPMs per sample
+    anno_df$total_counts_custom <- colSums(count_matrix)
+
     if(!is.null(spike_in_col)){
       if(!spike_in_col %in% colnames(annotation)){
         stop("Could not find spike-in column in annotation file.")
@@ -173,16 +176,13 @@ dataset_seurat <- function(annotation, seurat_obj, name, count_type ="TPM",spike
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
 #' @param whitelist list of cell-types, which you want to use later for simulation; NULL to simulate all cell-types
-#' @param annotation_column name of column in annotation with cell-types; should not be needed
-#' @param id_column name of column in annotation with cell IDs; should not be needed
 #'
 #' @return dataset object
 #' @export
 #'
 #' @examples
 dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="TPM",
-                           spike_in_col=NULL, whitelist=NULL,
-                           annotation_column, id_column){
+                           spike_in_col=NULL, whitelist=NULL){
 
   if(is.null(sfaira_setup)){
     warning(paste0("You need to setup sfaira first; please use setup_sfaira() to do so."))
@@ -190,7 +190,10 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="TPM",
   }
   adata <- download_sfaira(sfaira_setup, sfaira_id)
   count_matrix <- Matrix::t(adata$X)
-  annotation <- check_annotation(adata$obs, cell_column = annotation_column, id_column=id_column)
+  if(!is.null(adata$var$gene_symbol)){
+    rownames(count_matrix) <- adata$var$gene_symbol
+  }
+  annotation <- check_annotation(adata$obs)
 
   methods::new(Class="dataset",
       annotation=annotation,
@@ -201,6 +204,44 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="TPM",
       whitelist=whitelist
   )
 
+}
+
+#' constructor for dataset using filters for tissue, organism and assay. This results in much larger datasets for simulation
+#'
+#' @param organisms list of organisms (only human and mouse available)
+#' @param tissues list of tissues
+#' @param assays list of assays
+#' @param sfaira_setup the sfaira setup; given by \code{\link{setup_sfaira}}
+#' @param name name of the dataset; will be used for new unique IDs of cells
+#' @param count_type what type of counts are in the dataset; default is 'TPM'
+#' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
+#' @param whitelist list of cell-types, which you want to use later for simulation; NULL to simulate all cell-types
+#'
+#' @return
+#' @export
+#'
+#' @examples
+dataset_sfaira_multiple <- function(organisms, tissues, assays, sfaira_setup, name,
+                                    count_type ="TPM",spike_in_col=NULL, whitelist=NULL){
+  if(is.null(sfaira_setup)){
+    warning(paste0("You need to setup sfaira first; please use setup_sfaira() to do so."))
+    return(NULL)
+  }
+  adata <- download_sfaira_multiple(sfaira_setup, organisms, tissues, assays)
+  count_matrix <- Matrix::t(adata$X)
+  if(!is.null(adata$var$gene_symbol)){
+    rownames(count_matrix) <- adata$var$gene_symbol
+  }
+  annotation <- check_annotation(adata$obs)
+
+  methods::new(Class="dataset",
+               annotation=annotation,
+               count_matrix=count_matrix,
+               name=name,
+               count_type=count_type,
+               spike_in_col=spike_in_col,
+               whitelist=whitelist
+  )
 }
 
 #' check for correct column names in annotation file and replace them if neccesary
