@@ -24,4 +24,7 @@ Imports:
     tidyr,
     tools
 Suggests:
+    rmarkdown,
+    knitr,
     Seurat
+VignetteBuilder: knitr

@@ -16,15 +16,20 @@ setClass("dataset", slots=list(annotation="data.frame",
 setMethod(
   f="initialize",
   signature="dataset",
-  definition = function(.Object, annotation, count_matrix, name, count_type, spike_in_col, whitelist){
+  definition = function(.Object, annotation, count_matrix, name, count_type, spike_in_col, whitelist, matrix_colnames=NULL){
     genes <- rownames(count_matrix)
-    cells_m <- colnames(count_matrix)
+    if(is.null(matrix_colnames)){
+      cells_m <- colnames(count_matrix)
+    }else{
+      cells_m <- matrix_colnames
+    }
+    print(length(cells_m))
     cells_a <- annotation[["ID"]]
 
     if(length(cells_a) != length(cells_m)){
       warning("Unequal number of cells in annotation and count matrix. Intersection of both will be used!")
       cells_it <- Reduce(intersect, list(cells_a, cells_m))
-      annotation <- annotation[annotation[["ID"]] %in% cells_it]
+      annotation <- annotation[annotation[["ID"]] %in% cells_it,]
       count_matrix <- count_matrix[, cells_it]
       warning(paste0("Keeping ", length(cells_it), " cells."))
     }
@@ -41,7 +46,7 @@ setMethod(
         stop("No cells are left after using this whitelist; please check that the correct names are used.")
       }
       remaining_cells <- annotation[["ID"]]
-      count_matrix <- count_matrix[,remaining_cells]
+      count_matrix <- as(count_matrix[,remaining_cells], "sparseMatrix")
       cells_m <- colnames(count_matrix)
       genes <- rownames(count_matrix)
     }
@@ -57,7 +62,7 @@ setMethod(
                           count_type = count_type)
 
     # add additional column with total read counts/TPMs per sample
-    anno_df$total_counts_custom <- colSums(count_matrix)
+    anno_df$total_counts_custom <- Matrix::colSums(count_matrix)
 
     if(!is.null(spike_in_col)){
       if(!spike_in_col %in% colnames(annotation)){
@@ -217,11 +222,11 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="TPM",
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
 #' @param whitelist list of cell-types, which you want to use later for simulation; NULL to simulate all cell-types
 #'
-#' @return
+#' @return dataset object
 #' @export
 #'
 #' @examples
-dataset_sfaira_multiple <- function(organisms, tissues, assays, sfaira_setup, name,
+dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, sfaira_setup, name,
                                     count_type ="TPM",spike_in_col=NULL, whitelist=NULL){
   if(is.null(sfaira_setup)){
     warning(paste0("You need to setup sfaira first; please use setup_sfaira() to do so."))
@@ -240,7 +245,8 @@ dataset_sfaira_multiple <- function(organisms, tissues, assays, sfaira_setup, na
                name=name,
                count_type=count_type,
                spike_in_col=spike_in_col,
-               whitelist=whitelist
+               whitelist=whitelist,
+               matrix_colnames = colnames(count_matrix)  # i need this because of R weirdness...
   )
 }
 

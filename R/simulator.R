@@ -49,7 +49,7 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 
     # how many cells of this type do we need?
     if(is.null(total_read_counts)){
-      out <- sample_frac(cells_of_type_x, simulation_vector[x], replace = T)
+      out <- dplyr::sample_frac(cells_of_type_x, simulation_vector[x], replace = T)
       out <- out[["cell_ID"]]
     }else{
       # fill sample with cells of current cell-type until total_read_counts value is reached
@@ -57,7 +57,7 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
       read_counts_current <- 0
       out <- list()
       while(read_counts_current < counts_per_cell_type){
-        sampled_cell <- sample_n(cells_of_type_x, 1)
+        sampled_cell <- dplyr::sample_n(cells_of_type_x, 1)
         read_counts_current <- read_counts_current + sampled_cell[["total_counts_custom"]]
         out <- append(out, values = sampled_cell[["cell_ID"]])
       }
@@ -134,7 +134,9 @@ simulate_bulk <- function(data,
                           nsamples=100,
                           ncells=1000,
                           total_read_counts = NULL,
+                          whitelist = NULL,
                           ncores = 1){
+
 
   ##### different cell-type scenarios #####
 
@@ -212,7 +214,7 @@ simulate_bulk <- function(data,
 
   # sample cells and generate pseudo-bulk profiles
   idx <- 1
-  bulk <- do.call(cbind, mclapply(simulation_vector_list, function(x){
+  bulk <- do.call(cbind, parallel::mclapply(simulation_vector_list, function(x){
     sample<-simulate_sample(data=data,
                             scaling_factor = scaling_factor,
                             simulation_vector = x,
@@ -242,8 +244,8 @@ simulate_bulk <- function(data,
   }
 
   # build bioconductor expression set
-  expr_set <- ExpressionSet(assayData = bulk,
-                            phenoData = new("AnnotatedDataFrame", data=cell_fractions))
+  expr_set <- Biobase::ExpressionSet(assayData = bulk,
+                                     phenoData = new("AnnotatedDataFrame", data=cell_fractions))
 
   return(list(pseudo_bulk = bulk,
               cell_fractions = cell_fractions,
@@ -254,8 +256,8 @@ simulate_bulk <- function(data,
 
 # normalize samples to one million -> TPM
 tpm_normalize <- function(matrix){
-  m <- t(1e6*t(matrix)/colSums(matrix))
-  m <- replace_na(m, 0)
+  m <- Matrix::t(1e6*Matrix::t(matrix)/Matrix::colSums(matrix))
+  m <- tidyr::replace_na(m, 0)
 
   return(m)
 }

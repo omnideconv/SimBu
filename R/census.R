@@ -19,7 +19,7 @@ census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1, me
   names(cuts) <- NULL
 
   idx <- 1
-  out <- unlist(mclapply(cuts, function(x){
+  out <- unlist(parallel::mclapply(cuts, function(x){
     x <- unlist(x, use.names = F)
     chunk <- Matrix(matrix[,x])
     if(method == "monocle"){

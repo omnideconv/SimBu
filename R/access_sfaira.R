@@ -65,7 +65,6 @@ download_sfaira <- function(setup_list, id, force=F, synapse_user=NULL, synapse_
       return(NULL)
     }
     #streamline features & meta-data
-    ds$adata
     ds$datasets[[id]]$streamline_features(match_to_reference=list("human"= "Homo_sapiens.GRCh38.102", "mouse"= "Mus_musculus.GRCm38.102"))
     ds$datasets[[id]]$streamline_metadata(schema="sfaira")
     return(ds$datasets[[id]]$adata)
@@ -102,16 +101,16 @@ download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, a
     }else{
       # python code to subset sfaira universe by annotated datasets
       print("Removing datasets without cell-type annotation...")
-      py_run_string("import sfaira")
-      py_run_string(paste0("ds = sfaira.data.Universe(data_path=\'",setup_list[["rawdir"]],
+      reticulate::py_run_string("import sfaira")
+      reticulate::py_run_string(paste0("ds = sfaira.data.Universe(data_path=\'",setup_list[["rawdir"]],
                            "\', meta_path=\'",setup_list[["metadir"]],
                            "\', cache_path=\'",setup_list[["cachedir"]],"\')"))
-      py_run_string("dsg = sfaira.data.DatasetGroup(datasets=dict([(k, v) for k, v in ds.datasets.items() if v.annotated]), collection_id='something')")
-      ds <- py$dsg
+      reticulate::py_run_string("dsg = sfaira.data.DatasetGroup(datasets=dict([(k, v) for k, v in ds.datasets.items() if v.annotated]), collection_id='something')")
+      ds <- reticulate::py$dsg
     }
 
     # apply filters on sfaira database
-    if(all(is.null(c(organism, tissues, assay)))) stop("You must specify at least one filter.", call.=F)
+    if(all(is.null(c(organisms, tissues, assays)))) stop("You must specify at least one filter.", call.=F)
     if(!is.null(organisms)) {ds$subset(key="organism", values=organisms)}
     if(!is.null(assays)) {ds$subset(key="assay_sc", values=assays)}
     if(!is.null(tissues)) {ds$subset(key="organ", values=tissues)}
@@ -122,6 +121,7 @@ download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, a
     ds$load()
     #streamline features and meta-data
     print("Streamlining features & meta-data...")
+    ds$streamline_features(match_to_reference=list("human"= "Homo_sapiens.GRCh38.102", "mouse"= "Mus_musculus.GRCm38.102"))
     ds$streamline_metadata(schema = "sfaira")
     return(ds$adata)
 
