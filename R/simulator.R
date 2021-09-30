@@ -75,7 +75,6 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
   # apply selected scaling factor on each cell in matrix
   # this calculates a scaling vector (one value per cell) which will be applied to the matrix
   if(scaling_factor == "census"){
-    # TODO: does it make sense to calc census for all bulk samples combined? or keep it like this
     census_vector <- census(m, ncores = ncores, method="monocle", expr_threshold = 1)
     m <- m*(census_vector/10e6)
   }else if(scaling_factor == "spike_in"){
@@ -137,6 +136,18 @@ simulate_bulk <- function(data,
                           whitelist = NULL,
                           ncores = 1){
 
+  # remove all cells which are not in the whitelist of cell-types from annotation & count matrix
+  if(!is.null(whitelist)){
+    if(!all(whitelist %in% data@annotation[["cell_type"]])){
+      stop("Did not find all cell-types of whitelist in annotation.")
+    }
+    data@annotation <- data@annotation[data@annotation[["cell_type"]] %in% whitelist,]
+    if(length(data@annotation) == 0){
+      stop("No cells are left after using this whitelist; please check that the correct names are used.")
+    }
+    remaining_cells <- data@annotation[["cell_ID"]]
+    data@counts <- as(data@counts[,remaining_cells], "sparseMatrix")
+  }
 
   ##### different cell-type scenarios #####
 

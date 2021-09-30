@@ -1,5 +1,6 @@
 ---
 title: "Getting started with the pseudo-bulk simulator R package"
+author: "Alexander Dietrich"
 bibliography: references.bib
 biblio-style: apalike
 link-citations: yes
@@ -20,6 +21,10 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(simulator)
+library(data.table)
+library(tidyr)
+library(Matrix)
+library(Seurat)
 library(ggplot2)
 library(RColorBrewer)
 ```
@@ -32,8 +37,11 @@ The goal of this simulator is to create benchmark datasets, where pseudo bulk sa
 predefined cell-type fractions can be simulated using expression data from single-cell RNAseq
 experiments. 
 
+# Getting started
 
-# Setup the simulator
+This chapter covers all you need to know to quickly simulate some pseudo-bulk samples!
+
+## Setup the simulator
 This package can simulate samples from local or public data. We will start with the public data
 integration, since it requires no mostly no manual download of datasets. As a public database, 
 sfaira [@Fischer2020] is used. This gives access to 233 datasets from human and mouse with 
@@ -43,7 +51,7 @@ tutorial](https://sfaira.readthedocs.io/en/latest/installation.html). You do not
 new conda environment in order to use it later on. \
 To setup sfaira inside of the R package use this command: 
 
-```{r}
+```{r, warning=TRUE, message=TRUE}
 setup_list <- simulator::setup_sfaira(python_path = "/nfs/home/students/adietrich/.conda/envs/sfaira/bin/python3",
                                       env_name = "sfaira", 
                                       basedir = "/nfs/home/students/adietrich/ma/data/sfaira")
@@ -58,12 +66,12 @@ data from downloading datasets from sfaira are stored into. \
 You need to save the output of the command above in a variable for later use. \
 If you do not wish to use sfaira, just skip this step entirely. 
 
-# Creating a dataset
+## Creating a dataset
 
 The simulator package works with two internally defined data-structures: *datasets* and *databases*. \
 We will now create a dataset of samples from human pancreas:
 
-```{r}
+```{r, warning=TRUE, message=TRUE}
 ds_human_pancreas <- simulator::dataset_sfaira_multiple(sfaira_setup = setup_list,
                                                         organisms = "human", 
                                                         tissues = "pancreas", 
@@ -73,7 +81,7 @@ ds_human_pancreas <- simulator::dataset_sfaira_multiple(sfaira_setup = setup_lis
 This will download 2 datasets from sfaira and merge them together into a single expression
 matrix and a streamlined annotation table, which we can use for our simulation.
 
-# Simulate pseudo bulk datasets
+## Simulate pseudo bulk datasets
 
 We are now ready to simulate the first pseudo bulk samples with the created dataset:
 
@@ -92,7 +100,7 @@ You can also control the number of cells per sample by using the `total_read_cou
 parameter, which sets the total number of counts per sample. This can be used to simulate different
 sequencing depths. If you wish to use this parameter, it is important to know what type of
 expression data you have (raw or normalized). If you for example use TPMs as expression values
-and set the total read counts to `1e8`, this will get you really huge samples with many cells, since
+and set the total read counts to `1e7`, this will get you really huge samples with many cells, since
 TPM values are generally smaller than the raw count values. 
 
 Currently there are 4 `scenarios` implemented in the package: \
@@ -114,7 +122,7 @@ to create samples, where 50% are B-cells and the rest is filled randomly with ot
 * *spill-over*: this simulates samples with only a single cell-type present. Like with *spike-in*
 you need to set this cell-type with the additional parameter `spillover_cell_type`. \
 
-# Results
+## Results
 
 The `simulation` object contains three named entries: \
 
@@ -128,17 +136,139 @@ It gives the fractions for each cell-type in each sample. \
 
 Finally here is a boxplot of the resulting simulation:
 
-```{r}
+```{r, fig.width=8, fig.height=8}
 fractions <- simulation$cell_fractions
-fractions$sample <- rownames(frac)
+fractions$sample <- rownames(fractions)
 frac_long <- gather(fractions, cell_type, fraction, 1:length(fractions)-1)
 
 ggplot(frac_long, aes(x=fraction, y=sample, fill=cell_type))+
   geom_col()+
   ggtitle("Cell-type fractions for 50 pseudo-bulk RNAseq samples")+
-  scale_fill_manual(values = colorRampPalette(brewer.pal(12, "Set2"))(length(unique(frac_long$cell_type))))
+  scale_fill_manual(values = colorRampPalette(brewer.pal(8, "Set2"))(length(unique(frac_long$cell_type))))
 ```
 
+
+# More features
+
+## Using your own data
+
+The simulator also has the option to create datasets with your own scRNAseq experiments.
+You can create datasets in three different ways: \
+
+* Using a expression matrix & annotation file
+
+```{r}
+# change paths accordingly
+counts <- Matrix(as.matrix(fread("~/ma/data/Maynard/X_tpm.csv")), sparse = T)
+genes <- fread("~/ma/data/Maynard/var.csv")
+cells <- fread("~/ma/data/Maynard/obs.csv")
+cellnames <- cells$Run
+genenames <- genes$symbol
+dimnames(counts)<-list(cellnames, genenames)
+counts <- t(counts)
+
+annotation <- fread("~/ma/data/Maynard/annotation_obs.csv")[,c("Run","cell_type")]
+colnames(annotation) <- c("ID", "cell_type")
+
+dataset_file <- simulator::dataset(annotation = annotation,
+                                   count_matrix = counts,
+                                   name="Maynard")
+```
+
+* Using a h5ad expression data & annotation file
+
+```{r}
+# change paths accordingly
+counts <- "~/ma/data/Travaglini/Travaglini_Krasnow_2020_Lung_SS2.h5ad"
+annotation <- fread("~/ma/data/Travaglini/obs_extended.csv")
+# renaming the columns
+colnames(annotation)[which(colnames(annotation) == "free_annotation")]<-"cell_type"
+colnames(annotation)[which(colnames(annotation) == "index")]<-"ID"
+
+dataset_h5ad <- simulator::dataset_h5ad(annotation = annotation,
+                                        h5ad_file = counts, 
+                                        name = "Travaglini")
+```
+
+
+* Using a Seurat Object and annotation file
+
+```{r}
+# download Seurat object from tabula muris
+# https://figshare.com/ndownloader/files/13088531
+load("~/ma/data/tabula_muris/tabula_muris_bladder.Robj")
+seurat_obj <- Seurat::UpdateSeuratObject(tiss)
+annotation <- seurat_obj@meta.data
+# renaming the columns
+colnames(annotation)[which(colnames(annotation) == "free_annotation")]<-"cell_type"
+annotation$ID <- rownames(annotation)
+
+dataset_seurat <- simulator::dataset_seurat(annotation = annotation,
+                                            seurat_obj = seurat_obj,
+                                            name="TabulaMuris_Bladder")
+```
+
+
+**Important:** the annotation dataframe you are feeding into the dataset, needs these two
+columns: `ID` for the cell ID, which has to be in common with the cell IDs in the 
+expression matrix and `cell_type`, which gives the cell-type for a cell. \
+
+## Simulate using a whitelist of cell-types
+
+Sometimes, you are only interested in specific cell-types, but the dataset you are using
+has way too many cell-types:
+
+```{r}
+unique(dataset_file@annotation$cell_type)
+length(unique(dataset_file@annotation$cell_type))
+```
+You can handle this issue during simulation using the `whitelist` parameter:
+
+```{r, fig.width=8, fig.height=8}
+simulation <-  simulator::simulate_bulk(data = dataset_file,
+                                        scenario = "spike-in", 
+                                        scaling_factor = "none", 
+                                        spike_in_cell_type = "NK cell",
+                                        spike_in_amount = 0.5,
+                                        ncells=1000, 
+                                        nsamples = 50, 
+                                        ncores = 12,
+                                        whitelist = c("NK cell","B cell","T cell CD8", "T cell CD4", "Macrophage", "Monocyte conventional", "Monocyte non-conventional"))
+
+fractions <- simulation$cell_fractions
+fractions$sample <- rownames(fractions)
+frac_long <- gather(fractions, cell_type, fraction, 1:length(fractions)-1)
+
+ggplot(frac_long, aes(x=fraction, y=sample, fill=cell_type))+
+  geom_col()+
+  ggtitle("Cell-type fractions for 50 pseudo-bulk RNAseq samples")+
+  scale_fill_manual(values = colorRampPalette(brewer.pal(8, "Set2"))(length(unique(frac_long$cell_type))))
+```
+
+## Using scaling factors (Census)
+[I am still working on this section..]
+
+[Census](http://cole-trapnell-lab.github.io/monocle-release/docs/#census) is an 
+approach which tries to convert TPM counts into relative transcript counts. This 
+basically means, you get the mRNA counts per cell, which can differ between cell-types. \
+[@Qiu2017] state in their paper, that it should only be applied to TPM/FPKM normalized
+data, but I tried it out with raw expression counts as well, which worked as well. \
+Census calculates a vector with a scaling value for each cell in a sample. The simulated
+expression matrix will be multiplied with this vector in order to census-normalize the 
+pseudo-bulk sample. \
+You can switch this feature on, by setting the `scaling_factor` parameter to `census`.
+
+```{r}
+simulation <-  simulator::simulate_bulk(data = dataset_file,
+                                        scenario = "spike-in", 
+                                        scaling_factor = "census",   # use census scaling factor
+                                        spike_in_cell_type = "NK cell",
+                                        spike_in_amount = 0.5,
+                                        ncells=1000, 
+                                        nsamples = 50, 
+                                        ncores = 12,
+                                        whitelist = c("NK cell","B cell","T cell CD8", "T cell CD4", "Macrophage", "Monocyte conventional", "Monocyte non-conventional"))
+```
 
 
 

@@ -16,15 +16,10 @@ setClass("dataset", slots=list(annotation="data.frame",
 setMethod(
   f="initialize",
   signature="dataset",
-  definition = function(.Object, annotation, count_matrix, name, count_type, spike_in_col, whitelist, matrix_colnames=NULL){
+  definition = function(.Object, annotation, count_matrix, name, count_type, spike_in_col){
     genes <- rownames(count_matrix)
-    if(is.null(matrix_colnames)){
-      cells_m <- colnames(count_matrix)
-    }else{
-      cells_m <- matrix_colnames
-    }
-    print(length(cells_m))
     cells_a <- annotation[["ID"]]
+    cells_m <- colnames(count_matrix)
 
     if(length(cells_a) != length(cells_m)){
       warning("Unequal number of cells in annotation and count matrix. Intersection of both will be used!")
@@ -35,20 +30,6 @@ setMethod(
     }
     if(!all(cells_a %in% cells_m)){
       stop("The cell IDs in the annotation and count matrix do not correspond.")
-    }
-    # remove all cells which are not in the whitelist of cell-types from annotation & count matrix
-    if(!is.null(whitelist)){
-      if(!all(whitelist %in% annotation[["cell_type"]])){
-        stop("Did not find all cell-types of whitelist in annotation.")
-      }
-      annotation <- annotation[annotation[["cell_type"]] %in% whitelist]
-      if(length(annotation) == 0){
-        stop("No cells are left after using this whitelist; please check that the correct names are used.")
-      }
-      remaining_cells <- annotation[["ID"]]
-      count_matrix <- as(count_matrix[,remaining_cells], "sparseMatrix")
-      cells_m <- colnames(count_matrix)
-      genes <- rownames(count_matrix)
     }
 
     # generate new IDs for the cells and replace them in the count table
@@ -85,20 +66,18 @@ setMethod(
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
-#' @param whitelist list of cell-types, which you want to use later for simulation; NULL to simulate all cell-types
 #'
 #' @return dataset object
 #' @export
 #'
 #' @examples
-dataset <- function(annotation, count_matrix, name, count_type="TPM", spike_in_col=NULL, whitelist=NULL){
+dataset <- function(annotation, count_matrix, name, count_type="TPM", spike_in_col=NULL){
   methods::new(Class="dataset",
       annotation=annotation,
       count_matrix=count_matrix,
       name=name,
       count_type=count_type,
-      spike_in_col=spike_in_col,
-      whitelist=whitelist
+      spike_in_col=spike_in_col
      )
 }
 
@@ -109,18 +88,17 @@ dataset <- function(annotation, count_matrix, name, count_type="TPM", spike_in_c
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
-#' @param whitelist list of cell-types, which you want to use later for simulation; NULL to simulate all cell-types
 #'
 #' @return dataset object
 #' @export
 #'
 #' @examples
-dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in_col=NULL, whitelist=NULL){
+dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in_col=NULL){
 
   #TODO check for valid file
   h5ad_file <- normalizePath(h5ad_file)
 
-  file_type <- file_ext(h5ad_file)
+  file_type <- tools::file_ext(h5ad_file)
   if(file_type == "h5ad"){
     ad <- anndata::read_h5ad(h5ad_file)
     ad <- ad$transpose()
@@ -136,8 +114,7 @@ dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in
       count_matrix=X_mat,
       name=name,
       count_type=count_type,
-      spike_in_col=spike_in_col,
-      whitelist=whitelist
+      spike_in_col=spike_in_col
   )
 }
 
@@ -148,13 +125,12 @@ dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
-#' @param whitelist list of cell-types, which you want to use later for simulation; NULL to simulate all cell-types
 #'
 #' @return dataset object
 #' @export
 #'
 #' @examples
-dataset_seurat <- function(annotation, seurat_obj, name, count_type ="TPM",spike_in_col=NULL, whitelist=NULL){
+dataset_seurat <- function(annotation, seurat_obj, name, count_type ="TPM",spike_in_col=NULL){
 
   tryCatch({
     count_matrix <- seurat_obj@assays$RNA@counts
@@ -168,8 +144,7 @@ dataset_seurat <- function(annotation, seurat_obj, name, count_type ="TPM",spike
       count_matrix=count_matrix,
       name=name,
       count_type=count_type,
-      spike_in_col=spike_in_col,
-      whitelist=whitelist
+      spike_in_col=spike_in_col
   )
 }
 
@@ -180,33 +155,38 @@ dataset_seurat <- function(annotation, seurat_obj, name, count_type ="TPM",spike
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
-#' @param whitelist list of cell-types, which you want to use later for simulation; NULL to simulate all cell-types
 #'
 #' @return dataset object
 #' @export
 #'
 #' @examples
 dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="TPM",
-                           spike_in_col=NULL, whitelist=NULL){
+                           spike_in_col=NULL){
 
   if(is.null(sfaira_setup)){
-    warning(paste0("You need to setup sfaira first; please use setup_sfaira() to do so."))
+    warning("You need to setup sfaira first; please use setup_sfaira() to do so.")
     return(NULL)
   }
-  adata <- download_sfaira(sfaira_setup, sfaira_id)
+  adata <- download_sfaira_multiple(sfaira_setup, organisms, tissues, assays)
   count_matrix <- Matrix::t(adata$X)
   if(!is.null(adata$var$gene_symbol)){
     rownames(count_matrix) <- adata$var$gene_symbol
   }
   annotation <- check_annotation(adata$obs)
+  if(is.null(colnames(count_matrix)) && dim(count_matrix)[2] == dim(annotation)[1]){
+    colnames(count_matrix) <- annotation[["ID"]]
+  }
+  if(is.null(colnames(count_matrix)) && dim(count_matrix)[2] != dim(annotation)[1]){
+    warning("The count matrix has no column names and has different dimensions than the annotation. Cannot load this as a dataset.")
+    return(NULL)
+  }
 
   methods::new(Class="dataset",
       annotation=annotation,
       count_matrix=count_matrix,
       name=name,
       count_type=count_type,
-      spike_in_col=spike_in_col,
-      whitelist=whitelist
+      spike_in_col=spike_in_col
   )
 
 }
@@ -220,16 +200,15 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="TPM",
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
-#' @param whitelist list of cell-types, which you want to use later for simulation; NULL to simulate all cell-types
 #'
 #' @return dataset object
 #' @export
 #'
 #' @examples
 dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, sfaira_setup, name,
-                                    count_type ="TPM",spike_in_col=NULL, whitelist=NULL){
+                                    count_type ="TPM",spike_in_col=NULL){
   if(is.null(sfaira_setup)){
-    warning(paste0("You need to setup sfaira first; please use setup_sfaira() to do so."))
+    warning("You need to setup sfaira first; please use setup_sfaira() to do so.")
     return(NULL)
   }
   adata <- download_sfaira_multiple(sfaira_setup, organisms, tissues, assays)
@@ -238,15 +217,20 @@ dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, s
     rownames(count_matrix) <- adata$var$gene_symbol
   }
   annotation <- check_annotation(adata$obs)
+  if(is.null(colnames(count_matrix)) && dim(count_matrix)[2] == dim(annotation)[1]){
+    colnames(count_matrix) <- annotation[["ID"]]
+  }
+  if(is.null(colnames(count_matrix)) && dim(count_matrix)[2] != dim(annotation)[1]){
+    warning("The count matrix has no column names and has different dimensions than the annotation. Cannot load this as a dataset.")
+    return(NULL)
+  }
 
   methods::new(Class="dataset",
                annotation=annotation,
                count_matrix=count_matrix,
                name=name,
                count_type=count_type,
-               spike_in_col=spike_in_col,
-               whitelist=whitelist,
-               matrix_colnames = colnames(count_matrix)  # i need this because of R weirdness...
+               spike_in_col=spike_in_col
   )
 }
 
