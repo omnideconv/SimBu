@@ -9,8 +9,7 @@ dataset(
   count_matrix,
   name,
   count_type = "TPM",
-  spike_in_col = NULL,
-  whitelist = NULL
+  spike_in_col = NULL
 )
 }
 \arguments{
@@ -23,8 +22,6 @@ dataset(
 \item{count_type}{what type of counts are in the dataset; default is 'TPM'}
 
 \item{spike_in_col}{which column in annotation contains information on spike-in counts, which can be used to re-scale counts}
-
-\item{whitelist}{list of cell-types, which you want to use later for simulation; NULL to simulate all cell-types}
 }
 \value{
 dataset object

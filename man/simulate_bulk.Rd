@@ -6,20 +6,22 @@
 \usage{
 simulate_bulk(
   data,
-  scenario = c("noisy", "random", "spike-in", "spill-over"),
+  scenario = c("uniform", "random", "spike-in", "spill-over"),
   scaling_factor = c("NONE", "census", "spike-in", "custom"),
   spike_in_cell_type = NULL,
   spike_in_amount = NULL,
   spillover_cell_type = NULL,
   nsamples = 100,
   ncells = 1000,
+  total_read_counts = NULL,
+  whitelist = NULL,
   ncores = 1
 )
 }
 \arguments{
 \item{data}{\code{\link{database}} or \code{\link{dataset}} object}
 
-\item{scenario}{select on of the pre-defined cell-type fraction scenarios; possible are: \code{noisy},\code{random},\code{spike-in},\code{spill-over}}
+\item{scenario}{select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{spike-in},\code{spill-over}}
 
 \item{scaling_factor}{name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{custom}}
 
@@ -32,6 +34,8 @@ simulate_bulk(
 \item{nsamples}{numeric; number of samples in pseudo-bulk RNAseq dataset}
 
 \item{ncells}{numeric; number of cells in each dataset}
+
+\item{total_read_counts}{numeric; sets the total read count value for each sample}
 
 \item{ncores}{numeric; number of cores to use}
 }

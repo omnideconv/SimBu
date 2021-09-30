@@ -2,9 +2,17 @@
 % Please edit documentation in R/simulator.R
 \name{simulate_sample}
 \alias{simulate_sample}
-\title{function to sample cells according to given cell-type fractions}
+\title{function to sample cells according to given cell-type fractions
+Note: if total_read_counts is used, the cell-fractions are applied to the number of counts, not the number of cells!}
 \usage{
-simulate_sample(data, scaling_factor, simulation_vector, total_cells, ncores)
+simulate_sample(
+  data,
+  scaling_factor,
+  simulation_vector,
+  total_cells,
+  total_read_counts,
+  ncores
+)
 }
 \arguments{
 \item{data}{\code{\link{database}} or \code{\link{dataset}} object}
@@ -15,6 +23,8 @@ simulate_sample(data, scaling_factor, simulation_vector, total_cells, ncores)
 
 \item{total_cells}{numeric; number of total cells for this simulation}
 
+\item{total_read_counts}{numeric; sets the total read count value for each sample}
+
 \item{ncores}{numeric; number of cores used to create simulation}
 }
 \value{
@@ -22,4 +32,5 @@ returns a vector with mean count/TPM values over all selected samples per gene
 }
 \description{
 function to sample cells according to given cell-type fractions
+Note: if total_read_counts is used, the cell-fractions are applied to the number of counts, not the number of cells!
 }

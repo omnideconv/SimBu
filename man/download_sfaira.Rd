@@ -4,7 +4,13 @@
 \alias{download_sfaira}
 \title{download a specific dataset from sfaira by an ID}
 \usage{
-download_sfaira(setup_list, id, force = F)
+download_sfaira(
+  setup_list,
+  id,
+  force = F,
+  synapse_user = NULL,
+  synapse_pw = NULL
+)
 }
 \arguments{
 \item{setup_list}{the sfaira setup; given by \code{\link{setup_sfaira}}}
@@ -12,6 +18,10 @@ download_sfaira(setup_list, id, force = F)
 \item{id}{the ID of the datasets}
 
 \item{force}{logical; TRUE if you want to force the download, even though no cell-type annotation exists for this dataset. Default if FALSE}
+
+\item{synapse_user}{character; username for synapse portal (https://www.synapse.org)}
+
+\item{synapse_pw}{character; password for synapse portal (https://www.synapse.org)}
 }
 \value{
 a anndata object, stores counts, metadata and other information on the dataset
