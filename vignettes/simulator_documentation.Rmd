@@ -19,6 +19,17 @@ knitr::opts_chunk$set(
 )
 ```
 
+# Installation
+
+To install the package, run this:
+(Since it is a private repository, you currently need an authentification token for this repository.)
+
+```{r, eval=FALSE}
+install.packages("devtools")
+devtools::install_github("omnideconv/simulator") #add auth=XXX to download from private repository
+```
+
+
 ```{r setup}
 library(simulator)
 library(data.table)
