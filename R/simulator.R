@@ -108,11 +108,12 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 #' simulate whole pseudo-bulk RNAseq dataset
 #'
 #' @param data \code{\link{database}} or \code{\link{dataset}} object
-#' @param scenario select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{spike-in},\code{spill-over}
+#' @param scenario select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{spike-in},\code{spill-over}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
 #' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{custom}
 #' @param spike_in_cell_type name of cell-type used for \code{spike-in} scenario
 #' @param spike_in_amount fraction of cell-type used for \code{spike-in} scenario; must be between \code{0} and \code{0.99}
 #' @param spillover_cell_type name of cell-type used for \code{spill-over} scenario
+#' @param custom_scenario_data dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.
 #' @param nsamples numeric; number of samples in pseudo-bulk RNAseq dataset
 #' @param ncells numeric; number of cells in each dataset
 #' @param total_read_counts numeric; sets the total read count value for each sample
@@ -127,11 +128,12 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 #'
 #' @examples
 simulate_bulk <- function(data,
-                          scenario=c("uniform","random","spike-in","spill-over"),
+                          scenario=c("uniform","random","spike-in","spill-over", "custom"),
                           scaling_factor=c("NONE","census","spike-in","custom"),
                           spike_in_cell_type = NULL,
                           spike_in_amount = NULL,
                           spillover_cell_type = NULL,
+                          custom_scenario_data = NULL,
                           nsamples=100,
                           ncells=1000,
                           total_read_counts = NULL,
@@ -227,13 +229,26 @@ simulate_bulk <- function(data,
     if(is.null(spillover_cell_type)){
       stop("The spill-over scenario requires you to select a cell-type which will be simulated")
     }
-
     simulation_vector_list <- lapply(rep(1:nsamples), function(x){
       simulation_vector <- c(1)
       names(simulation_vector) <- as.character(spillover_cell_type)
       return(simulation_vector)
     })
     sample_names <- paste0("spillover_sample", rep(1:nsamples))
+    names(simulation_vector_list) <- sample_names
+  }if(scenario == "custom"){
+    if(is.null(custom_scenario_data)){
+      stop("You need to provide a dataframe with you custom cell-type fractions in this scenario with the custom_scenario_data parameter.")
+    }
+    # check dimensions and cell-types in dataframe; samples are rows
+    if(nrow(custom_scenario_data) != nsamples){
+      stop("The scenario data has a differnt amount of samples than you want to simulate.")
+    }
+    if(!all(colnames(custom_scenario_data) %in% unique(data@annotation[["cell_type"]]))){
+      stop("Could not find all cell-types from scenario data in annotation.")
+    }
+    simulation_vector_list <- apply(custom_scenario_data, 1, function(x){y<-x; names(y)<-names(x);return(as.list(y))})
+    sample_names <- paste0("custom_sample", rep(1:nsamples))
     names(simulation_vector_list) <- sample_names
   }
 
