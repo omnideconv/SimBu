@@ -54,9 +54,11 @@ This chapter covers all you need to know to quickly simulate some pseudo-bulk sa
 
 ## Setup the simulator
 This package can simulate samples from local or public data. We will start with the public data
-integration, since it requires no mostly no manual download of datasets. As a public database, 
-sfaira [@Fischer2020] is used. This gives access to 233 datasets from human and mouse with 
-more than 3 million cells in total. \
+integration, since it requires mostly no manual download of datasets. As a public database, 
+sfaira [@Fischer2020] is used, which is a dataset and model repository for single-cell RNA-sequencing
+data. It gives access to about 233 datasets from human and mouse with more than 3 million cells in total. 
+You can browse them interactively here: [https://theislab.github.io/sfaira-portal/Datasets](https://theislab.github.io/sfaira-portal/Datasets). Note 
+that only annotated datasets will be downloaded! \
 In order to use this database, we first need to install it using conda. Simply follow [this installation
 tutorial](https://sfaira.readthedocs.io/en/latest/installation.html). You do not need to activate the
 new conda environment in order to use it later on. \
@@ -69,10 +71,10 @@ setup_list <- simulator::setup_sfaira(python_path = "/nfs/home/students/adietric
 ```
 
 The `python_path` parameter is used to set the path to the python executable **inside** of the
-newly created conda environment. Similarily, the `env_name` parameter is the name of this newly
+newly created conda environment. Similarly, the `env_name` parameter is the name of this newly
 created conda environment. These two parameters need to be set correctly, so that sfaira can be
 used later on. \
-The third parameter describes the name of a direcory in which the raw files, meta data and cached
+The third parameter describes the name of a directory in which the raw files, meta data and cached
 data from downloading datasets from sfaira are stored into. \
 You need to save the output of the command above in a variable for later use. \
 If you do not wish to use sfaira, just skip this step entirely. 
@@ -80,7 +82,12 @@ If you do not wish to use sfaira, just skip this step entirely.
 ## Creating a dataset
 
 The simulator package works with two internally defined data-structures: *datasets* and *databases*. \
-We will now create a dataset of samples from human pancreas:
+We will now create a dataset of samples from human pancreas using the `organisms` and `tissues` parameter.
+You can provide a single word (like we do here) or for example a list of tissues
+you want to download: `c("pancreas","lung")`. An additional parameter is the `assays` parameter,
+where you subset the database further to only download datasets from certain sequencing
+assays (for examples `Smart-seq2`). \
+The `name` parameter is used later on to give each sample a unique name.
 
 ```{r, warning=TRUE, message=TRUE}
 ds_human_pancreas <- simulator::dataset_sfaira_multiple(sfaira_setup = setup_list,
@@ -88,9 +95,11 @@ ds_human_pancreas <- simulator::dataset_sfaira_multiple(sfaira_setup = setup_lis
                                                         tissues = "pancreas", 
                                                         name="human_pancreas")
 ```
-
-This will download 2 datasets from sfaira and merge them together into a single expression
-matrix and a streamlined annotation table, which we can use for our simulation.
+Currently there are two datasets in sfaira from human pancreas, which have cell-type annotation.
+The package will download them for you automatically and merge them together into a single expression
+matrix and a streamlined annotation table, which we can use for our simulation. \
+It can happen, that some datasets from sfaira are not (yet) ready for the automatic download,
+an error message will then appear in R, telling you which file to download and where to put it. \
 
 ## Simulate pseudo bulk datasets
 
