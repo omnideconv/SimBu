@@ -116,6 +116,8 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 #' @param nsamples numeric; number of samples in pseudo-bulk RNAseq dataset
 #' @param ncells numeric; number of cells in each dataset
 #' @param total_read_counts numeric; sets the total read count value for each sample
+#' @param whitelist list; give a list of cell-types you want to keep for the simulation; if NULL, all are used
+#' @param blacklist list; give a list of cell-types you want to remove for the simulation; if NULL, all are used; is applied after whitelist
 #' @param ncores numeric; number of cores to use
 #'
 #' @return named list; \code{pseudo_bulk} is a sparse matrix with the simulated counts;
@@ -134,9 +136,10 @@ simulate_bulk <- function(data,
                           ncells=1000,
                           total_read_counts = NULL,
                           whitelist = NULL,
+                          blacklist = NULL,
                           ncores = 1){
 
-  # remove all cells which are not in the whitelist of cell-types from annotation & count matrix
+  # keep only cell-types which are in whitelist in annotation & count matrix
   if(!is.null(whitelist)){
     if(!all(whitelist %in% data@annotation[["cell_type"]])){
       stop("Did not find all cell-types of whitelist in annotation.")
@@ -144,6 +147,19 @@ simulate_bulk <- function(data,
     data@annotation <- data@annotation[data@annotation[["cell_type"]] %in% whitelist,]
     if(length(data@annotation) == 0){
       stop("No cells are left after using this whitelist; please check that the correct names are used.")
+    }
+    remaining_cells <- data@annotation[["cell_ID"]]
+    data@counts <- as(data@counts[,remaining_cells], "sparseMatrix")
+  }
+
+  # remove cell-types which are in blacklist from annotation & count matrix
+  if(!is.null(blacklist)){
+    if(!all(blacklist %in% data@annotation[["cell_type"]])){
+      stop("Did not find all cell-types of blacklist in annotation.")
+    }
+    data@annotation <- data@annotation[!data@annotation[["cell_type"]] %in% blacklist,]
+    if(length(data@annotation) == 0){
+      stop("No cells are left after using this blacklist; please check that the correct names are used.")
     }
     remaining_cells <- data@annotation[["cell_ID"]]
     data@counts <- as(data@counts[,remaining_cells], "sparseMatrix")
