@@ -108,7 +108,7 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 #' simulate whole pseudo-bulk RNAseq dataset
 #'
 #' @param data \code{\link{database}} or \code{\link{dataset}} object
-#' @param scenario select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{spike-in},\code{spill-over}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
+#' @param scenario select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{unique},\code{spill-over}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
 #' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{custom}
 #' @param spike_in_cell_type name of cell-type used for \code{spike-in} scenario
 #' @param spike_in_amount fraction of cell-type used for \code{spike-in} scenario; must be between \code{0} and \code{0.99}
@@ -128,11 +128,11 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 #'
 #' @examples
 simulate_bulk <- function(data,
-                          scenario=c("uniform","random","spike-in","spill-over", "custom"),
+                          scenario=c("uniform","random","spike-in","unique", "custom"),
                           scaling_factor=c("NONE","census","spike-in","custom"),
                           spike_in_cell_type = NULL,
                           spike_in_amount = NULL,
-                          spillover_cell_type = NULL,
+                          unique_cell_type = NULL,
                           custom_scenario_data = NULL,
                           nsamples=100,
                           ncells=1000,
@@ -224,14 +224,14 @@ simulate_bulk <- function(data,
     sample_names <- paste0("spike_in_sample", rep(1:nsamples))
     names(simulation_vector_list) <- sample_names
   }
-  # spill-over: only simulate a single cell-type
-  if(scenario == "spill-over"){
-    if(is.null(spillover_cell_type)){
-      stop("The spill-over scenario requires you to select a cell-type which will be simulated")
+  # unique: only simulate a single cell-type
+  if(scenario == "unique"){
+    if(is.null(unique_cell_type)){
+      stop("The unique scenario requires you to select a cell-type which will be simulated")
     }
     simulation_vector_list <- lapply(rep(1:nsamples), function(x){
       simulation_vector <- c(1)
-      names(simulation_vector) <- as.character(spillover_cell_type)
+      names(simulation_vector) <- as.character(unique_cell_type)
       return(simulation_vector)
     })
     sample_names <- paste0("spillover_sample", rep(1:nsamples))
