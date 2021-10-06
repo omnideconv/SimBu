@@ -236,7 +236,9 @@ simulate_bulk <- function(data,
     })
     sample_names <- paste0("spillover_sample", rep(1:nsamples))
     names(simulation_vector_list) <- sample_names
-  }if(scenario == "custom"){
+  }
+  # custom fractions
+  if(scenario == "custom"){
     if(is.null(custom_scenario_data)){
       stop("You need to provide a dataframe with you custom cell-type fractions in this scenario with the custom_scenario_data parameter.")
     }
