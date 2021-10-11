@@ -55,8 +55,9 @@ download_sfaira <- function(setup_list, id, force=F, synapse_user=NULL, synapse_
 
   # download and load count matrix of given sfaira ID
   tryCatch({
-    ds$datasets[[id]]$download()
-    ds$datasets[[id]]$load()
+    ds$subset(key="id", values=c(id))
+    ds$download()
+    ds$load()
     is_annotated <- ds$datasets[[id]]$annotated
     if(!is_annotated && force){
       warning("The downloaded dataset has no annotation; this might get you into issues down the road.")

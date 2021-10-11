@@ -1,5 +1,8 @@
 #' class for a dataset
 #'
+#' @description
+#' This is the main class to store single-cell datasets and use them for pseudo-bulk simulations.
+#'
 #' @slot annotation data.frame. a single dataframe with cell-type annotation of each cell in dataset
 #' @slot counts Matrix. a sparse matrix for the counts
 #' @slot name character. name of the dataset
@@ -16,7 +19,7 @@ setClass("dataset", slots=list(annotation="data.frame",
 setMethod(
   f="initialize",
   signature="dataset",
-  definition = function(.Object, annotation, count_matrix, name, count_type, spike_in_col){
+  definition = function(.Object, annotation, count_matrix, name, count_type, spike_in_col, filter_genes){
     genes <- rownames(count_matrix)
     cells_a <- annotation[["ID"]]
     cells_m <- colnames(count_matrix)
@@ -31,6 +34,21 @@ setMethod(
     if(!all(cells_a %in% cells_m)){
       stop("The cell IDs in the annotation and count matrix do not correspond.")
     }
+
+    # filter expression matrix if wanted (remove 0 genes and genes with no variance)
+    if(filter_genes){
+      count_matrix <- count_matrix[which(Matrix::rowSums(count_matrix)>0),]
+      # need to calculate the row variance in chunks of 1000 rows
+      #ncuts <- dim(count_matrix)[1]/1000
+      #cuts<-split(seq_len(nrow(count_matrix)), cut(seq_len(nrow(count_matrix)), pretty(seq_len(nrow(count_matrix)), ncuts)))
+      #names(cuts)<-NULL
+      #res <- mclapply(cuts, function(x){
+      #  chunk <- Matrix(count_matrix[unlist(x, use.names = F),])
+      #  vars <- apply(chunk, 1, var)
+      #  return(names(which(vars==0)))
+      #}, mc.cores = 8)
+    }
+
 
     # generate new IDs for the cells and replace them in the count table
     new_ids <- paste0(name,"_", rep(1:length(cells_m)))
@@ -66,18 +84,20 @@ setMethod(
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
+#' @param filter_genes boolean, if zero expression genes will be included in dataset or not
 #'
 #' @return dataset object
 #' @export
 #'
 #' @examples
-dataset <- function(annotation, count_matrix, name, count_type="TPM", spike_in_col=NULL){
+dataset <- function(annotation, count_matrix, name, count_type="TPM", spike_in_col=NULL, filter_genes=F){
   methods::new(Class="dataset",
       annotation=annotation,
       count_matrix=count_matrix,
       name=name,
       count_type=count_type,
-      spike_in_col=spike_in_col
+      spike_in_col=spike_in_col,
+      filter_genes=filter_genes
      )
 }
 
@@ -88,12 +108,13 @@ dataset <- function(annotation, count_matrix, name, count_type="TPM", spike_in_c
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
+#' @param filter_genes boolean, if zero expression genes will be included in dataset or not
 #'
 #' @return dataset object
 #' @export
 #'
 #' @examples
-dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in_col=NULL){
+dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in_col=NULL, filter_genes=F){
 
   #TODO check for valid file
   h5ad_file <- normalizePath(h5ad_file)
@@ -114,7 +135,8 @@ dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in
       count_matrix=X_mat,
       name=name,
       count_type=count_type,
-      spike_in_col=spike_in_col
+      spike_in_col=spike_in_col,
+      filter_genes=filter_genes
   )
 }
 
@@ -125,12 +147,13 @@ dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
+#' @param filter_genes boolean, if zero expression genes will be included in dataset or not
 #'
 #' @return dataset object
 #' @export
 #'
 #' @examples
-dataset_seurat <- function(annotation, seurat_obj, name, count_type ="TPM",spike_in_col=NULL){
+dataset_seurat <- function(annotation, seurat_obj, name, count_type ="TPM",spike_in_col=NULL, filter_genes=F){
 
   tryCatch({
     count_matrix <- seurat_obj@assays$RNA@counts
@@ -144,7 +167,8 @@ dataset_seurat <- function(annotation, seurat_obj, name, count_type ="TPM",spike
       count_matrix=count_matrix,
       name=name,
       count_type=count_type,
-      spike_in_col=spike_in_col
+      spike_in_col=spike_in_col,
+      filter_genes=filter_genes
   )
 }
 
@@ -155,19 +179,20 @@ dataset_seurat <- function(annotation, seurat_obj, name, count_type ="TPM",spike
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
+#' @param filter_genes boolean, if zero expression genes will be included in dataset or not
 #'
 #' @return dataset object
 #' @export
 #'
 #' @examples
 dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="TPM",
-                           spike_in_col=NULL){
+                           spike_in_col=NULL, force=F, filter_genes=F){
 
   if(is.null(sfaira_setup)){
     warning("You need to setup sfaira first; please use setup_sfaira() to do so.")
     return(NULL)
   }
-  adata <- download_sfaira_multiple(sfaira_setup, organisms, tissues, assays)
+  adata <- download_sfaira(setup_list = sfaira_setup, id = sfaira_id, force = force)
   count_matrix <- Matrix::t(adata$X)
   if(!is.null(adata$var$gene_symbol)){
     rownames(count_matrix) <- adata$var$gene_symbol
@@ -186,7 +211,8 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="TPM",
       count_matrix=count_matrix,
       name=name,
       count_type=count_type,
-      spike_in_col=spike_in_col
+      spike_in_col=spike_in_col,
+      filter_genes=filter_genes
   )
 
 }
@@ -200,13 +226,14 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="TPM",
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
+#' @param filter_genes boolean, if zero expression genes will be included in dataset or not
 #'
 #' @return dataset object
 #' @export
 #'
 #' @examples
 dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, sfaira_setup, name,
-                                    count_type ="TPM",spike_in_col=NULL){
+                                    count_type ="TPM",spike_in_col=NULL, filter_genes=F){
   if(is.null(sfaira_setup)){
     warning("You need to setup sfaira first; please use setup_sfaira() to do so.")
     return(NULL)
@@ -230,7 +257,8 @@ dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, s
                count_matrix=count_matrix,
                name=name,
                count_type=count_type,
-               spike_in_col=spike_in_col
+               spike_in_col=spike_in_col,
+               filter_genes=filter_genes
   )
 }
 
@@ -241,7 +269,6 @@ dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, s
 #' @param id_column name of cell ID column; default is 1, which uses the rownames
 #'
 #' @return annotation dataframe with correct column names
-#' @export
 #'
 #' @examples
 check_annotation <- function(annotation, cell_column="cell_type", id_column=1){

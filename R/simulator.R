@@ -18,9 +18,12 @@ require(dplyr)
 
 ###### simulation ######
 
-#' function to sample cells according to given cell-type fractions; creates a single pseudo-bulk sample
-#' Note: if total_read_counts is used, the cell-fractions are applied to the number of counts, not the number of cells!
+#' simulate single pseudo-bulk sample
 #'
+#' @description
+#' function to sample cells according to given cell-type fractions. This creates a single pseudo-bulk sample by calculating the
+#' mean expression value per gene over all sampled cells.
+#' Note: if total_read_counts is used, the cell-fractions are applied to the number of counts, not the number of cells!
 #' @param data \code{\link{database}} or \code{\link{dataset}} object
 #' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{custom}
 #' @param simulation_vector named vector with wanted cell-types and their fractions
@@ -28,11 +31,18 @@ require(dplyr)
 #' @param total_read_counts numeric; sets the total read count value for each sample
 #' @param ncores numeric; number of cores used to create simulation
 #'
-#' @return returns a vector with mean count/TPM values over all selected samples per gene
+#' @return returns a vector with expression values for all genes in the provided dataset
 #' @export
 #'
 #' @examples
-#' simulate_sample(data = dataset, scaling_factor="census", simulation_vector=c("B cells"=0.3,"T cells"=0.5, "Macrophages"=0.2), total_cells=1000, total_read_counts)
+#' \dontrun{
+#' # simulate a pseudo-bulk dataset with three cell-types: Bcells, Tcells & Macrophages with a total of 1000 cells in the sample
+#' simulate_sample(data = dataset, scaling_factor="none", simulation_vector=c("B cells"=0.3,"T cells"=0.5, "Macrophages"=0.2), total_cells=1000)
+#' # simulate a pseudo-bulk dataset with three cell-types: Bcells, Tcells & Macrophages with a total of 1e8 reads in the sample
+#' simulate_sample(data = dataset, scaling_factor="none", simulation_vector=c("B cells"=0.3,"T cells"=0.5, "Macrophages"=0.2), total_read_counts=1e8)
+#' # simulate a pseudo-bulk dataset and apply census normalization on the sampled single cells before calculating the bulk sample
+#' simulate_sample(data = dataset, scaling_factor="census", simulation_vector=c("B cells"=0.3,"T cells"=0.5, "Macrophages"=0.2), total_read_counts=1e8)
+#' }
 simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells, total_read_counts, ncores){
 
   if(!all(names(simulation_vector) %in% unique(data@annotation[["cell_type"]]))){
@@ -102,15 +112,16 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 }
 
 
-# function to simulate a whole pseudo-bulk dataset
-# data = dataset or database object
-# scenario = pre-defined cell-type fractions
-# nsamples = number of pseudo-bulk samples to be generated
 #' simulate whole pseudo-bulk RNAseq dataset
 #'
-#' @param data \code{\link{database}} or \code{\link{dataset}} object
+#' @description
+#' This function allows you to create a full pseudo-bulk RNAseq dataset. You need to provide a \code{\link{dataset}} or \code{\link{database}} from which the cells
+#' will be sampled for the simulation. Also a \code{scenario} has to be selected, where you can choose how the cells will be sampled and a
+#' \code{scaling_factor} on how the read counts will be transformed proir to the simulation.
+#'
+#' @param data \code{\link{dataset}} or \code{\link{database}} object
 #' @param scenario select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{unique},\code{spill-over}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
-#' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{custom}
+#' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in} or \code{NONE} for no scaling factor
 #' @param spike_in_cell_type name of cell-type used for \code{spike-in} scenario
 #' @param spike_in_amount fraction of cell-type used for \code{spike-in} scenario; must be between \code{0} and \code{0.99}
 #' @param spillover_cell_type name of cell-type used for \code{spill-over} scenario
@@ -128,9 +139,24 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' # this creates a basic dataset with uniform cell-type distribution and no additional transformation of the data with 10 samples and 2000 cells each
+#' simulate_bulk(dataset, scenario="uniform", scaling_factor="NONE", nsamples=10, ncells=2000)
+#' # use the spike-in scenario to have 50% B cells per sample
+#' simulate_bulk(dataset, scenario="spike-in", scaling_factor="NONE", nsamples=10, ncells=2000, spike_in_cell_type="Bcell", spike_in_amount=0.5)
+#' # use the unique scenario to only have B cells
+#' simulate_bulk(dataset, scenario="unique", scaling_factor="NONE", nsamples=10, ncells=2000, unique_cell_type="Bcell")
+#' # use the unique scenario to only have B cells
+#' simulate_bulk(dataset, scenario="unique", scaling_factor="NONE", nsamples=10, ncells=2000, unique_cell_type="Bcell")
+#' # simulate a dataset with custom cell-type fraction for each of the 3 samples
+#' fractions <- data.frame("Bcell"=c(0.2,0.4,0.2),"Tcell"=c(0.4,0.2,0.1),"Macrophage"=c(0.4,0.4,0.7))
+#' simulate_bulk(dataset, scenario="custom", scaling_factor="NONE", nsamples=3, ncells=2000, custom_scenario_data=fractions)
+#' # use a blacklist to exclude certain cell-types for the simulation
+#' simulate_bulk(dataset, scenario="custom", scaling_factor="NONE", nsamples=3, ncells=2000, custom_scenario_data=fractions)
+#' }
 simulate_bulk <- function(data,
                           scenario=c("uniform","random","spike-in","unique", "custom"),
-                          scaling_factor=c("NONE","census","spike-in","custom"),
+                          scaling_factor=c("NONE","census","spike-in"),
                           spike_in_cell_type = NULL,
                           spike_in_amount = NULL,
                           unique_cell_type = NULL,

@@ -44,7 +44,7 @@ library(RColorBrewer)
 Cell-type deconvolution is an important analysis-step while processing bulk RNA-seq experiments 
 and many tools exist to tackle this issue. Though the user lacks a good comparison between those
 tools and when one might be more beneficial than others. \
-The goal of this simulator is to create benchmark datasets, where pseudo bulk sample with 
+The goal of this simulator is to create benchmark datasets, where pseudo bulk samples with 
 predefined cell-type fractions can be simulated using expression data from single-cell RNAseq
 experiments. 
 
@@ -59,9 +59,23 @@ sfaira [@Fischer2020] is used, which is a dataset and model repository for singl
 data. It gives access to about 233 datasets from human and mouse with more than 3 million cells in total. 
 You can browse them interactively here: [https://theislab.github.io/sfaira-portal/Datasets](https://theislab.github.io/sfaira-portal/Datasets). Note 
 that only annotated datasets will be downloaded! \
-In order to use this database, we first need to install it using conda. Simply follow [this installation
-tutorial](https://sfaira.readthedocs.io/en/latest/installation.html). You do not need to activate the
-new conda environment in order to use it later on. \
+In order to use this database, we first need to install it. We recommend to use [conda](https://docs.conda.io/projects/conda/en/latest/index.html) to create a new
+environment and install sfaira into this directory. This ensures that no other packages interfere with the installation. \
+*Note:* currently the simulator seems to work only with the develop version of sfaira.\
+A recommended step by step installation would look like this:
+```
+conda create --name sfaira
+conda activate sfaira
+conda install pip
+git clone https://github.com/theislab/sfaira.git
+cd sfaira
+git checkout dev
+git pull
+/path/to/conda/envs/sfaira/bin/pip install -e . #this ensures that the correct pip is used
+```
+Watch out that you are using pip inside of the new environment, not the global pip!\
+
+You do not need to activate the new conda environment each time in order to use it in the R package.\
 To setup sfaira inside of the R package use this command: 
 
 ```{r, warning=TRUE, message=TRUE}
@@ -233,7 +247,7 @@ dataset_seurat <- simulator::dataset_seurat(annotation = annotation,
 columns: `ID` for the cell ID, which has to be in common with the cell IDs in the 
 expression matrix and `cell_type`, which gives the cell-type for a cell. \
 
-## Simulate using a whitelist of cell-types
+## Simulate using a whitelist (and blacklist) of cell-types
 
 Sometimes, you are only interested in specific cell-types, but the dataset you are using
 has way too many cell-types:
@@ -264,6 +278,9 @@ ggplot(frac_long, aes(x=fraction, y=sample, fill=cell_type))+
   ggtitle("Cell-type fractions for 50 pseudo-bulk RNAseq samples")+
   scale_fill_manual(values = colorRampPalette(brewer.pal(8, "Set2"))(length(unique(frac_long$cell_type))))
 ```
+
+In the same way, you can also provide a `blacklist` parameter, where you name the
+cell-types you **don't** want to be included in your simulation.
 
 ## Using scaling factors (Census)
 [I am still working on this section..]
