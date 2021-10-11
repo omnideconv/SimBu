@@ -18,43 +18,39 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of simulator is to ...
+The goal of simulator is to simulate pseudo-bulk RNAseq datasets from public or private single-cell RNAseq datasets.
 
 ## Installation
 
-You can install the released version of simulator from [CRAN](https://CRAN.R-project.org) with:
+To install this package, use the following command:
 
 ``` r
-install.packages("simulator")
+install.packages("devtools")
+devtools::install_github("omnideconv/simulator") # auth=XXX for private repository
 ```
 
-And the development version from [GitHub](https://github.com/) with:
+If you want to use the public data integration the package offers ([sfaira](https://theislab.github.io/Datasets) database), you additionally have to install sfaira into a new conda environment; follow these steps in your terminal:
 
-``` r
-# install.packages("devtools")
-devtools::install_github("alex-d13/simulator")
 ```
-## Example
+conda create --name sfaira
+conda activate sfaira
+conda install pip
+git clone https://github.com/theislab/sfaira.git
+cd sfaira
+git checkout dev
+git pull
+/path/to/conda/envs/sfaira/bin/pip install -e . #this ensures that the correct pip is used
+```
 
-This is a basic example which shows you how to solve a common problem:
+## Usage
 
-```{r example}
+Create a dataset-object with local data and simulate a pseudo-bulk dataset
+
+```{r example, eval=F}
 library(simulator)
-## basic example code
+# use local data to build dataset
+dataset <- dataset(annotation = annotation_dataframe, count_matrix = expression_matrix, name = "test_dataset")
+simulation <- simulate_bulk(data = dataset, scenario = "uniform", scaling_factor = "none")
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
 
-```{r cars}
-summary(cars)
-```
-
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this. You could also use GitHub Actions to re-render `README.Rmd` every time you push. An example workflow can be found here: <https://github.com/r-lib/actions/tree/master/examples>.
-
-You can also embed plots, for example:
-
-```{r pressure, echo = FALSE}
-plot(pressure)
-```
-
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
