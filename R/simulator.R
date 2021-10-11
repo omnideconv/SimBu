@@ -18,7 +18,7 @@ require(dplyr)
 
 ###### simulation ######
 
-#' function to sample cells according to given cell-type fractions
+#' function to sample cells according to given cell-type fractions; creates a single pseudo-bulk sample
 #' Note: if total_read_counts is used, the cell-fractions are applied to the number of counts, not the number of cells!
 #'
 #' @param data \code{\link{database}} or \code{\link{dataset}} object
@@ -32,6 +32,7 @@ require(dplyr)
 #' @export
 #'
 #' @examples
+#' simulate_sample(data = dataset, scaling_factor="census", simulation_vector=c("B cells"=0.3,"T cells"=0.5, "Macrophages"=0.2), total_cells=1000, total_read_counts)
 simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells, total_read_counts, ncores){
 
   if(!all(names(simulation_vector) %in% unique(data@annotation[["cell_type"]]))){
@@ -49,7 +50,7 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 
     # how many cells of this type do we need?
     if(is.null(total_read_counts)){
-      out <- dplyr::sample_frac(cells_of_type_x, simulation_vector[x], replace = T)
+      out <- dplyr::slice_sample(cells_of_type_x, n=total_cells*simulation_vector[x], replace=T)
       out <- out[["cell_ID"]]
     }else{
       # fill sample with cells of current cell-type until total_read_counts value is reached
@@ -57,7 +58,7 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
       read_counts_current <- 0
       out <- list()
       while(read_counts_current < counts_per_cell_type){
-        sampled_cell <- dplyr::sample_n(cells_of_type_x, 1)
+        sampled_cell <- dplyr::slice_sample(cells_of_type_x, n=1)
         read_counts_current <- read_counts_current + sampled_cell[["total_counts_custom"]]
         out <- append(out, values = sampled_cell[["cell_ID"]])
       }
