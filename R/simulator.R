@@ -9,18 +9,13 @@ require(reticulate)
 require(tidyr)
 require(tools)
 require(methods)
-require(dplyr)
-#source("R/scripts/census.R")
-#source("R/dataset.R")
-#source("R/database.R")
-# needs python library sfaira
+
 
 
 ###### simulation ######
 
 #' simulate single pseudo-bulk sample
 #'
-#' @description
 #' function to sample cells according to given cell-type fractions. This creates a single pseudo-bulk sample by calculating the
 #' mean expression value per gene over all sampled cells.
 #' Note: if total_read_counts is used, the cell-fractions are applied to the number of counts, not the number of cells!
@@ -38,8 +33,10 @@ require(dplyr)
 #' \dontrun{
 #' # simulate a pseudo-bulk dataset with three cell-types: Bcells, Tcells & Macrophages with a total of 1000 cells in the sample
 #' simulate_sample(data = dataset, scaling_factor="none", simulation_vector=c("B cells"=0.3,"T cells"=0.5, "Macrophages"=0.2), total_cells=1000)
+#'
 #' # simulate a pseudo-bulk dataset with three cell-types: Bcells, Tcells & Macrophages with a total of 1e8 reads in the sample
 #' simulate_sample(data = dataset, scaling_factor="none", simulation_vector=c("B cells"=0.3,"T cells"=0.5, "Macrophages"=0.2), total_read_counts=1e8)
+#'
 #' # simulate a pseudo-bulk dataset and apply census normalization on the sampled single cells before calculating the bulk sample
 #' simulate_sample(data = dataset, scaling_factor="census", simulation_vector=c("B cells"=0.3,"T cells"=0.5, "Macrophages"=0.2), total_read_counts=1e8)
 #' }
@@ -114,7 +111,6 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 
 #' simulate whole pseudo-bulk RNAseq dataset
 #'
-#' @description
 #' This function allows you to create a full pseudo-bulk RNAseq dataset. You need to provide a \code{\link{dataset}} or \code{\link{database}} from which the cells
 #' will be sampled for the simulation. Also a \code{scenario} has to be selected, where you can choose how the cells will be sampled and a
 #' \code{scaling_factor} on how the read counts will be transformed proir to the simulation.
@@ -142,15 +138,20 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 #' \dontrun{
 #' # this creates a basic dataset with uniform cell-type distribution and no additional transformation of the data with 10 samples and 2000 cells each
 #' simulate_bulk(dataset, scenario="uniform", scaling_factor="NONE", nsamples=10, ncells=2000)
+#'
 #' # use the spike-in scenario to have 50% B cells per sample
 #' simulate_bulk(dataset, scenario="spike-in", scaling_factor="NONE", nsamples=10, ncells=2000, spike_in_cell_type="Bcell", spike_in_amount=0.5)
+#'
 #' # use the unique scenario to only have B cells
 #' simulate_bulk(dataset, scenario="unique", scaling_factor="NONE", nsamples=10, ncells=2000, unique_cell_type="Bcell")
+#'
 #' # use the unique scenario to only have B cells
 #' simulate_bulk(dataset, scenario="unique", scaling_factor="NONE", nsamples=10, ncells=2000, unique_cell_type="Bcell")
+#'
 #' # simulate a dataset with custom cell-type fraction for each of the 3 samples
 #' fractions <- data.frame("Bcell"=c(0.2,0.4,0.2),"Tcell"=c(0.4,0.2,0.1),"Macrophage"=c(0.4,0.4,0.7))
 #' simulate_bulk(dataset, scenario="custom", scaling_factor="NONE", nsamples=3, ncells=2000, custom_scenario_data=fractions)
+#'
 #' # use a blacklist to exclude certain cell-types for the simulation
 #' simulate_bulk(dataset, scenario="custom", scaling_factor="NONE", nsamples=3, ncells=2000, custom_scenario_data=fractions)
 #' }

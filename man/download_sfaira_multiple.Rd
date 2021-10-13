@@ -2,7 +2,7 @@
 % Please edit documentation in R/access_sfaira.R
 \name{download_sfaira_multiple}
 \alias{download_sfaira_multiple}
-\title{download multiple datasets from sfaira using filters for organism, tissue and/or assay; similar to the filters on the sfaira website (\url{https://theislab.github.io/sfaira-portal/Datasets})}
+\title{download multiple datasets from sfaira using filters for organism, tissue and/or assay}
 \usage{
 download_sfaira_multiple(
   setup_list,
@@ -27,5 +27,5 @@ download_sfaira_multiple(
 
 }
 \description{
-download multiple datasets from sfaira using filters for organism, tissue and/or assay; similar to the filters on the sfaira website (\url{https://theislab.github.io/sfaira-portal/Datasets})
+similar to the filters on the sfaira website (\url{https://theislab.github.io/sfaira-portal/Datasets})
 }

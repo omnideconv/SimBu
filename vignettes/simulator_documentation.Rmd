@@ -64,7 +64,7 @@ environment and install sfaira into this directory. This ensures that no other p
 *Note:* currently the simulator seems to work only with the develop version of sfaira.\
 A recommended step by step installation would look like this:
 ```
-conda create --name sfaira
+conda create --name sfaira python=3.9
 conda activate sfaira
 conda install pip
 git clone https://github.com/theislab/sfaira.git
@@ -87,7 +87,12 @@ setup_list <- simulator::setup_sfaira(python_path = "/nfs/home/students/adietric
 The `python_path` parameter is used to set the path to the python executable **inside** of the
 newly created conda environment. Similarly, the `env_name` parameter is the name of this newly
 created conda environment. These two parameters need to be set correctly, so that sfaira can be
-used later on. \
+used later on. You can find out the python-path in a conda environment named `sfaira` like this:\
+```
+activate sfaira
+which python3
+```
+
 The third parameter describes the name of a directory in which the raw files, meta data and cached
 data from downloading datasets from sfaira are stored into. \
 You need to save the output of the command above in a variable for later use. \
@@ -114,6 +119,13 @@ The package will download them for you automatically and merge them together int
 matrix and a streamlined annotation table, which we can use for our simulation. \
 It can happen, that some datasets from sfaira are not (yet) ready for the automatic download,
 an error message will then appear in R, telling you which file to download and where to put it. \
+
+If you wish to see all datasets which are included in sfaira you can use the following command:
+```{r}
+all_datasets <- simulator::sfaira_overview(setup_list = setup_list)
+head(all_datasets)
+```
+
 
 ## Simulate pseudo bulk datasets
 

@@ -2,8 +2,7 @@
 % Please edit documentation in R/simulator.R
 \name{simulate_sample}
 \alias{simulate_sample}
-\title{function to sample cells according to given cell-type fractions
-Note: if total_read_counts is used, the cell-fractions are applied to the number of counts, not the number of cells!}
+\title{simulate single pseudo-bulk sample}
 \usage{
 simulate_sample(
   data,
@@ -28,9 +27,22 @@ simulate_sample(
 \item{ncores}{numeric; number of cores used to create simulation}
 }
 \value{
-returns a vector with mean count/TPM values over all selected samples per gene
+returns a vector with expression values for all genes in the provided dataset
 }
 \description{
-function to sample cells according to given cell-type fractions
+function to sample cells according to given cell-type fractions. This creates a single pseudo-bulk sample by calculating the
+mean expression value per gene over all sampled cells.
 Note: if total_read_counts is used, the cell-fractions are applied to the number of counts, not the number of cells!
+}
+\examples{
+\dontrun{
+# simulate a pseudo-bulk dataset with three cell-types: Bcells, Tcells & Macrophages with a total of 1000 cells in the sample
+simulate_sample(data = dataset, scaling_factor="none", simulation_vector=c("B cells"=0.3,"T cells"=0.5, "Macrophages"=0.2), total_cells=1000)
+
+# simulate a pseudo-bulk dataset with three cell-types: Bcells, Tcells & Macrophages with a total of 1e8 reads in the sample
+simulate_sample(data = dataset, scaling_factor="none", simulation_vector=c("B cells"=0.3,"T cells"=0.5, "Macrophages"=0.2), total_read_counts=1e8)
+
+# simulate a pseudo-bulk dataset and apply census normalization on the sampled single cells before calculating the bulk sample
+simulate_sample(data = dataset, scaling_factor="census", simulation_vector=c("B cells"=0.3,"T cells"=0.5, "Macrophages"=0.2), total_read_counts=1e8)
+}
 }

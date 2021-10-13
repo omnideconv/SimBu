@@ -1,5 +1,8 @@
-# needs sparse matrix with cells in cols, genes in rows
-#' applies the census count transformation on a count matrix; needs a sparse matrix with cells in columns and genes in rows
+
+#' applies the census count transformation on a count matrix
+#'
+#' needs a sparse matrix with cells in columns and genes in rows. You can find the detailed explaination here:
+#' \url{http://cole-trapnell-lab.github.io/monocle-release/docs/#census}
 #'
 #' @param matrix sparse count matrix; cells in columns, genes in rows
 #' @param exp_capture_rate expected capture rate; default=0.25

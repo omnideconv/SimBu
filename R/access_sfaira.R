@@ -1,5 +1,11 @@
 #' setup the sfaira package
 #'
+#' If you want to download datasets from sfaira, you need to setup the connection to their database first.
+#' Sfaira should be installed in its own conda environment; the python-path used inside of this environment
+#' as well as the name of the environment have to be given to this function. Additionally you have to give the
+#' path to a directory where the sfaira datasets will be downloaded into.
+#'
+#'
 #' @param python_path path to the python executable
 #' @param env_name name of the conda environment in which sfaira is installed
 #' @param basedir name of the directory, where the raw files will be downloaded into
@@ -8,6 +14,9 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' sfaira_list <- setup_sfaira(python_path="/path/to/conda/envs/sfaira/bin/python3",env_name="sfaira", basedir="/home/sfaira_data")
+#' }
 setup_sfaira <- function(python_path, env_name, basedir){
   tryCatch({
     # check if sfaira is installed in environment
@@ -77,7 +86,9 @@ download_sfaira <- function(setup_list, id, force=F, synapse_user=NULL, synapse_
 
 }
 
-#' download multiple datasets from sfaira using filters for organism, tissue and/or assay; similar to the filters on the sfaira website (\url{https://theislab.github.io/sfaira-portal/Datasets})
+#' download multiple datasets from sfaira using filters for organism, tissue and/or assay
+#'
+#' similar to the filters on the sfaira website (\url{https://theislab.github.io/sfaira-portal/Datasets})
 #'
 #' @param setup_list the sfaira setup; given by \code{\link{setup_sfaira}}
 #' @param organisms list of organisms (only human and mouse available)
@@ -131,4 +142,36 @@ download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, a
     print(e$message)
     return(NULL)
   })
+}
+
+
+#' Gives an overview of the possible datasets you can use from the sfaira database
+#'
+#' @param setup_list the sfaira setup; given by \code{\link{setup_sfaira}}
+#'
+#' @return a dataframe with information on each dataset
+#' @export
+#'
+#' @examples
+#' all_datasets <- sfaira_overview(setup_list)
+sfaira_overview <- function(setup_list){
+  sfaira <- setup_list[["sfaira"]]
+  ds <- sfaira$data$Universe(data_path = setup_list[["rawdir"]],
+                             meta_path = setup_list[["metadir"]],
+                             cache_path = setup_list[["cachedir"]])
+  all_datasets <- ds$datasets
+  info_list <- lapply(all_datasets, function(x){
+    return(list(id=x$id,
+                author=x$author,
+                doi=x$doi,
+                annotated=x$annotated,
+                normalization=x$normalization,
+                assay=x$assay_sc,
+                organ=x$organ,
+                organism=x$organism))
+  })
+
+  suppressWarnings(out <- rbindlist(info_list))
+  out$annotated[which(is.na(out$annotated))]<-F
+  return(out)
 }

@@ -8,7 +8,7 @@
 a datasets object
 }
 \description{
-class for a dataset
+This is the main class to store single-cell datasets and use them for pseudo-bulk simulations.
 }
 \section{Slots}{
 

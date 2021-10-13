@@ -6,30 +6,32 @@
 \usage{
 simulate_bulk(
   data,
-  scenario = c("uniform", "random", "spike-in", "spill-over"),
-  scaling_factor = c("NONE", "census", "spike-in", "custom"),
+  scenario = c("uniform", "random", "spike-in", "unique", "custom"),
+  scaling_factor = c("NONE", "census", "spike-in"),
   spike_in_cell_type = NULL,
   spike_in_amount = NULL,
-  spillover_cell_type = NULL,
+  unique_cell_type = NULL,
+  custom_scenario_data = NULL,
   nsamples = 100,
   ncells = 1000,
   total_read_counts = NULL,
   whitelist = NULL,
+  blacklist = NULL,
   ncores = 1
 )
 }
 \arguments{
-\item{data}{\code{\link{database}} or \code{\link{dataset}} object}
+\item{data}{\code{\link{dataset}} or \code{\link{database}} object}
 
-\item{scenario}{select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{spike-in},\code{spill-over}}
+\item{scenario}{select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{unique},\code{spill-over}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.}
 
-\item{scaling_factor}{name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{custom}}
+\item{scaling_factor}{name of scaling factor; possible are: \code{census}, \code{spike-in} or \code{NONE} for no scaling factor}
 
 \item{spike_in_cell_type}{name of cell-type used for \code{spike-in} scenario}
 
 \item{spike_in_amount}{fraction of cell-type used for \code{spike-in} scenario; must be between \code{0} and \code{0.99}}
 
-\item{spillover_cell_type}{name of cell-type used for \code{spill-over} scenario}
+\item{custom_scenario_data}{dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.}
 
 \item{nsamples}{numeric; number of samples in pseudo-bulk RNAseq dataset}
 
@@ -37,7 +39,13 @@ simulate_bulk(
 
 \item{total_read_counts}{numeric; sets the total read count value for each sample}
 
+\item{whitelist}{list; give a list of cell-types you want to keep for the simulation; if NULL, all are used}
+
+\item{blacklist}{list; give a list of cell-types you want to remove for the simulation; if NULL, all are used; is applied after whitelist}
+
 \item{ncores}{numeric; number of cores to use}
+
+\item{spillover_cell_type}{name of cell-type used for \code{spill-over} scenario}
 }
 \value{
 named list; \code{pseudo_bulk} is a sparse matrix with the simulated counts;
@@ -45,5 +53,29 @@ named list; \code{pseudo_bulk} is a sparse matrix with the simulated counts;
 \code{expression_set} is a Bioconductor Expression Set \url{http://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf}
 }
 \description{
-simulate whole pseudo-bulk RNAseq dataset
+This function allows you to create a full pseudo-bulk RNAseq dataset. You need to provide a \code{\link{dataset}} or \code{\link{database}} from which the cells
+will be sampled for the simulation. Also a \code{scenario} has to be selected, where you can choose how the cells will be sampled and a
+\code{scaling_factor} on how the read counts will be transformed proir to the simulation.
+}
+\examples{
+\dontrun{
+# this creates a basic dataset with uniform cell-type distribution and no additional transformation of the data with 10 samples and 2000 cells each
+simulate_bulk(dataset, scenario="uniform", scaling_factor="NONE", nsamples=10, ncells=2000)
+
+# use the spike-in scenario to have 50\% B cells per sample
+simulate_bulk(dataset, scenario="spike-in", scaling_factor="NONE", nsamples=10, ncells=2000, spike_in_cell_type="Bcell", spike_in_amount=0.5)
+
+# use the unique scenario to only have B cells
+simulate_bulk(dataset, scenario="unique", scaling_factor="NONE", nsamples=10, ncells=2000, unique_cell_type="Bcell")
+
+# use the unique scenario to only have B cells
+simulate_bulk(dataset, scenario="unique", scaling_factor="NONE", nsamples=10, ncells=2000, unique_cell_type="Bcell")
+
+# simulate a dataset with custom cell-type fraction for each of the 3 samples
+fractions <- data.frame("Bcell"=c(0.2,0.4,0.2),"Tcell"=c(0.4,0.2,0.1),"Macrophage"=c(0.4,0.4,0.7))
+simulate_bulk(dataset, scenario="custom", scaling_factor="NONE", nsamples=3, ncells=2000, custom_scenario_data=fractions)
+
+# use a blacklist to exclude certain cell-types for the simulation
+simulate_bulk(dataset, scenario="custom", scaling_factor="NONE", nsamples=3, ncells=2000, custom_scenario_data=fractions)
+}
 }

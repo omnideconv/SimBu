@@ -9,7 +9,8 @@ dataset_seurat(
   seurat_obj,
   name,
   count_type = "TPM",
-  spike_in_col = NULL
+  spike_in_col = NULL,
+  filter_genes = F
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ dataset_seurat(
 \item{count_type}{what type of counts are in the dataset; default is 'TPM'}
 
 \item{spike_in_col}{which column in annotation contains information on spike-in counts, which can be used to re-scale counts}
+
+\item{filter_genes}{boolean, if zero expression genes will be included in dataset or not}
 }
 \value{
 dataset object

@@ -2,7 +2,7 @@
 % Please edit documentation in R/census.R
 \name{census}
 \alias{census}
-\title{applies the census count transformation on a count matrix; needs a sparse matrix with cells in columns and genes in rows}
+\title{applies the census count transformation on a count matrix}
 \usage{
 census(
   matrix,
@@ -27,5 +27,6 @@ census(
 a vector for each cell-type, with a scaling factor which can be used to transform the counts of the matrix
 }
 \description{
-applies the census count transformation on a count matrix; needs a sparse matrix with cells in columns and genes in rows
+needs a sparse matrix with cells in columns and genes in rows. You can find the detailed explaination here:
+\url{http://cole-trapnell-lab.github.io/monocle-release/docs/#census}
 }
