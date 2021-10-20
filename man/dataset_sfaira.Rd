@@ -12,7 +12,8 @@ dataset_sfaira(
   spike_in_col = NULL,
   force = F,
   filter_genes = T,
-  variance_cutoff = 0
+  variance_cutoff = 0,
+  type_abundance_cutoff = 0
 )
 }
 \arguments{
@@ -29,6 +30,8 @@ dataset_sfaira(
 \item{filter_genes}{boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}}
 
 \item{variance_cutoff}{numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff}
+
+\item{type_abundance_cutoff}{numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types}
 }
 \value{
 dataset object
