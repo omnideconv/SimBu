@@ -2,16 +2,17 @@
 % Please edit documentation in R/dataset.R
 \name{dataset_sfaira}
 \alias{dataset_sfaira}
-\title{constructor for a dataset using a sfaira ID}
+\title{Build a dataset using a single sfaira entry ID}
 \usage{
 dataset_sfaira(
   sfaira_id,
   sfaira_setup,
   name,
-  count_type = "TPM",
+  count_type = "raw",
   spike_in_col = NULL,
   force = F,
-  filter_genes = F
+  filter_genes = T,
+  variance_cutoff = 0
 )
 }
 \arguments{
@@ -25,11 +26,13 @@ dataset_sfaira(
 
 \item{spike_in_col}{which column in annotation contains information on spike-in counts, which can be used to re-scale counts}
 
-\item{filter_genes}{boolean, if zero expression genes will be included in dataset or not}
+\item{filter_genes}{boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}}
+
+\item{variance_cutoff}{numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff}
 }
 \value{
 dataset object
 }
 \description{
-constructor for a dataset using a sfaira ID
+Build a dataset using a single sfaira entry ID
 }

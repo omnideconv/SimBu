@@ -8,9 +8,10 @@ dataset_h5ad(
   annotation,
   h5ad_file,
   name,
-  count_type = "TPM",
+  count_type = "raw",
   spike_in_col = NULL,
-  filter_genes = F
+  filter_genes = T,
+  variance_cutoff = 0
 )
 }
 \arguments{
@@ -24,7 +25,9 @@ dataset_h5ad(
 
 \item{spike_in_col}{which column in annotation contains information on spike-in counts, which can be used to re-scale counts}
 
-\item{filter_genes}{boolean, if zero expression genes will be included in dataset or not}
+\item{filter_genes}{boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}}
+
+\item{variance_cutoff}{numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff}
 }
 \value{
 dataset object

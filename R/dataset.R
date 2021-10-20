@@ -19,7 +19,7 @@ setClass("dataset", slots=list(annotation="data.frame",
 setMethod(
   f="initialize",
   signature="dataset",
-  definition = function(.Object, annotation, count_matrix, name, count_type, spike_in_col, filter_genes){
+  definition = function(.Object, annotation, count_matrix, name, count_type, spike_in_col, filter_genes, variance_cutoff, type_abundance_cutoff){
     genes <- rownames(count_matrix)
     cells_a <- annotation[["ID"]]
     cells_m <- colnames(count_matrix)
@@ -37,18 +37,13 @@ setMethod(
 
     # filter expression matrix if wanted (remove 0 genes and genes with no variance)
     if(filter_genes){
-      count_matrix <- count_matrix[which(Matrix::rowSums(count_matrix)>0),]
-      # need to calculate the row variance in chunks of 1000 rows
-      #ncuts <- dim(count_matrix)[1]/1000
-      #cuts<-split(seq_len(nrow(count_matrix)), cut(seq_len(nrow(count_matrix)), pretty(seq_len(nrow(count_matrix)), ncuts)))
-      #names(cuts)<-NULL
-      #res <- mclapply(cuts, function(x){
-      #  chunk <- Matrix(count_matrix[unlist(x, use.names = F),])
-      #  vars <- apply(chunk, 1, var)
-      #  return(names(which(vars==0)))
-      #}, mc.cores = 8)
+      print("Filtering genes...")
+      # filter by expression
+      count_matrix <- count_matrix[which(Matrix::rowSums(count_matrix) > 0),]
+      #filter by variance
+      count_matrix <- as(count_matrix, "dgCMatrix")
+      count_matrix <- count_matrix[which(sparseMatrixStats::rowVars(count_matrix) > variance_cutoff),]
     }
-
 
     # generate new IDs for the cells and replace them in the count table
     new_ids <- paste0(name,"_", rep(1:length(cells_m)))
@@ -59,6 +54,15 @@ setMethod(
                           cell_ID.old = cells_m,
                           cell_type = annotation[["cell_type"]],
                           count_type = count_type)
+
+    # filter cells by type abundance
+    if(type_abundance_cutoff > 0){
+      low_abundant_types <- names(which(table(anno_df$cell_type) < type_abundance_cutoff))
+      low_abundant_cells <- anno_df[anno_df$cell_type %in% low_abundant_types,]$cell_ID
+
+      anno_df <- anno_df[!anno_df$cell_ID %in% low_abundant_cells,]
+      count_matrix <- count_matrix[,which(!colnames(count_matrix) %in% low_abundant_cells)]
+    }
 
     # add additional column with total read counts/TPMs per sample
     anno_df$total_counts_custom <- Matrix::colSums(count_matrix)
@@ -84,20 +88,24 @@ setMethod(
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
-#' @param filter_genes boolean, if zero expression genes will be included in dataset or not
+#' @param filter_genes boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}
+#' @param variance_cutoff numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff
+#' @param type_abundance_cutoff numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types
 #'
 #' @return dataset object
 #' @export
 #'
 #' @examples
-dataset <- function(annotation, count_matrix, name, count_type="TPM", spike_in_col=NULL, filter_genes=F){
+dataset <- function(annotation, count_matrix, name, count_type="raw", spike_in_col=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
   methods::new(Class="dataset",
       annotation=annotation,
       count_matrix=count_matrix,
       name=name,
       count_type=count_type,
       spike_in_col=spike_in_col,
-      filter_genes=filter_genes
+      filter_genes=filter_genes,
+      variance_cutoff=variance_cutoff,
+      type_abundance_cutoff=type_abundance_cutoff
      )
 }
 
@@ -108,13 +116,15 @@ dataset <- function(annotation, count_matrix, name, count_type="TPM", spike_in_c
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
-#' @param filter_genes boolean, if zero expression genes will be included in dataset or not
+#' @param filter_genes boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}
+#' @param variance_cutoff numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff
+#' @param type_abundance_cutoff numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types
 #'
 #' @return dataset object
 #' @export
 #'
 #' @examples
-dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in_col=NULL, filter_genes=F){
+dataset_h5ad <- function(annotation, h5ad_file, name, count_type="raw", spike_in_col=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
 
   #TODO check for valid file
   h5ad_file <- normalizePath(h5ad_file)
@@ -136,7 +146,9 @@ dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in
       name=name,
       count_type=count_type,
       spike_in_col=spike_in_col,
-      filter_genes=filter_genes
+      filter_genes=filter_genes,
+      variance_cutoff=variance_cutoff,
+      type_abundance_cutoff=type_abundance_cutoff
   )
 }
 
@@ -147,13 +159,15 @@ dataset_h5ad <- function(annotation, h5ad_file, name, count_type="TPM", spike_in
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
-#' @param filter_genes boolean, if zero expression genes will be included in dataset or not
+#' @param filter_genes boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}
+#' @param variance_cutoff numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff
+#' @param type_abundance_cutoff numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types
 #'
 #' @return dataset object
 #' @export
 #'
 #' @examples
-dataset_seurat <- function(annotation, seurat_obj, name, count_type ="TPM",spike_in_col=NULL, filter_genes=F){
+dataset_seurat <- function(annotation, seurat_obj, name, count_type ="raw",spike_in_col=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
 
   tryCatch({
     count_matrix <- seurat_obj@assays$RNA@counts
@@ -168,25 +182,29 @@ dataset_seurat <- function(annotation, seurat_obj, name, count_type ="TPM",spike
       name=name,
       count_type=count_type,
       spike_in_col=spike_in_col,
-      filter_genes=filter_genes
+      filter_genes=filter_genes,
+      variance_cutoff=variance_cutoff,
+      type_abundance_cutoff=type_abundance_cutoff
   )
 }
 
-#' constructor for a dataset using a sfaira ID
+#' Build a dataset using a single sfaira entry ID
 #'
 #' @param sfaira_id ID of a sfaira dataset
 #' @param sfaira_setup the sfaira setup; given by \code{\link{setup_sfaira}}
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
-#' @param filter_genes boolean, if zero expression genes will be included in dataset or not
+#' @param filter_genes boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}
+#' @param variance_cutoff numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff
+#' @param type_abundance_cutoff numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types
 #'
 #' @return dataset object
 #' @export
 #'
 #' @examples
-dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="TPM",
-                           spike_in_col=NULL, force=F, filter_genes=F){
+dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="raw",
+                           spike_in_col=NULL, force=F, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
 
   if(is.null(sfaira_setup)){
     warning("You need to setup sfaira first; please use setup_sfaira() to do so.")
@@ -212,12 +230,18 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="TPM",
       name=name,
       count_type=count_type,
       spike_in_col=spike_in_col,
-      filter_genes=filter_genes
+      filter_genes=filter_genes,
+      variance_cutoff=variance_cutoff,
+      type_abundance_cutoff=type_abundance_cutoff
   )
 
 }
 
-#' constructor for dataset using filters for tissue, organism and assay. This results in much larger datasets for simulation
+#' Build a dataset using multiple sfaira entries
+#'
+#' You can apply different filters on the whole data-zoo of sfaria; the resulting single-cell datasets will
+#' be combined into a single dataset which you can use for simulation
+#' Note: only datasets in sfaira with annotation are considered!
 #'
 #' @param organisms list of organisms (only human and mouse available)
 #' @param tissues list of tissues
@@ -226,14 +250,16 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="TPM",
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
-#' @param filter_genes boolean, if zero expression genes will be included in dataset or not
+#' @param filter_genes boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}
+#' @param variance_cutoff numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff
+#' @param type_abundance_cutoff numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types
 #'
 #' @return dataset object
 #' @export
 #'
 #' @examples
 dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, sfaira_setup, name,
-                                    count_type ="TPM",spike_in_col=NULL, filter_genes=F){
+                                    count_type ="raw",spike_in_col=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
   if(is.null(sfaira_setup)){
     warning("You need to setup sfaira first; please use setup_sfaira() to do so.")
     return(NULL)
@@ -258,7 +284,9 @@ dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, s
                name=name,
                count_type=count_type,
                spike_in_col=spike_in_col,
-               filter_genes=filter_genes
+               filter_genes=filter_genes,
+               variance_cutoff=variance_cutoff,
+               type_abundance_cutoff=type_abundance_cutoff
   )
 }
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/dataset.R
 \name{dataset_sfaira_multiple}
 \alias{dataset_sfaira_multiple}
-\title{constructor for dataset using filters for tissue, organism and assay. This results in much larger datasets for simulation}
+\title{Build a dataset using multiple sfaira entries}
 \usage{
 dataset_sfaira_multiple(
   organisms = NULL,
@@ -10,9 +10,10 @@ dataset_sfaira_multiple(
   assays = NULL,
   sfaira_setup,
   name,
-  count_type = "TPM",
+  count_type = "raw",
   spike_in_col = NULL,
-  filter_genes = F
+  filter_genes = T,
+  variance_cutoff = 0
 )
 }
 \arguments{
@@ -30,11 +31,15 @@ dataset_sfaira_multiple(
 
 \item{spike_in_col}{which column in annotation contains information on spike-in counts, which can be used to re-scale counts}
 
-\item{filter_genes}{boolean, if zero expression genes will be included in dataset or not}
+\item{filter_genes}{boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}}
+
+\item{variance_cutoff}{numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff}
 }
 \value{
 dataset object
 }
 \description{
-constructor for dataset using filters for tissue, organism and assay. This results in much larger datasets for simulation
+You can apply different filters on the whole data-zoo of sfaria; the resulting single-cell datasets will
+be combined into a single dataset which you can use for simulation
+Note: only datasets in sfaira with annotation are considered!
 }

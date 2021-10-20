@@ -26,7 +26,7 @@ To install the package, run this:
 
 ```{r, eval=FALSE}
 install.packages("devtools")
-devtools::install_github("omnideconv/simulator") #add auth=XXX to download from private repository
+devtools::install_github("omnideconv/simulator") #add auth_token=XXX to download from private repository
 ```
 
 
@@ -64,14 +64,9 @@ environment and install sfaira into this directory. This ensures that no other p
 *Note:* currently the simulator seems to work only with the develop version of sfaira.\
 A recommended step by step installation would look like this:
 ```
-conda create --name sfaira python=3.9
+conda create --name sfaira python=3.9 pip
 conda activate sfaira
-conda install pip
-git clone https://github.com/theislab/sfaira.git
-cd sfaira
-git checkout dev
-git pull
-/path/to/conda/envs/sfaira/bin/pip install -e . #this ensures that the correct pip is used
+/path/to/conda/envs/sfaira/bin/pip install git+https://github.com/theislab/sfaira.git@dev #this ensures that the correct pip is used
 ```
 Watch out that you are using pip inside of the new environment, not the global pip!\
 
