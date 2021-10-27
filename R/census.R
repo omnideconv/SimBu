@@ -8,13 +8,13 @@
 #' @param exp_capture_rate expected capture rate; default=0.25
 #' @param expr_threshold expression threshold; default=0
 #' @param ncores number of cores
-#' @param method implementation of census; possible are: \code{monocle},\code{paper},\code{t_estimate}
+#' @param method implementation of census; possible are: \code{monocle} and \code{paper}
 #'
 #' @return a vector for each cell-type, with a scaling factor which can be used to transform the counts of the matrix
 #' @export
 #'
 #' @examples
-census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1, method=c("monocle","paper","t_estimate")){
+census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1, method=c("monocle","paper")){
   ncuts <- dim(matrix)[2]/1000
 
   #split matrix into cuts, each cut is a fractions of genes which are analyzed over all cells
@@ -86,6 +86,8 @@ census_monocle <- function(expr_matrix, exp_capture_rate, expr_threshold){
   return(total)
 }
 
+# this implementation can create negative values for x_star, which leads to NaN in the end-result
+# monocle implementation has fixed this by using 10^mean(x_star) [but I do not know why they do it like this]
 census_paper <- function(expr_matrix, exp_capture_rate, expr_threshold){
   cells <- dim(expr_matrix)[2]
   idx <- 1
@@ -113,6 +115,7 @@ census_paper <- function(expr_matrix, exp_capture_rate, expr_threshold){
         break
       })
   }))
+  return(total)
 }
 
 
