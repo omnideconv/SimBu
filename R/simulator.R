@@ -10,7 +10,7 @@ require(tidyr)
 require(tools)
 require(methods)
 require(sparseMatrixStats)
-
+require(ggplot2)
 
 
 ###### simulation ######
@@ -90,19 +90,34 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
     # if you want to transform your counts by spike-in data, an additional column in the annotation table is needed
     # with name "spike-in"; the matrix counts will then be transformed accordingly
     if(!"spike_in" %in% colnames(data@annotation)){
-      stop("No column with spike-in information in annotation data. Check your dataset/database again!")
-    }else{
-      # get subset of spike-in counts from the sampled cells
-      spike_in_vector <- data@annotation[["spike_in"]]
-      names(spike_in_vector) <- data@annotation$cell_ID
-      spike_in_vector <- spike_in_vector[simulated_annotation$values]
-      m <- t(t(m) * spike_in_vector)
+      stop("No column with spike-in information in annotation data. Check your dataset again!")
     }
-  }else if(scaling_factor == "custom"){
+    if(!"read_number" %in% colnames(data@annotation)){
+      stop("No column with total read number information in annotation data. Check your dataset again!")
+    }
+    # get subset of spike-in counts from the sampled cells
+    tmp <- data@annotation[,c("cell_ID","spike_in","read_number")]
+    tmp <- merge(tmp, simulated_annotation, by.x="cell_ID",by.y="values", all.y=T) # need to merge to also get lines for duplicate cell entries
+    scaling_factor <- (tmp$read_number - tmp$spike_in)/tmp$read_number
+
+    m <- m * scaling_factor
+
+  }else if(scaling_factor == "reads"){
+    if(!"read_number" %in% colnames(data@annotation)){
+      stop("No column with total read number information in annotation data. Check your dataset again!")
+    }
+    tmp <- data@annotation[,c("cell_ID","read_number")]
+    tmp <- merge(tmp, simulated_annotation, by.x="cell_ID",by.y="values", all.y=T)
+    scaling_factor <- tmp$read_number
+
+    #TODO rescale the scaling factor to a useful range (0-1 produces too many low values)
+    m <- m * scaling_factor
+  }else if (scaling_factor == "custom"){
     #TODO
   }
 
-  # calculate the mean count/TPM value per gene to get a single pseudo-bulk sample
+  # calculate the mean expression value per gene to get a single pseudo-bulk sample
+  # TODO add different functions instead of only "mean"
   simulated_count_vector <- rowMeans(as.matrix(m))
 
   return(simulated_count_vector = simulated_count_vector)
@@ -116,8 +131,8 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 #' will be sampled for the simulation. Also a \code{scenario} has to be selected, where you can choose how the cells will be sampled and a
 #' \code{scaling_factor} on how the read counts will be transformed proir to the simulation.
 #'
-#' @param data \code{\link{dataset}} or \code{\link{database}} object
-#' @param scenario select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{unique},\code{spill-over}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
+#' @param data \code{\link{dataset}} object
+#' @param scenario select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{mirror_db},\code{unique},\code{spill-over}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
 #' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in} or \code{NONE} for no scaling factor
 #' @param spike_in_cell_type name of cell-type used for \code{spike-in} scenario
 #' @param spike_in_amount fraction of cell-type used for \code{spike-in} scenario; must be between \code{0} and \code{0.99}
@@ -141,10 +156,7 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 #' simulate_bulk(dataset, scenario="uniform", scaling_factor="NONE", nsamples=10, ncells=2000)
 #'
 #' # use the spike-in scenario to have 50% B cells per sample
-#' simulate_bulk(dataset, scenario="spike-in", scaling_factor="NONE", nsamples=10, ncells=2000, spike_in_cell_type="Bcell", spike_in_amount=0.5)
-#'
-#' # use the unique scenario to only have B cells
-#' simulate_bulk(dataset, scenario="unique", scaling_factor="NONE", nsamples=10, ncells=2000, unique_cell_type="Bcell")
+#' simulate_bulk(dataset, scenario="spike_in", scaling_factor="NONE", nsamples=10, ncells=2000, spike_in_cell_type="Bcell", spike_in_amount=0.5)
 #'
 #' # use the unique scenario to only have B cells
 #' simulate_bulk(dataset, scenario="unique", scaling_factor="NONE", nsamples=10, ncells=2000, unique_cell_type="Bcell")
@@ -157,8 +169,8 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 #' simulate_bulk(dataset, scenario="custom", scaling_factor="NONE", nsamples=3, ncells=2000, custom_scenario_data=fractions)
 #' }
 simulate_bulk <- function(data,
-                          scenario=c("uniform","random","spike-in","unique", "custom"),
-                          scaling_factor=c("NONE","census","spike-in"),
+                          scenario=c("uniform","random","mirror_db","spike_in","unique", "custom"),
+                          scaling_factor=c("NONE","census","spike-in", "custom"),
                           spike_in_cell_type = NULL,
                           spike_in_amount = NULL,
                           unique_cell_type = NULL,
@@ -213,18 +225,33 @@ simulate_bulk <- function(data,
   if(scenario == "random"){
     # generate 'nsamples' random samples
     simulation_vector_list <- lapply(rep(1:nsamples), function(x){
-      # sample 'ncells' times from the different cell-types to get a random profile of all cell-types
-      simulation_vector <- table(sample(unique(data@annotation[["cell_type"]]), size = ncells, replace = T))/ncells
-      names <- names(simulation_vector)
-      simulation_vector <- as.vector(simulation_vector)
-      names(simulation_vector) <- names
+      n_cell_types <- length(unique(data@annotation[["cell_type"]]))
+      # generate n_cell_type amount of random fractions from the uniform distribution, which will sum up to 1
+      m <- matrix(runif(n_cell_types, 0, 1), ncol=n_cell_types)
+      m <- sweep(m, 1, rowSums(m), FUN="/")
+      simulation_vector <- as.vector(m[1,])
+      names(simulation_vector) <- unique(data@annotation[["cell_type"]])
       return(simulation_vector)
     })
     sample_names <- paste0("random_sample", rep(1:nsamples))
     names(simulation_vector_list) <- sample_names
   }
+  # generate cell-type fractions, which mirror the fraction of each cell-type in the used dataset
+  if(scenario == "mirror_db"){
+    # generate 'nsamples' random samples
+    simulation_vector_list <- lapply(rep(1:nsamples), function(x){
+      # each cell-type will be represented as many times as it occurs in the used dataset
+      simulation_vector <- table(data@annotation$cell_type)/nrow(data@annotation)
+      names <- names(simulation_vector)
+      simulation_vector <- as.vector(simulation_vector)
+      names(simulation_vector) <- names
+      return(simulation_vector)
+    })
+    sample_names <- paste0("mirror_db_sample", rep(1:nsamples))
+    names(simulation_vector_list) <- sample_names
+  }
   # one cell-type will be highly over represented, the others are random
-  if(scenario == "spike-in"){
+  if(scenario == "spike_in"){
 
     if(is.null(spike_in_cell_type) || is.null(spike_in_amount)){
       stop("The spike-in scenario requires you to select one cell-type which will be over represented")
@@ -344,4 +371,62 @@ tpm_normalize <- function(matrix){
 #' @examples
 save_simulation <- function(simulation, filename){
   write.table(exprs(simulation$expression_set), filename, quote = F, sep="\t")
+}
+
+
+#' Plot the cell-type fractions in your simulated dataset
+#'
+#' @param simulation a simulation object generated by \code{simulate_bulk}
+#'
+#' @return a gpplot2 barplot
+#' @export
+#'
+plot_simulation <- function(simulation){
+  fractions <- simulation$cell_fractions
+  fractions$sample <- factor(rownames(fractions), levels = rownames(fractions))
+  frac_long <- gather(fractions, cell_type, fraction, 1:length(fractions)-1)
+
+  ggplot2::ggplot(frac_long, aes(x=fraction, y=sample, fill=cell_type))+
+    geom_col()+
+    ggtitle(paste0("Cell-type fractions for \n",nrow(fractions)," pseudo-bulk RNAseq samples"))+
+    scale_fill_manual(values = colorRampPalette(brewer.pal(8, "Set2"))(length(unique(frac_long$cell_type))))+
+    theme_bw()
+}
+
+
+#' Combine multiple simulations into one result
+#'
+#' we recommend to only merge simulations from the same dataset object, otherwise the count matrices might not correspond on the gene level
+#'
+#' @param simulation_list a list of simulations
+#'
+#' @return named list; \code{pseudo_bulk} is a sparse matrix with the simulated counts;
+#' \code{cell-fractions} is a dataframe with the simulated cell-fractions per sample;
+#' \code{expression_set} is a Bioconductor Expression Set \url{http://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf}
+#' @export
+#'
+merge_simulations <- function(simulation_list){
+  # merge cell fractions dataframe
+  sample_names <- unlist(lapply(simulation_list, function(x){rownames(x[["cell_fractions"]])}))
+  sample_names <- paste0(sample_names,"_",rep(1:length(sample_names)))
+  cell_fractions <- data.frame(rbindlist(lapply(simulation_list, function(x){x[["cell_fractions"]]}), fill=T, use.names=T), check.names = F)
+  rownames(cell_fractions) <- sample_names
+  cell_fractions[is.na(cell_fractions)] <- 0
+
+  # merge count matrix
+  intersect_genes <- Reduce(intersect, lapply(simulation_list, function(x){rownames(x[["pseudo_bulk"]])}))
+  count_matrices <- lapply(simulation_list, function(x){
+    m <- x[["pseudo_bulk"]]
+    m[intersect_genes,]
+  })
+  bulk <- do.call("cbind",count_matrices)
+  colnames(bulk) <- sample_names
+
+  # build bioconductor expression set
+  expr_set <- Biobase::ExpressionSet(assayData = bulk,
+                                     phenoData = new("AnnotatedDataFrame", data=cell_fractions))
+
+  return(list(pseudo_bulk = bulk,
+              cell_fractions = cell_fractions,
+              expression_set = expr_set))
 }

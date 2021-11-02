@@ -19,7 +19,7 @@ setClass("dataset", slots=list(annotation="data.frame",
 setMethod(
   f="initialize",
   signature="dataset",
-  definition = function(.Object, annotation, count_matrix, name, count_type, spike_in_col, filter_genes, variance_cutoff, type_abundance_cutoff){
+  definition = function(.Object, annotation, count_matrix, name, count_type, spike_in_col, read_number_col, filter_genes, variance_cutoff, type_abundance_cutoff){
     genes <- rownames(count_matrix)
     cells_a <- annotation[["ID"]]
     cells_m <- colnames(count_matrix)
@@ -55,6 +55,21 @@ setMethod(
                           cell_type = annotation[["cell_type"]],
                           count_type = count_type)
 
+    # add additional column with name "spike_in" if this data is available
+    if(!is.null(spike_in_col)){
+      if(!spike_in_col %in% colnames(annotation)){
+        stop("Could not find spike-in column in annotation file.")
+      }
+      anno_df <- cbind(anno_df, spike_in=annotation[[spike_in_col]])
+    }
+    # add additional column with name "read_number" if this data is available
+    if(!is.null(read_number_col)){
+      if(!read_number_col %in% colnames(annotation)){
+        stop("Could not find read_number_col column in annotation file.")
+      }
+      anno_df <- cbind(anno_df, read_number=annotation[[read_number_col]])
+    }
+
     # filter cells by type abundance
     if(type_abundance_cutoff > 0){
       low_abundant_types <- names(which(table(anno_df$cell_type) < type_abundance_cutoff))
@@ -66,13 +81,6 @@ setMethod(
 
     # add additional column with total read counts/TPMs per sample
     anno_df$total_counts_custom <- Matrix::colSums(count_matrix)
-
-    if(!is.null(spike_in_col)){
-      if(!spike_in_col %in% colnames(annotation)){
-        stop("Could not find spike-in column in annotation file.")
-      }
-      anno_df <- cbind(anno_df, spike_in=annotation[[spike_in_col]])
-    }
 
     .Object@annotation <- anno_df
     .Object@counts <- count_matrix
@@ -87,7 +95,8 @@ setMethod(
 #' @param count_matrix sparse matrix; genes in rows, cells in columns
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
-#' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
+#' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts; mandatory for spike-in scaling factor in simulation
+#' @param read_number_col which column in annotation contains information on total read numbers in a cell; mandatory for spike-in scaling factor in simulation
 #' @param filter_genes boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}
 #' @param variance_cutoff numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff
 #' @param type_abundance_cutoff numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types
@@ -96,17 +105,69 @@ setMethod(
 #' @export
 #'
 #' @examples
-dataset <- function(annotation, count_matrix, name, count_type="raw", spike_in_col=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
+dataset <- function(annotation, count_matrix, name, count_type="raw", spike_in_col=NULL, read_number_col=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
   methods::new(Class="dataset",
       annotation=annotation,
       count_matrix=count_matrix,
       name=name,
       count_type=count_type,
       spike_in_col=spike_in_col,
+      read_number_col=read_number_col,
       filter_genes=filter_genes,
       variance_cutoff=variance_cutoff,
       type_abundance_cutoff=type_abundance_cutoff
      )
+}
+
+#' constructor to merge multiple datasets into one
+#'
+#' @param dataset_list  list of dataset objects
+#' @param name name of the new dataset
+#'
+#' @return dataset object
+#' @export
+#'
+#' @examples
+dataset_multiple <- function(dataset_list, name, count_type="raw", spike_in_col=NULL, read_number_col=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
+  if(length(dataset_list) <= 1){
+    stop("You need at least 2 datasets to create a database!")
+  }
+
+  # only use genes which appear in all databases
+  genes_list <- lapply(dataset_list, function(x){rownames(x@counts)})
+  genes_it <- Reduce(intersect, genes_list)
+  if(length(genes_it)==0){
+    stop("There are no common genes between your datasets; cannot build a database from this.")
+  }
+
+  # subset count matrices accordingly
+  count_matrices <- lapply(dataset_list, function(x){
+    x@counts[genes_it, ]
+  })
+
+  # combine count matrices to a single one
+  count_matrix <- do.call(cbind, count_matrices)
+
+  # combine all annotation dataframes to a single dataframe
+  anno_df <- rbindlist(lapply(dataset_list, function(x){x@annotation}), fill = T)
+
+  # check if there is a spike-in value for each sample; else cannot use it
+  if(sum(is.na(anno_df[["spike_in"]])) > 0){
+    anno_df[["spike_in"]] <- NULL
+  }
+
+  methods::new(Class="dataset",
+               annotation=annotation,
+               count_matrix=count_matrix,
+               name=name,
+               count_type=count_type,
+               spike_in_col=spike_in_col,
+               read_number_col=read_number_col,
+               filter_genes=filter_genes,
+               variance_cutoff=variance_cutoff,
+               type_abundance_cutoff=type_abundance_cutoff
+  )
+
 }
 
 #' constructor for a dataset using a h5ad file for the counts
@@ -124,7 +185,7 @@ dataset <- function(annotation, count_matrix, name, count_type="raw", spike_in_c
 #' @export
 #'
 #' @examples
-dataset_h5ad <- function(annotation, h5ad_file, name, count_type="raw", spike_in_col=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
+dataset_h5ad <- function(annotation, h5ad_file, name, count_type="raw", spike_in_col=NULL, read_number_col=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
 
   #TODO check for valid file
   h5ad_file <- normalizePath(h5ad_file)
@@ -146,6 +207,7 @@ dataset_h5ad <- function(annotation, h5ad_file, name, count_type="raw", spike_in
       name=name,
       count_type=count_type,
       spike_in_col=spike_in_col,
+      read_number_col=read_number_col,
       filter_genes=filter_genes,
       variance_cutoff=variance_cutoff,
       type_abundance_cutoff=type_abundance_cutoff
@@ -182,6 +244,7 @@ dataset_seurat <- function(annotation, seurat_obj, name, count_type ="raw",spike
       name=name,
       count_type=count_type,
       spike_in_col=spike_in_col,
+      read_number_col=read_number_col,
       filter_genes=filter_genes,
       variance_cutoff=variance_cutoff,
       type_abundance_cutoff=type_abundance_cutoff
@@ -204,7 +267,7 @@ dataset_seurat <- function(annotation, seurat_obj, name, count_type ="raw",spike
 #'
 #' @examples
 dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="raw",
-                           spike_in_col=NULL, force=F, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
+                           spike_in_col=NULL, read_number_col=NULL, force=F, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
 
   if(is.null(sfaira_setup)){
     warning("You need to setup sfaira first; please use setup_sfaira() to do so.")
@@ -230,6 +293,7 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="raw",
       name=name,
       count_type=count_type,
       spike_in_col=spike_in_col,
+      read_number_col=read_number_col,
       filter_genes=filter_genes,
       variance_cutoff=variance_cutoff,
       type_abundance_cutoff=type_abundance_cutoff
@@ -259,7 +323,7 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="raw",
 #'
 #' @examples
 dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, sfaira_setup, name,
-                                    count_type ="raw",spike_in_col=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
+                                    count_type ="raw",spike_in_col=NULL, read_number_col=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
   if(is.null(sfaira_setup)){
     warning("You need to setup sfaira first; please use setup_sfaira() to do so.")
     return(NULL)
@@ -289,6 +353,7 @@ dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, s
                type_abundance_cutoff=type_abundance_cutoff
   )
 }
+
 
 #' check for correct column names in annotation file and replace them if neccesary
 #'

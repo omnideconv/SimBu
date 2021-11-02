@@ -15,6 +15,7 @@
 #'
 #' @examples
 census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1, method=c("monocle","paper")){
+  #order_cells <- colnames(matrix)
   ncuts <- dim(matrix)[2]/1000
 
   #split matrix into cuts, each cut is a fractions of genes which are analyzed over all cells
@@ -39,6 +40,7 @@ census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1, me
 
     return(cen)
   },mc.cores = ncores))
+
 
   return(out)
 }

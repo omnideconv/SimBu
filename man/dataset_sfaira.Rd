@@ -10,6 +10,7 @@ dataset_sfaira(
   name,
   count_type = "raw",
   spike_in_col = NULL,
+  read_number_col = NULL,
   force = F,
   filter_genes = T,
   variance_cutoff = 0,

@@ -10,6 +10,7 @@ dataset_h5ad(
   name,
   count_type = "raw",
   spike_in_col = NULL,
+  read_number_col = NULL,
   filter_genes = T,
   variance_cutoff = 0,
   type_abundance_cutoff = 0

@@ -9,7 +9,7 @@ census(
   exp_capture_rate = 0.25,
   expr_threshold = 0,
   ncores = 1,
-  method = c("monocle", "paper", "t_estimate")
+  method = c("monocle", "paper")
 )
 }
 \arguments{
@@ -21,7 +21,7 @@ census(
 
 \item{ncores}{number of cores}
 
-\item{method}{implementation of census; possible are: \code{monocle},\code{paper},\code{t_estimate}}
+\item{method}{implementation of census; possible are: \code{monocle} and \code{paper}}
 }
 \value{
 a vector for each cell-type, with a scaling factor which can be used to transform the counts of the matrix

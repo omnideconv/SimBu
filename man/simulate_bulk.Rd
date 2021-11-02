@@ -6,8 +6,8 @@
 \usage{
 simulate_bulk(
   data,
-  scenario = c("uniform", "random", "spike-in", "unique", "custom"),
-  scaling_factor = c("NONE", "census", "spike-in"),
+  scenario = c("uniform", "random", "mirror_db", "spike_in", "unique", "custom"),
+  scaling_factor = c("NONE", "census", "spike-in", "custom"),
   spike_in_cell_type = NULL,
   spike_in_amount = NULL,
   unique_cell_type = NULL,
@@ -21,9 +21,9 @@ simulate_bulk(
 )
 }
 \arguments{
-\item{data}{\code{\link{dataset}} or \code{\link{database}} object}
+\item{data}{\code{\link{dataset}} object}
 
-\item{scenario}{select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{unique},\code{spill-over}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.}
+\item{scenario}{select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{mirror_db},\code{unique},\code{spill-over}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.}
 
 \item{scaling_factor}{name of scaling factor; possible are: \code{census}, \code{spike-in} or \code{NONE} for no scaling factor}
 
@@ -63,10 +63,7 @@ will be sampled for the simulation. Also a \code{scenario} has to be selected, w
 simulate_bulk(dataset, scenario="uniform", scaling_factor="NONE", nsamples=10, ncells=2000)
 
 # use the spike-in scenario to have 50\% B cells per sample
-simulate_bulk(dataset, scenario="spike-in", scaling_factor="NONE", nsamples=10, ncells=2000, spike_in_cell_type="Bcell", spike_in_amount=0.5)
-
-# use the unique scenario to only have B cells
-simulate_bulk(dataset, scenario="unique", scaling_factor="NONE", nsamples=10, ncells=2000, unique_cell_type="Bcell")
+simulate_bulk(dataset, scenario="spike_in", scaling_factor="NONE", nsamples=10, ncells=2000, spike_in_cell_type="Bcell", spike_in_amount=0.5)
 
 # use the unique scenario to only have B cells
 simulate_bulk(dataset, scenario="unique", scaling_factor="NONE", nsamples=10, ncells=2000, unique_cell_type="Bcell")
