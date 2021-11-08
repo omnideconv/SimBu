@@ -50,6 +50,7 @@ simulate_bulk(
 \value{
 named list; \code{pseudo_bulk} is a sparse matrix with the simulated counts;
 \code{cell-fractions} is a dataframe with the simulated cell-fractions per sample;
+\code{scaling_vector} scaling value for each cell in dataset
 \code{expression_set} is a Bioconductor Expression Set \url{http://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf}
 }
 \description{

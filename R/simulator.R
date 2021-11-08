@@ -11,6 +11,7 @@ require(tools)
 require(methods)
 require(sparseMatrixStats)
 require(ggplot2)
+require(scales)
 
 
 ###### simulation ######
@@ -22,6 +23,7 @@ require(ggplot2)
 #' Note: if total_read_counts is used, the cell-fractions are applied to the number of counts, not the number of cells!
 #' @param data \code{\link{database}} or \code{\link{dataset}} object
 #' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{custom}
+#' @param scaling_vector vector with scaling values for each cell; calculated by the \code{calc_scaling_vector} function
 #' @param simulation_vector named vector with wanted cell-types and their fractions
 #' @param total_cells numeric; number of total cells for this simulation
 #' @param total_read_counts numeric; sets the total read count value for each sample
@@ -29,19 +31,7 @@ require(ggplot2)
 #'
 #' @return returns a vector with expression values for all genes in the provided dataset
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' # simulate a pseudo-bulk dataset with three cell-types: Bcells, Tcells & Macrophages with a total of 1000 cells in the sample
-#' simulate_sample(data = dataset, scaling_factor="none", simulation_vector=c("B cells"=0.3,"T cells"=0.5, "Macrophages"=0.2), total_cells=1000)
-#'
-#' # simulate a pseudo-bulk dataset with three cell-types: Bcells, Tcells & Macrophages with a total of 1e8 reads in the sample
-#' simulate_sample(data = dataset, scaling_factor="none", simulation_vector=c("B cells"=0.3,"T cells"=0.5, "Macrophages"=0.2), total_read_counts=1e8)
-#'
-#' # simulate a pseudo-bulk dataset and apply census normalization on the sampled single cells before calculating the bulk sample
-#' simulate_sample(data = dataset, scaling_factor="census", simulation_vector=c("B cells"=0.3,"T cells"=0.5, "Macrophages"=0.2), total_read_counts=1e8)
-#' }
-simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells, total_read_counts, ncores){
+simulate_sample <- function(data, scaling_factor, scaling_vector, simulation_vector, total_cells, total_read_counts, ncores){
 
   if(!all(names(simulation_vector) %in% unique(data@annotation[["cell_type"]]))){
     stop("Some cell-types in the provided simulation vector are not in the annotation.")
@@ -81,40 +71,9 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
   # get the corresponding columns from the count matrix in the data
   m <- data@counts[, unlist(sampled_cells)]
 
-  # apply selected scaling factor on each cell in matrix
-  # this calculates a scaling vector (one value per cell) which will be applied to the matrix
-  if(scaling_factor == "census"){
-    census_vector <- census(m, ncores = ncores, method="monocle", expr_threshold = 1)
-    m <- m*(census_vector/10e6)
-  }else if(scaling_factor == "spike_in"){
-    # if you want to transform your counts by spike-in data, an additional column in the annotation table is needed
-    # with name "spike-in"; the matrix counts will then be transformed accordingly
-    if(!"spike_in" %in% colnames(data@annotation)){
-      stop("No column with spike-in information in annotation data. Check your dataset again!")
-    }
-    if(!"read_number" %in% colnames(data@annotation)){
-      stop("No column with total read number information in annotation data. Check your dataset again!")
-    }
-    # get subset of spike-in counts from the sampled cells
-    tmp <- data@annotation[,c("cell_ID","spike_in","read_number")]
-    tmp <- merge(tmp, simulated_annotation, by.x="cell_ID",by.y="values", all.y=T) # need to merge to also get lines for duplicate cell entries
-    scaling_factor <- (tmp$read_number - tmp$spike_in)/tmp$read_number
-
-    m <- m * scaling_factor
-
-  }else if(scaling_factor == "reads"){
-    if(!"read_number" %in% colnames(data@annotation)){
-      stop("No column with total read number information in annotation data. Check your dataset again!")
-    }
-    tmp <- data@annotation[,c("cell_ID","read_number")]
-    tmp <- merge(tmp, simulated_annotation, by.x="cell_ID",by.y="values", all.y=T)
-    scaling_factor <- tmp$read_number
-
-    #TODO rescale the scaling factor to a useful range (0-1 produces too many low values)
-    m <- m * scaling_factor
-  }else if (scaling_factor == "custom"){
-    #TODO
-  }
+  # apply scaling vector on the sampled cells in the count matrix
+  scaling_vector <- scaling_vector[unlist(sampled_cells)]
+  m <- m * scaling_vector
 
   # calculate the mean expression value per gene to get a single pseudo-bulk sample
   # TODO add different functions instead of only "mean"
@@ -147,6 +106,7 @@ simulate_sample <- function(data, scaling_factor, simulation_vector, total_cells
 #'
 #' @return named list; \code{pseudo_bulk} is a sparse matrix with the simulated counts;
 #' \code{cell-fractions} is a dataframe with the simulated cell-fractions per sample;
+#' \code{scaling_vector} scaling value for each cell in dataset
 #' \code{expression_set} is a Bioconductor Expression Set \url{http://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf}
 #' @export
 #'
@@ -263,18 +223,17 @@ simulate_bulk <- function(data,
       stop("The spike-in cell-type could not be found in your dataset/database.")
     }
 
-    n_spike_in_cells <- ncells * spike_in_amount   # this is how many cells will be of type spike-in
-    random_cells <- ncells - n_spike_in_cells      # this is how many cells will be of type random
-    # generate random samples
+    random_cell_types <- setdiff(unique(data@annotation[["cell_type"]]), spike_in_cell_type)
+    all_cell_types <- c(random_cell_types, spike_in_cell_type)
+
     simulation_vector_list <- lapply(rep(1:nsamples), function(x){
-      # sample 'random_cells' times from the different cell-types to get a random profile of all cell-types except spike-in type
-      possible_cell_types <- setdiff(unique(data@annotation[["cell_type"]]), spike_in_cell_type)
-      simulation_vector <- (table(sample(possible_cell_types, size = random_cells, replace = T))/random_cells)*(1-spike_in_amount)
-      names <- names(simulation_vector)
-      simulation_vector <- as.vector(simulation_vector)
-      names(simulation_vector) <- names
-      simulation_vector <-c(simulation_vector, spike_in_amount)
-      names(simulation_vector)[length(simulation_vector)] <- as.character(spike_in_cell_type)
+      n_cell_types <- length(unique(data@annotation[["cell_type"]]))-1
+      # generate n_cell_type amount of random fractions from the uniform distribution, which will sum up to 1
+      m <- matrix(runif(n_cell_types, 0, 1), ncol=n_cell_types)
+      simulation_vector <- as.vector(m[1,])
+      simulation_vector <- spike_in_amount * simulation_vector/sum(simulation_vector)
+      simulation_vector <- append(simulation_vector, spike_in_amount)
+      names(simulation_vector) <- all_cell_types
       return(simulation_vector)
     })
     sample_names <- paste0("spike_in_sample", rep(1:nsamples))
@@ -290,7 +249,7 @@ simulate_bulk <- function(data,
       names(simulation_vector) <- as.character(unique_cell_type)
       return(simulation_vector)
     })
-    sample_names <- paste0("spillover_sample", rep(1:nsamples))
+    sample_names <- paste0("unique_sample", rep(1:nsamples))
     names(simulation_vector_list) <- sample_names
   }
   # custom fractions
@@ -305,10 +264,17 @@ simulate_bulk <- function(data,
     if(!all(colnames(custom_scenario_data) %in% unique(data@annotation[["cell_type"]]))){
       stop("Could not find all cell-types from scenario data in annotation.")
     }
-    simulation_vector_list <- apply(custom_scenario_data, 1, function(x){y<-x; names(y)<-names(x);return(as.list(y))})
+    simulation_vector_list <- as.list(as.data.frame(t(custom_scenario_data)))
+    simulation_vector_list <- lapply(simulation_vector_list, function(x){names(x)<-colnames(custom_scenario_data);x<-x})
     sample_names <- paste0("custom_sample", rep(1:nsamples))
     names(simulation_vector_list) <- sample_names
   }
+
+  ##### pre-calculate scaling factors ####
+
+  scaling_vector <- calc_scaling_vector(data=data,
+                                        scaling_factor=scaling_factor,
+                                        ncores=ncores)
 
   ##### generate the samples #####
 
@@ -317,6 +283,7 @@ simulate_bulk <- function(data,
   bulk <- do.call(cbind, parallel::mclapply(simulation_vector_list, function(x){
     sample<-simulate_sample(data=data,
                             scaling_factor = scaling_factor,
+                            scaling_vector = scaling_vector,
                             simulation_vector = x,
                             total_cells = ncells,
                             total_read_counts = total_read_counts,
@@ -349,8 +316,63 @@ simulate_bulk <- function(data,
 
   return(list(pseudo_bulk = bulk,
               cell_fractions = cell_fractions,
+              scaling_vector = scaling_vector,
               expression_set = expr_set))
 
+}
+
+
+#' Calculate scaling factor for a dataset
+#'
+#' @param data dataset object
+#' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in} or \code{NONE} for no scaling factor
+#' @param ncores number of cores
+#'
+#' @return a named vector with a scaling value for each cell in the dataset
+#' @export
+#'
+calc_scaling_vector <- function(data, scaling_factor, ncores){
+
+  m <- data@counts
+
+  if(scaling_factor == "census"){
+    scaling_vector <- census(m, ncores = ncores, method="monocle", expr_threshold = 0.1)
+    scaling_vector <- scaling_vector/10e6
+  }else if(scaling_factor == "spike-in"){
+    # if you want to transform your counts by spike-in data, an additional column in the annotation table is needed
+    # with name "spike-in"; the matrix counts will then be transformed accordingly
+    if(!"spike_in" %in% colnames(data@annotation)){
+      stop("No column with spike-in information in annotation data. Check your dataset again!")
+    }
+    if(!"read_number" %in% colnames(data@annotation)){
+      stop("No column with total read number information in annotation data. Check your dataset again!")
+    }
+    # get subset of spike-in counts from the sampled cells
+    tmp <- data@annotation[,c("cell_ID","spike_in","read_number")]
+    #tmp <- merge(tmp, simulated_annotation, by.x="cell_ID",by.y="values", all.y=T) # need to merge to also get lines for duplicate cell entries
+    scaling_vector <- (tmp$read_number - tmp$spike_in)/tmp$read_number
+    names(scaling_vector) <- tmp$cell_ID
+
+  }else if(scaling_factor == "reads"){
+    if(!"read_number" %in% colnames(data@annotation)){
+      stop("No column with total read number information in annotation data. Check your dataset again!")
+    }
+    tmp <- data@annotation[,c("cell_ID","read_number")]
+    #tmp <- merge(tmp, simulated_annotation, by.x="cell_ID",by.y="values", all.y=T)
+    scaling_vector <- tmp$read_number
+
+  }else if (scaling_factor == "custom"){
+    #TODO
+  }else if(scaling_factor == "NONE"){
+    scaling_vector <- rep(1, nrow(data@annotation))
+    names(scaling_vector) <- data@annotation$cell_ID
+  }else{
+    warning("No valid scaling factor method provided.")
+    scaling_vector <- rep(1, nrow(data@annotation))
+    names(scaling_vector) <- data@annotation$cell_ID
+  }
+
+  return(scaling_vector)
 }
 
 
@@ -389,7 +411,7 @@ plot_simulation <- function(simulation){
   ggplot2::ggplot(frac_long, aes(x=fraction, y=sample, fill=cell_type))+
     geom_col()+
     ggtitle(paste0("Cell-type fractions for \n",nrow(fractions)," pseudo-bulk RNAseq samples"))+
-    scale_fill_manual(values = colorRampPalette(brewer.pal(8, "Set2"))(length(unique(frac_long$cell_type))))+
+    scale_fill_manual(values = colorRampPalette(brewer.pal(9, "Paired"))(length(unique(frac_long$cell_type))))+
     theme_bw()
 }
 
