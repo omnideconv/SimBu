@@ -39,6 +39,7 @@ simulate_sample <- function(data,
                             scaling_vector,
                             simulation_vector,
                             scaling_factor_aggregation,
+                            sample_aggreation,
                             total_cells,
                             total_read_counts, ncores){
 
@@ -308,6 +309,8 @@ simulate_bulk <- function(data,
                             scaling_factor = scaling_factor,
                             scaling_vector = scaling_vector,
                             simulation_vector = x,
+                            scaling_factor_aggregation = scaling_factor_aggregation,
+                            sample_aggreation = sample_aggreation,
                             total_cells = ncells,
                             total_read_counts = total_read_counts,
                             ncores=ncores)
