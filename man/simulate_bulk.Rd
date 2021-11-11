@@ -12,6 +12,7 @@ simulate_bulk(
   spike_in_amount = NULL,
   unique_cell_type = NULL,
   custom_scenario_data = NULL,
+  custom_scaling_vector = NULL,
   nsamples = 100,
   ncells = 1000,
   total_read_counts = NULL,
@@ -32,6 +33,8 @@ simulate_bulk(
 \item{spike_in_amount}{fraction of cell-type used for \code{spike-in} scenario; must be between \code{0} and \code{0.99}}
 
 \item{custom_scenario_data}{dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.}
+
+\item{custom_scaling_vector}{named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1}
 
 \item{nsamples}{numeric; number of samples in pseudo-bulk RNAseq dataset}
 

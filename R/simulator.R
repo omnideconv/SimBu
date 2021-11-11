@@ -97,6 +97,7 @@ simulate_sample <- function(data, scaling_factor, scaling_vector, simulation_vec
 #' @param spike_in_amount fraction of cell-type used for \code{spike-in} scenario; must be between \code{0} and \code{0.99}
 #' @param spillover_cell_type name of cell-type used for \code{spill-over} scenario
 #' @param custom_scenario_data dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.
+#' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1
 #' @param nsamples numeric; number of samples in pseudo-bulk RNAseq dataset
 #' @param ncells numeric; number of cells in each dataset
 #' @param total_read_counts numeric; sets the total read count value for each sample
@@ -135,6 +136,7 @@ simulate_bulk <- function(data,
                           spike_in_amount = NULL,
                           unique_cell_type = NULL,
                           custom_scenario_data = NULL,
+                          custom_scaling_vector = NULL,
                           nsamples=100,
                           ncells=1000,
                           total_read_counts = NULL,
@@ -272,9 +274,10 @@ simulate_bulk <- function(data,
 
   ##### pre-calculate scaling factors ####
 
-  scaling_vector <- calc_scaling_vector(data=data,
-                                        scaling_factor=scaling_factor,
-                                        ncores=ncores)
+  scaling_vector <- calc_scaling_vector(data = data,
+                                        scaling_factor = scaling_factor,
+                                        custom_scaling_vector = custom_scaling_vector,
+                                        ncores = ncores)
 
   ##### generate the samples #####
 
@@ -326,12 +329,13 @@ simulate_bulk <- function(data,
 #'
 #' @param data dataset object
 #' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in} or \code{NONE} for no scaling factor
+#' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1
 #' @param ncores number of cores
 #'
 #' @return a named vector with a scaling value for each cell in the dataset
 #' @export
 #'
-calc_scaling_vector <- function(data, scaling_factor, ncores){
+calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, ncores){
 
   m <- data@counts
 
@@ -362,12 +366,22 @@ calc_scaling_vector <- function(data, scaling_factor, ncores){
     scaling_vector <- tmp$read_number
 
   }else if (scaling_factor == "custom"){
-    #TODO
+    # needs vector with values for existing cell-types
+    # cell-types that do not occur in this vector will have scaling-factor of 1
+    if(is.null(custom_scaling_vector)){stop("For the custom scaling factor you need to provide a custom_scaling_vector!")}
+
+    missing_cell_types <- as.vector(unique(data@annotation$cell_type)[which(!unique(data@annotation$cell_type) %in% names(custom_scaling_vector))])
+    complete_vector <- rep(1, length(missing_cell_types))
+    names(complete_vector) <- missing_cell_types
+    complete_vector <- data.frame(value=append(complete_vector, custom_scaling_vector), check.names=F)
+    scaling_vector <- merge(complete_vector, data@annotation, by.x=0,by.y="cell_type", all.y=T)[["value"]]
+    names(scaling_vector) <- data@annotation$cell_ID
+
   }else if(scaling_factor == "NONE"){
     scaling_vector <- rep(1, nrow(data@annotation))
     names(scaling_vector) <- data@annotation$cell_ID
   }else{
-    warning("No valid scaling factor method provided.")
+    warning("No valid scaling factor method provided. Scaling all cells by 1.")
     scaling_vector <- rep(1, nrow(data@annotation))
     names(scaling_vector) <- data@annotation$cell_ID
   }
