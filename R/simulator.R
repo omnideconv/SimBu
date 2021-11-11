@@ -84,8 +84,8 @@ simulate_sample <- function(data,
   # apply scaling vector on the sampled cells in the count matrix
   scaling_vector <- scaling_vector[unlist(sampled_cells)]
   switch (scaling_factor_aggregation,
-    "multiply" = m <- m * scaling_vector,
-    "division" = m <- m / scaling_vector
+    "multiply" = m <- t(t(m) * scaling_vector),
+    "division" = m <- t(t(m) / scaling_vector)
   )
 
   # calculate the mean expression value per gene to get a single pseudo-bulk sample
