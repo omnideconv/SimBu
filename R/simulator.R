@@ -12,6 +12,7 @@ require(methods)
 require(sparseMatrixStats)
 require(ggplot2)
 require(scales)
+require(matrixStats)
 
 
 ###### simulation ######
@@ -25,13 +26,21 @@ require(scales)
 #' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{custom}
 #' @param scaling_vector vector with scaling values for each cell; calculated by the \code{calc_scaling_vector} function
 #' @param simulation_vector named vector with wanted cell-types and their fractions
+#' @param scaling_factor_aggregation aggregation function how to apply the scaling factor, possible are: \code{multiply}(default) and \code{division}
+#' @param sample_aggreation aggregation method on how to generate a sample; possible are: \code{mean}(default), \code{sum}, \code{median}
 #' @param total_cells numeric; number of total cells for this simulation
 #' @param total_read_counts numeric; sets the total read count value for each sample
 #' @param ncores numeric; number of cores used to create simulation
 #'
 #' @return returns a vector with expression values for all genes in the provided dataset
 #' @export
-simulate_sample <- function(data, scaling_factor, scaling_vector, simulation_vector, total_cells, total_read_counts, ncores){
+simulate_sample <- function(data,
+                            scaling_factor,
+                            scaling_vector,
+                            simulation_vector,
+                            scaling_factor_aggregation,
+                            total_cells,
+                            total_read_counts, ncores){
 
   if(!all(names(simulation_vector) %in% unique(data@annotation[["cell_type"]]))){
     stop("Some cell-types in the provided simulation vector are not in the annotation.")
@@ -73,11 +82,18 @@ simulate_sample <- function(data, scaling_factor, scaling_vector, simulation_vec
 
   # apply scaling vector on the sampled cells in the count matrix
   scaling_vector <- scaling_vector[unlist(sampled_cells)]
-  m <- m * scaling_vector
+  switch (scaling_factor_aggregation,
+    "multiply" = m <- m * scaling_vector,
+    "division" = m <- m / scaling_vector
+  )
 
   # calculate the mean expression value per gene to get a single pseudo-bulk sample
-  # TODO add different functions instead of only "mean"
-  simulated_count_vector <- rowMeans(as.matrix(m))
+  switch (sample_aggreation,
+    "mean" = simulated_count_vector <- rowMeans(as.matrix(m)),
+    "sum" = simulated_count_vector <- rowSums(as.matrix(m)),
+    "median" = simulated_count_vector <- matrixStats::rowMedians(as.matrix(m))
+  )
+
 
   return(simulated_count_vector = simulated_count_vector)
 
@@ -98,6 +114,8 @@ simulate_sample <- function(data, scaling_factor, scaling_vector, simulation_vec
 #' @param spillover_cell_type name of cell-type used for \code{spill-over} scenario
 #' @param custom_scenario_data dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.
 #' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1
+#' @param scaling_factor_aggregation aggregation function how to apply the scaling factor, possible are: \code{multiply}(default) and \code{division}
+#' @param sample_aggreation aggregation method on how to generate a sample; possible are: \code{mean}(default), \code{sum}, \code{median}
 #' @param nsamples numeric; number of samples in pseudo-bulk RNAseq dataset
 #' @param ncells numeric; number of cells in each dataset
 #' @param total_read_counts numeric; sets the total read count value for each sample
@@ -137,6 +155,8 @@ simulate_bulk <- function(data,
                           unique_cell_type = NULL,
                           custom_scenario_data = NULL,
                           custom_scaling_vector = NULL,
+                          scaling_factor_aggregation = "multiply",
+                          sample_aggreation = "mean",
                           nsamples=100,
                           ncells=1000,
                           total_read_counts = NULL,

@@ -13,6 +13,8 @@ simulate_bulk(
   unique_cell_type = NULL,
   custom_scenario_data = NULL,
   custom_scaling_vector = NULL,
+  scaling_factor_aggregation = "multiply",
+  sample_aggreation = "mean",
   nsamples = 100,
   ncells = 1000,
   total_read_counts = NULL,
@@ -35,6 +37,10 @@ simulate_bulk(
 \item{custom_scenario_data}{dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.}
 
 \item{custom_scaling_vector}{named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1}
+
+\item{scaling_factor_aggregation}{aggregation function how to apply the scaling factor, possible are: \code{multiply}(default) and \code{division}}
+
+\item{sample_aggreation}{aggregation method on how to generate a sample; possible are: \code{mean}(default), \code{sum}, \code{median}}
 
 \item{nsamples}{numeric; number of samples in pseudo-bulk RNAseq dataset}
 

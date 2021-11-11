@@ -9,6 +9,7 @@ simulate_sample(
   scaling_factor,
   scaling_vector,
   simulation_vector,
+  scaling_factor_aggregation,
   total_cells,
   total_read_counts,
   ncores
@@ -23,11 +24,15 @@ simulate_sample(
 
 \item{simulation_vector}{named vector with wanted cell-types and their fractions}
 
+\item{scaling_factor_aggregation}{aggregation function how to apply the scaling factor, possible are: \code{multiply}(default) and \code{division}}
+
 \item{total_cells}{numeric; number of total cells for this simulation}
 
 \item{total_read_counts}{numeric; sets the total read count value for each sample}
 
 \item{ncores}{numeric; number of cores used to create simulation}
+
+\item{sample_aggreation}{aggregation method on how to generate a sample; possible are: \code{mean}(default), \code{sum}, \code{median}}
 }
 \value{
 returns a vector with expression values for all genes in the provided dataset
