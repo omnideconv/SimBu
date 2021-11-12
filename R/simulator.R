@@ -84,8 +84,8 @@ simulate_sample <- function(data,
   # apply scaling vector on the sampled cells in the count matrix
   scaling_vector <- scaling_vector[unlist(sampled_cells)]
   switch (scaling_factor_aggregation,
-    "multiply" = m <- t(t(m) * scaling_vector),
-    "division" = m <- t(t(m) / scaling_vector)
+    "multiply" = m <- Matrix::t(Matrix::t(m) * scaling_vector),
+    "division" = m <- Matrix::t(Matrix::t(m) / scaling_vector)
   )
 
   # calculate the mean expression value per gene to get a single pseudo-bulk sample
@@ -94,6 +94,7 @@ simulate_sample <- function(data,
     "sum" = simulated_count_vector <- rowSums(as.matrix(m)),
     "median" = simulated_count_vector <- matrixStats::rowMedians(as.matrix(m))
   )
+  print(paste0("Simulated sample: ", sum(simulated_count_vector)))
 
 
   return(simulated_count_vector = simulated_count_vector)
@@ -340,6 +341,8 @@ simulate_bulk <- function(data,
   expr_set <- Biobase::ExpressionSet(assayData = bulk,
                                      phenoData = new("AnnotatedDataFrame", data=cell_fractions))
 
+  cat("Finished simulation.\n")
+
   return(list(pseudo_bulk = bulk,
               cell_fractions = cell_fractions,
               scaling_vector = scaling_vector,
@@ -387,6 +390,7 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, nco
     tmp <- data@annotation[,c("cell_ID","read_number")]
     #tmp <- merge(tmp, simulated_annotation, by.x="cell_ID",by.y="values", all.y=T)
     scaling_vector <- tmp$read_number
+    names(scaling_vector) <- tmp$cell_ID
 
   }else if (scaling_factor == "custom"){
     # needs vector with values for existing cell-types
@@ -397,8 +401,9 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, nco
     complete_vector <- rep(1, length(missing_cell_types))
     names(complete_vector) <- missing_cell_types
     complete_vector <- data.frame(value=append(complete_vector, custom_scaling_vector), check.names=F)
-    scaling_vector <- merge(complete_vector, data@annotation, by.x=0,by.y="cell_type", all.y=T)[["value"]]
-    names(scaling_vector) <- data@annotation$cell_ID
+    df <- merge(complete_vector, data@annotation, by.x=0,by.y="cell_type", all.y=T)[,c("value","cell_ID")]
+    scaling_vector <- df$value
+    names(scaling_vector) <- df$cell_ID
 
   }else if(scaling_factor == "NONE"){
     scaling_vector <- rep(1, nrow(data@annotation))

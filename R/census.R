@@ -14,7 +14,7 @@
 #' @export
 #'
 #' @examples
-census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1, method=c("monocle","paper")){
+census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1, method=c("monocle","paper","expr_genes")){
   #order_cells <- colnames(matrix)
   ncuts <- dim(matrix)[2]/1000
 
@@ -30,7 +30,7 @@ census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1, me
       cen <- census_monocle(chunk, exp_capture_rate=exp_capture_rate, expr_threshold=expr_threshold)
     }else if (method == "paper"){
       cen <- census_paper(chunk, exp_capture_rate=exp_capture_rate, expr_threshold=expr_threshold)
-    }else if (method == "t_estimate"){
+    }else if (method == "expr_genes_test"){
       cen <- calc_xi(chunk, expr_threshold=expr_threshold)
     }
 
