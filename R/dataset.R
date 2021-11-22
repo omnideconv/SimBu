@@ -107,16 +107,16 @@ setMethod(
 #' @examples
 dataset <- function(annotation, count_matrix, name, count_type="raw", spike_in_col=NULL, read_number_col=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
   methods::new(Class="dataset",
-      annotation=annotation,
-      count_matrix=count_matrix,
-      name=name,
-      count_type=count_type,
-      spike_in_col=spike_in_col,
-      read_number_col=read_number_col,
-      filter_genes=filter_genes,
-      variance_cutoff=variance_cutoff,
-      type_abundance_cutoff=type_abundance_cutoff
-     )
+               annotation=annotation,
+               count_matrix=count_matrix,
+               name=name,
+               count_type=count_type,
+               spike_in_col=spike_in_col,
+               read_number_col=read_number_col,
+               filter_genes=filter_genes,
+               variance_cutoff=variance_cutoff,
+               type_abundance_cutoff=type_abundance_cutoff
+  )
 }
 
 #' constructor to merge multiple datasets into one
@@ -202,15 +202,15 @@ dataset_h5ad <- function(annotation, h5ad_file, name, count_type="raw", spike_in
   }
 
   methods::new(Class="dataset",
-      annotation=annotation,
-      count_matrix=X_mat,
-      name=name,
-      count_type=count_type,
-      spike_in_col=spike_in_col,
-      read_number_col=read_number_col,
-      filter_genes=filter_genes,
-      variance_cutoff=variance_cutoff,
-      type_abundance_cutoff=type_abundance_cutoff
+               annotation=annotation,
+               count_matrix=count_matrix,
+               name=name,
+               count_type=count_type,
+               spike_in_col=spike_in_col,
+               read_number_col=read_number_col,
+               filter_genes=filter_genes,
+               variance_cutoff=variance_cutoff,
+               type_abundance_cutoff=type_abundance_cutoff
   )
 }
 
@@ -239,15 +239,15 @@ dataset_seurat <- function(annotation, seurat_obj, name, count_type ="raw",spike
   })
 
   methods::new(Class="dataset",
-      annotation=annotation,
-      count_matrix=count_matrix,
-      name=name,
-      count_type=count_type,
-      spike_in_col=spike_in_col,
-      read_number_col=read_number_col,
-      filter_genes=filter_genes,
-      variance_cutoff=variance_cutoff,
-      type_abundance_cutoff=type_abundance_cutoff
+               annotation=annotation,
+               count_matrix=count_matrix,
+               name=name,
+               count_type=count_type,
+               spike_in_col=spike_in_col,
+               read_number_col=read_number_col,
+               filter_genes=filter_genes,
+               variance_cutoff=variance_cutoff,
+               type_abundance_cutoff=type_abundance_cutoff
   )
 }
 
@@ -288,15 +288,15 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="raw",
   }
 
   methods::new(Class="dataset",
-      annotation=annotation,
-      count_matrix=count_matrix,
-      name=name,
-      count_type=count_type,
-      spike_in_col=spike_in_col,
-      read_number_col=read_number_col,
-      filter_genes=filter_genes,
-      variance_cutoff=variance_cutoff,
-      type_abundance_cutoff=type_abundance_cutoff
+               annotation=annotation,
+               count_matrix=count_matrix,
+               name=name,
+               count_type=count_type,
+               spike_in_col=spike_in_col,
+               read_number_col=read_number_col,
+               filter_genes=filter_genes,
+               variance_cutoff=variance_cutoff,
+               type_abundance_cutoff=type_abundance_cutoff
   )
 
 }
@@ -341,13 +341,13 @@ dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, s
     warning("The count matrix has no column names and has different dimensions than the annotation. Cannot load this as a dataset.")
     return(NULL)
   }
-
   methods::new(Class="dataset",
                annotation=annotation,
                count_matrix=count_matrix,
                name=name,
                count_type=count_type,
                spike_in_col=spike_in_col,
+               read_number_col=read_number_col,
                filter_genes=filter_genes,
                variance_cutoff=variance_cutoff,
                type_abundance_cutoff=type_abundance_cutoff
