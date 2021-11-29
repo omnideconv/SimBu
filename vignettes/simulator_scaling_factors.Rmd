@@ -1,0 +1,217 @@
+---
+title: "Introducing mRNA bias into simulations with scaling factors"
+author: "Alexander Dietrich"
+date: "11/29/2021"
+bibliography: references.bib
+biblio-style: apalike
+link-citations: yes
+colorlinks: yes
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{simulator_documentation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Using scaling factors 
+
+This package allows the user to introduce an mRNA bias into pseudo-bulk RNA-seq samples. Different cell-types contain different amounts of mRNA (Dendritic cells for examples contain much more than Neutrophils); this bias can be added into simulations artificially in different ways. \
+The scaling factors will always be applied on the single-cell dataset first, altering its expression profiles accordingly, and then the pseudo-bulk samples are generated with an aggregation method (`mean` by default). By default we `multiply` the scaling factor with the dataset, but you can change this to `division` in the `scaling_factor_aggregation` parameter of `simulate_bulk()`.
+
+
+## Pre-defined scaling factors
+
+Some studies have proposed scaling factors for immune cells, such as EPIC [@Racle2017] or quantiseq [@Finotello2019],
+deconvolution tools which correct for the mRNA bias internally using these values:
+
+```{r, format="markdown"}
+epic <- data.frame(
+  type = c("B cells", 
+           "Macrophages",
+           "Monocytes", 
+           "Neutrophils",
+           "NK cells",
+           "T cells",
+           "T cells CD4",
+           "T cells CD8",
+           "T helper cells",
+           "T regulatory cells",
+           "otherCells",
+           "default"),
+  mRNA = c(0.4016,
+           1.4196,
+           1.4196,
+           0.1300,
+           0.4396,
+           0.3952,
+           0.3952,
+           0.3952,
+           0.3952,
+           0.3952,
+           0.4000,
+           0.4000)
+  
+)
+
+epic
+```
+
+```{r, format="markdown"}
+quantiseq <- data.frame(
+  type = c("B cells",
+           "Macrophages",
+           "MacrophagesM2",
+           "Monocytes",
+           "Neutrophils",
+           "NK cells",
+           "T cells CD4",
+           "T cells CD8",
+           "T regulatory cells",
+           "Dendritic cells",
+           "T cells"),
+  mRNA = c( 65.66148,
+            138.11520,
+            119.35447,
+            130.65455,
+            27.73634,
+            117.71584,
+            63.87200,
+            70.25659,
+            72.55110,
+            140.76091,
+            68.89323)
+  
+)
+
+quantiseq
+```
+
+
+When you want to apply one of these scaling factors into your simulation (therefore in-/decreasing the expression signals for the cell-types), use the `custom` value for the `scaling_factor` parameter. Note, that the input for `custom_scaling_vector` needs to be a named list, so we need to transform the dataframes from above slightly:
+
+```{r, eval=FALSE}
+scaling_epic <- epic$mRNA
+names(scaling_epic) <- epic$type
+sim_epic <- simulate_bulk(data=dataset,
+                          scenario = "random",
+                          scaling_factor="custom", 
+                          custom_scaling_vector = scaling_epic, 
+                          nsamples = 100, 
+                          ncells=1000,
+                          ncores=4)
+
+```
+
+
+With this approach, we can also try out some custom scaling factors, for example increasing the expression levels for a single cell-type (B cells) by 10-fold compared to the rest. All cell-types which are not mentioned in the named list given to `custom_scaling_vector` will be transformed with a scaling factor of 1, meaning nothing changes for them.
+
+```{r, eval=FALSE}
+sim_extreme_b <- simulate_bulk(data = dataset, 
+                               scenario = "random",
+                               scaling_factor = "custom",
+                               custom_scaling_vector = c("B cells"=10), 
+                               nsamples = 100, 
+                               ncells = 1000, 
+                               ncores = 4)
+
+```
+
+**Important:** Take care, that the cell-type annotation names in your dataset are the same as in the scaling factor! Otherwise the scaling factor will not be applied or even worse, applied to a different cell-type.
+
+## Dataset specific scaling factors
+
+You can also choose to calculate scaling factors, which are depending on your provided single-cell dataset. Compared to the previous section, this will give a unique value for each cell rather than a cell-type, making it possibly more sensitive. 
+
+### Reads and genes
+
+Two straight forward approaches would be the number of reads or number of expressed genes/features. For this, we need to generate our initial dataset object a little bit differently and add more information to the internal annotation table:
+
+```{r, eval=FALSE}
+  ds <- dataset(annotation = annotation,
+                count_matrix = count_matrix,
+                name = "reads_and_genes",
+                read_number_col = "total_reads",      # add read number column
+                additional_cols = c("gene_number"))   # add gene number column
+
+```
+
+Here our `annotation` dataframe contains additional columns such as `total_reads` and `gene_number`. The first gives the number of reads per cell, the other the number of expressed genes per cell. The number of reads will be stored in the dataset annotation in the `read_number` column, all columns we add via the `additional_cols` parameter will keep their original name.  We can now use these values for mRNA bias introduction based on reads or genes:
+
+```{r, eval=FALSE}
+
+sim_reads <- simulate_bulk(data=ds, 
+                           scenario = "random", 
+                           scaling_factor="read-number",  # use number of reads as scaling factor
+                           nsamples = 100, 
+                           ncells=1000, 
+                           ncores=4)
+
+sim_genes <- simulate_bulk(data = ds,
+                           scenario = "random",
+                           scaling_factor = "gene_number", # use gene_number column as scaling factor
+                           nsamples = 100,
+                           ncells = 1000,
+                           ncores = 4)
+
+
+
+```
+
+These options would also allow you to use other numerical measurements you have for the single cells as scaling factors, such as weight or size for example.
+
+
+### Spike-ins
+
+One other numerical measurement can be spike-ins. Usually the number of reads mapped to spike-in molecules per cell is given in the cell annotations. If this is the case, they can be stored in the dataset annotation using the `spike_in_col` parameter, where you indicate the name of the column from the `annotation` dataframe in which the spike-in information is stored. To calculate a scaling factor from this, the number of reads are also necessary, so we will add this information as well (as above using the `read_number_col` parameter).
+
+```{r, eval=FALSE}
+  ds <- dataset(annotation = annotation,
+                count_matrix = count_matrix,
+                name = "spike-ins",
+                spike_in_col = "ercc_sum",   # add spike-in column
+                read_number_col = "total_reads")
+
+```
+
+The scaling factor with spike-ins is calculated as the "% of reads NOT mapped to spike-in reads", or: `(n_reads - n_spike_in)/n_reads` for each cell. We apply it like this:
+
+```{r, eval=FALSE}
+sim_spike <- simulate_bulk(data = ds,
+                           scenario = "random",
+                           scaling_factor = "spike-in", # use spike-in scaling factor
+                           nsamples = 100,
+                           ncells = 1000,
+                           ncores = 4)
+```
+
+
+## Census - estimate mRNA counts per cell
+
+[Census](http://cole-trapnell-lab.github.io/monocle-release/docs/#census) is an 
+approach which tries to convert TPM counts into relative transcript counts. This 
+basically means, you get the mRNA counts per cell, which can differ between cell-types. \
+[@Qiu2017] state in their paper, that it should only be applied to TPM/FPKM normalized
+data, but I tried it out with raw expression counts as well, which worked as well. \
+Census calculates a vector with a scaling value for each cell in a sample. 
+You can switch this feature on, by setting the `scaling_factor` parameter to `census`.
+
+```{r, eval=FALSE}
+sim_census <-  simulate_bulk(data = dataset_file,
+                             scenario = "spike-in", 
+                             scaling_factor = "census",   # use census scaling factor
+                             nsamples = 100, 
+                             ncells=1000, 
+                             ncores = 4)
+```
+
+
+In our analysis we found, that Census is basically a complicated way of estimating the number of expressed genes per cell. It will remain to the user to decide if he/she wants to use census or simply the number of expressed genes (as shown above) as scaling factor.
+
+# References

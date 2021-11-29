@@ -23,7 +23,7 @@ require(matrixStats)
 #' mean expression value per gene over all sampled cells.
 #' Note: if total_read_counts is used, the cell-fractions are applied to the number of counts, not the number of cells!
 #' @param data \code{\link{database}} or \code{\link{dataset}} object
-#' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{custom}
+#' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number},\code{custom}
 #' @param scaling_vector vector with scaling values for each cell; calculated by the \code{calc_scaling_vector} function
 #' @param simulation_vector named vector with wanted cell-types and their fractions
 #' @param scaling_factor_aggregation aggregation function how to apply the scaling factor, possible are: \code{multiply}(default) and \code{division}
@@ -47,7 +47,9 @@ simulate_sample <- function(data,
     stop("Some cell-types in the provided simulation vector are not in the annotation.")
   }
 
-  if(sum(simulation_vector) != 1){
+  if(!all.equal(sum(simulation_vector), 1)){
+    print(sum(simulation_vector))
+    print(simulation_vector)
     stop("The cell-type fractions need to sum up to 1.")
   }
 
@@ -96,7 +98,6 @@ simulate_sample <- function(data,
   )
   print(paste0("Simulated sample: ", sum(simulated_count_vector)))
 
-
   return(simulated_count_vector = simulated_count_vector)
 
 }
@@ -110,12 +111,13 @@ simulate_sample <- function(data,
 #'
 #' @param data \code{\link{dataset}} object
 #' @param scenario select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{mirror_db},\code{unique},\code{spill-over}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
-#' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in} or \code{NONE} for no scaling factor
+#' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number}, \code{custom} or \code{NONE} for no scaling factor
 #' @param spike_in_cell_type name of cell-type used for \code{spike-in} scenario
 #' @param spike_in_amount fraction of cell-type used for \code{spike-in} scenario; must be between \code{0} and \code{0.99}
+#' @param unique_cell_type name of cell-type for \code{unique} scenario
 #' @param spillover_cell_type name of cell-type used for \code{spill-over} scenario
 #' @param custom_scenario_data dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.
-#' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1
+#' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1; mandatory for \code{custom} scaling factor
 #' @param scaling_factor_aggregation aggregation function how to apply the scaling factor, possible are: \code{multiply}(default) and \code{division}
 #' @param sample_aggreation aggregation method on how to generate a sample; possible are: \code{mean}(default), \code{sum}, \code{median}
 #' @param nsamples numeric; number of samples in pseudo-bulk RNAseq dataset
@@ -151,7 +153,7 @@ simulate_sample <- function(data,
 #' }
 simulate_bulk <- function(data,
                           scenario=c("uniform","random","mirror_db","spike_in","unique", "custom"),
-                          scaling_factor=c("NONE","census","spike-in", "custom"),
+                          scaling_factor=c("NONE","census","spike-in", "custom", "read-number", "annotation_column"),
                           spike_in_cell_type = NULL,
                           spike_in_amount = NULL,
                           unique_cell_type = NULL,
@@ -211,7 +213,7 @@ simulate_bulk <- function(data,
     simulation_vector_list <- lapply(rep(1:nsamples), function(x){
       n_cell_types <- length(unique(data@annotation[["cell_type"]]))
       # generate n_cell_type amount of random fractions from the uniform distribution, which will sum up to 1
-      m <- matrix(runif(n_cell_types, 0, 1), ncol=n_cell_types)
+      m <- round(matrix(runif(n_cell_types, 0, 1), ncol=n_cell_types),3)
       m <- sweep(m, 1, rowSums(m), FUN="/")
       simulation_vector <- as.vector(m[1,])
       names(simulation_vector) <- unique(data@annotation[["cell_type"]])
@@ -328,22 +330,29 @@ simulate_bulk <- function(data,
 
   cell_fractions <- data.frame(t(data.frame(simulation_vector_list)))
 
-  # normalize count matrix to have TPM-like values
-  bulk <- tpm_normalize(bulk)
-
   # remove non-unique features from simulated dataset
   if(length(unique(rownames(bulk))) != dim(bulk)[1]){
     un <- unique(rownames(bulk))
     bulk <- bulk[un,]
   }
 
+  # normalize count matrix to CPMs
+  tryCatch({
+    bulk_cpm <- cpm_normalize(bulk)
+  }, error=function(e){
+    print(e$message)
+    stop()
+  })
+
+
   # build bioconductor expression set
-  expr_set <- Biobase::ExpressionSet(assayData = bulk,
+  expr_set <- Biobase::ExpressionSet(assayData = bulk_cpm,
                                      phenoData = new("AnnotatedDataFrame", data=cell_fractions))
 
   cat("Finished simulation.\n")
 
-  return(list(pseudo_bulk = bulk,
+  return(list(pseudo_bulk = bulk_cpm,
+              pseudo_bulk_raw = bulk,
               cell_fractions = cell_fractions,
               scaling_vector = scaling_vector,
               expression_set = expr_set))
@@ -354,7 +363,7 @@ simulate_bulk <- function(data,
 #' Calculate scaling factor for a dataset
 #'
 #' @param data dataset object
-#' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in} or \code{NONE} for no scaling factor
+#' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number}, \code{custom} or \code{NONE} for no scaling factor
 #' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1
 #' @param ncores number of cores
 #'
@@ -383,9 +392,9 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, nco
     scaling_vector <- (tmp$read_number - tmp$spike_in)/tmp$read_number
     names(scaling_vector) <- tmp$cell_ID
 
-  }else if(scaling_factor == "reads"){
+  }else if(scaling_factor == "read-number"){
     if(!"read_number" %in% colnames(data@annotation)){
-      stop("No column with total read number information in annotation data. Check your dataset again!")
+      stop("The annotation in your dataset does not contain read-number information; you cannot apply the read-number scaling factor.")
     }
     tmp <- data@annotation[,c("cell_ID","read_number")]
     #tmp <- merge(tmp, simulated_annotation, by.x="cell_ID",by.y="values", all.y=T)
@@ -408,6 +417,16 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, nco
   }else if(scaling_factor == "NONE"){
     scaling_vector <- rep(1, nrow(data@annotation))
     names(scaling_vector) <- data@annotation$cell_ID
+  }else if(!is.null(scaling_factor)){
+    print(paste0("Scaling by ", scaling_factor,"-column in annotation table; if no scaling is wished instead, use 'NONE'."))
+    if(!scaling_factor %in% colnames(data@annotation)){stop(paste0("A column with the name ", scaling_factor," cannot be found in the annotation."))}
+    if(!is.numeric(data@annotation[,c(scaling_factor)])){stop(paste0("The column with the name ", scaling_factor," is not numeric and cannot be used for scaling."))}
+
+    tmp <- data@annotation[,c("cell_ID",scaling_factor)]
+    colnames(tmp) <- c("a","b")
+    scaling_vector <- tmp$b
+    names(scaling_vector) <- tmp$a
+
   }else{
     warning("No valid scaling factor method provided. Scaling all cells by 1.")
     scaling_vector <- rep(1, nrow(data@annotation))
@@ -419,7 +438,7 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, nco
 
 
 # normalize samples to one million -> TPM
-tpm_normalize <- function(matrix){
+cpm_normalize <- function(matrix){
   m <- Matrix::t(1e6*Matrix::t(matrix)/Matrix::colSums(matrix))
   m <- tidyr::replace_na(m, 0)
 

@@ -10,6 +10,7 @@ simulate_sample(
   scaling_vector,
   simulation_vector,
   scaling_factor_aggregation,
+  sample_aggreation,
   total_cells,
   total_read_counts,
   ncores
@@ -18,7 +19,7 @@ simulate_sample(
 \arguments{
 \item{data}{\code{\link{database}} or \code{\link{dataset}} object}
 
-\item{scaling_factor}{name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{custom}}
+\item{scaling_factor}{name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number},\code{custom}}
 
 \item{scaling_vector}{vector with scaling values for each cell; calculated by the \code{calc_scaling_vector} function}
 
@@ -26,13 +27,13 @@ simulate_sample(
 
 \item{scaling_factor_aggregation}{aggregation function how to apply the scaling factor, possible are: \code{multiply}(default) and \code{division}}
 
+\item{sample_aggreation}{aggregation method on how to generate a sample; possible are: \code{mean}(default), \code{sum}, \code{median}}
+
 \item{total_cells}{numeric; number of total cells for this simulation}
 
 \item{total_read_counts}{numeric; sets the total read count value for each sample}
 
 \item{ncores}{numeric; number of cores used to create simulation}
-
-\item{sample_aggreation}{aggregation method on how to generate a sample; possible are: \code{mean}(default), \code{sum}, \code{median}}
 }
 \value{
 returns a vector with expression values for all genes in the provided dataset

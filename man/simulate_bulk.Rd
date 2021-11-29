@@ -7,7 +7,7 @@
 simulate_bulk(
   data,
   scenario = c("uniform", "random", "mirror_db", "spike_in", "unique", "custom"),
-  scaling_factor = c("NONE", "census", "spike-in", "custom"),
+  scaling_factor = c("NONE", "census", "spike-in", "custom", "read-number"),
   spike_in_cell_type = NULL,
   spike_in_amount = NULL,
   unique_cell_type = NULL,
@@ -28,7 +28,7 @@ simulate_bulk(
 
 \item{scenario}{select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{mirror_db},\code{unique},\code{spill-over}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.}
 
-\item{scaling_factor}{name of scaling factor; possible are: \code{census}, \code{spike-in} or \code{NONE} for no scaling factor}
+\item{scaling_factor}{name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number}, \code{custom} or \code{NONE} for no scaling factor}
 
 \item{spike_in_cell_type}{name of cell-type used for \code{spike-in} scenario}
 
@@ -36,7 +36,7 @@ simulate_bulk(
 
 \item{custom_scenario_data}{dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.}
 
-\item{custom_scaling_vector}{named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1}
+\item{custom_scaling_vector}{named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1; mandatory for \code{custom} scaling factor}
 
 \item{scaling_factor_aggregation}{aggregation function how to apply the scaling factor, possible are: \code{multiply}(default) and \code{division}}
 

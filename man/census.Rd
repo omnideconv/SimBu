@@ -9,7 +9,7 @@ census(
   exp_capture_rate = 0.25,
   expr_threshold = 0,
   ncores = 1,
-  method = c("monocle", "paper")
+  method = c("monocle", "paper", "expr_genes")
 )
 }
 \arguments{

@@ -9,7 +9,7 @@ calc_scaling_vector(data, scaling_factor, custom_scaling_vector, ncores)
 \arguments{
 \item{data}{dataset object}
 
-\item{scaling_factor}{name of scaling factor; possible are: \code{census}, \code{spike-in} or \code{NONE} for no scaling factor}
+\item{scaling_factor}{name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number}, \code{custom} or \code{NONE} for no scaling factor}
 
 \item{custom_scaling_vector}{named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1}
 

@@ -19,8 +19,9 @@ setClass("dataset", slots=list(annotation="data.frame",
 setMethod(
   f="initialize",
   signature="dataset",
-  definition = function(.Object, annotation, count_matrix, name, count_type, spike_in_col, read_number_col, filter_genes, variance_cutoff, type_abundance_cutoff){
+  definition = function(.Object, annotation, count_matrix, name, count_type, spike_in_col, read_number_col, additional_cols, filter_genes, variance_cutoff, type_abundance_cutoff){
     genes <- rownames(count_matrix)
+    annotation <- as.data.table(annotation)
     cells_a <- annotation[["ID"]]
     cells_m <- colnames(count_matrix)
 
@@ -69,6 +70,18 @@ setMethod(
       }
       anno_df <- cbind(anno_df, read_number=annotation[[read_number_col]])
     }
+    # add all additional columns mentioned in "additional_cols"
+    if(!is.null(additional_cols)){
+      if(!any(additional_cols %in% colnames(annotation))){
+        stop("Not all columns mentioned in additional_cols are present in the provided annotation file.")
+      }
+      if(any(colnames(anno_df) %in% additional_cols)){
+        stop("At least one of the columns mentioned in additional_cols is already present in the dataset annotation object. Please rename.")
+      }
+      anno_df <- cbind(anno_df, annotation[, additional_cols])
+      # rename new column(s)
+      # colnames(anno_df)[ncols(anno_df)-length(additional_cols), ncols(anno_df)] <- additional_cols
+    }
 
     # filter cells by type abundance
     if(type_abundance_cutoff > 0){
@@ -81,6 +94,7 @@ setMethod(
 
     # add additional column with total read counts/TPMs per sample
     anno_df$total_counts_custom <- Matrix::colSums(count_matrix)
+    print("Created dataset.")
 
     .Object@annotation <- anno_df
     .Object@counts <- count_matrix
@@ -96,7 +110,8 @@ setMethod(
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts; mandatory for spike-in scaling factor in simulation
-#' @param read_number_col which column in annotation contains information on total read numbers in a cell; mandatory for spike-in scaling factor in simulation
+#' @param read_number_col which column in annotation contains information on total read numbers in a cell; mandatory for "spike-in" scaling factor and "read-number" in simulation
+#' @param additional_cols list of column names in annotation, that should be stored as well in dataset object
 #' @param filter_genes boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}
 #' @param variance_cutoff numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff
 #' @param type_abundance_cutoff numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types
@@ -105,7 +120,7 @@ setMethod(
 #' @export
 #'
 #' @examples
-dataset <- function(annotation, count_matrix, name, count_type="raw", spike_in_col=NULL, read_number_col=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
+dataset <- function(annotation, count_matrix, name, count_type="raw", spike_in_col=NULL, read_number_col=NULL, additional_cols=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
   methods::new(Class="dataset",
                annotation=annotation,
                count_matrix=count_matrix,
@@ -113,6 +128,7 @@ dataset <- function(annotation, count_matrix, name, count_type="raw", spike_in_c
                count_type=count_type,
                spike_in_col=spike_in_col,
                read_number_col=read_number_col,
+               additional_cols=additional_cols,
                filter_genes=filter_genes,
                variance_cutoff=variance_cutoff,
                type_abundance_cutoff=type_abundance_cutoff
@@ -128,7 +144,7 @@ dataset <- function(annotation, count_matrix, name, count_type="raw", spike_in_c
 #' @export
 #'
 #' @examples
-dataset_multiple <- function(dataset_list, name, count_type="raw", spike_in_col=NULL, read_number_col=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
+dataset_multiple <- function(dataset_list, name, count_type="raw", spike_in_col=NULL, read_number_col=NULL, additional_cols=NULL,filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
   if(length(dataset_list) <= 1){
     stop("You need at least 2 datasets to create a database!")
   }
@@ -163,6 +179,7 @@ dataset_multiple <- function(dataset_list, name, count_type="raw", spike_in_col=
                count_type=count_type,
                spike_in_col=spike_in_col,
                read_number_col=read_number_col,
+               additional_cols=additional_cols,
                filter_genes=filter_genes,
                variance_cutoff=variance_cutoff,
                type_abundance_cutoff=type_abundance_cutoff
@@ -177,6 +194,7 @@ dataset_multiple <- function(dataset_list, name, count_type="raw", spike_in_col=
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
+#' @param read_number_col which column in annotation contains information on total read numbers in a cell; mandatory for "spike-in" scaling factor and "read-number" in simulation
 #' @param filter_genes boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}
 #' @param variance_cutoff numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff
 #' @param type_abundance_cutoff numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types
@@ -185,7 +203,7 @@ dataset_multiple <- function(dataset_list, name, count_type="raw", spike_in_col=
 #' @export
 #'
 #' @examples
-dataset_h5ad <- function(annotation, h5ad_file, name, count_type="raw", spike_in_col=NULL, read_number_col=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
+dataset_h5ad <- function(annotation, h5ad_file, name, count_type="raw", spike_in_col=NULL, read_number_col=NULL, additional_cols=NULL,filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
 
   #TODO check for valid file
   h5ad_file <- normalizePath(h5ad_file)
@@ -203,11 +221,12 @@ dataset_h5ad <- function(annotation, h5ad_file, name, count_type="raw", spike_in
 
   methods::new(Class="dataset",
                annotation=annotation,
-               count_matrix=count_matrix,
+               count_matrix=X_mat,
                name=name,
                count_type=count_type,
                spike_in_col=spike_in_col,
                read_number_col=read_number_col,
+               additional_cols=additional_cols,
                filter_genes=filter_genes,
                variance_cutoff=variance_cutoff,
                type_abundance_cutoff=type_abundance_cutoff
@@ -221,6 +240,7 @@ dataset_h5ad <- function(annotation, h5ad_file, name, count_type="raw", spike_in
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
+#' @param read_number_col which column in annotation contains information on total read numbers in a cell; mandatory for "spike-in" scaling factor and "read-number" in simulation
 #' @param filter_genes boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}
 #' @param variance_cutoff numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff
 #' @param type_abundance_cutoff numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types
@@ -229,7 +249,7 @@ dataset_h5ad <- function(annotation, h5ad_file, name, count_type="raw", spike_in
 #' @export
 #'
 #' @examples
-dataset_seurat <- function(annotation, seurat_obj, name, count_type ="raw",spike_in_col=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
+dataset_seurat <- function(annotation, seurat_obj, name, count_type ="raw",spike_in_col=NULL, read_number_col=NULL, additional_cols=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
 
   tryCatch({
     count_matrix <- seurat_obj@assays$RNA@counts
@@ -245,6 +265,7 @@ dataset_seurat <- function(annotation, seurat_obj, name, count_type ="raw",spike
                count_type=count_type,
                spike_in_col=spike_in_col,
                read_number_col=read_number_col,
+               additional_cols=additional_cols,
                filter_genes=filter_genes,
                variance_cutoff=variance_cutoff,
                type_abundance_cutoff=type_abundance_cutoff
@@ -258,6 +279,7 @@ dataset_seurat <- function(annotation, seurat_obj, name, count_type ="raw",spike
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param count_type what type of counts are in the dataset; default is 'TPM'
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
+#' @param read_number_col which column in annotation contains information on total read numbers in a cell; mandatory for "spike-in" scaling factor and "read-number" in simulation
 #' @param filter_genes boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}
 #' @param variance_cutoff numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff
 #' @param type_abundance_cutoff numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types
@@ -267,7 +289,7 @@ dataset_seurat <- function(annotation, seurat_obj, name, count_type ="raw",spike
 #'
 #' @examples
 dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="raw",
-                           spike_in_col=NULL, read_number_col=NULL, force=F, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
+                           spike_in_col=NULL, read_number_col=NULL, additional_cols=NULL, force=F, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
 
   if(is.null(sfaira_setup)){
     warning("You need to setup sfaira first; please use setup_sfaira() to do so.")
@@ -294,6 +316,7 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="raw",
                count_type=count_type,
                spike_in_col=spike_in_col,
                read_number_col=read_number_col,
+               additional_cols=additional_cols,
                filter_genes=filter_genes,
                variance_cutoff=variance_cutoff,
                type_abundance_cutoff=type_abundance_cutoff
@@ -323,7 +346,7 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name, count_type ="raw",
 #'
 #' @examples
 dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, sfaira_setup, name,
-                                    count_type ="raw",spike_in_col=NULL, read_number_col=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
+                                    count_type ="raw",spike_in_col=NULL, read_number_col=NULL, additional_cols=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
   if(is.null(sfaira_setup)){
     warning("You need to setup sfaira first; please use setup_sfaira() to do so.")
     return(NULL)
@@ -348,6 +371,7 @@ dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, s
                count_type=count_type,
                spike_in_col=spike_in_col,
                read_number_col=read_number_col,
+               additional_cols=additional_cols,
                filter_genes=filter_genes,
                variance_cutoff=variance_cutoff,
                type_abundance_cutoff=type_abundance_cutoff

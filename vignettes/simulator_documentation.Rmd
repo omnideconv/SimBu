@@ -129,10 +129,10 @@ We are now ready to simulate the first pseudo bulk samples with the created data
 ```{r}
 simulation <- simulator::simulate_bulk(data = ds_human_pancreas,
                                        scenario = "random", 
-                                       scaling_factor = "none", 
+                                       scaling_factor = "NONE", 
                                        ncells=1000, 
                                        nsamples = 50, 
-                                       ncores = 12)
+                                       ncores = 4)
 ```
 
 `ncells` sets the number of cells in each sample, while `nsamples` sets the total amount
@@ -144,7 +144,7 @@ expression data you have (raw or normalized). If you for example use TPMs as exp
 and set the total read counts to `1e7`, this will get you really huge samples with many cells, since
 TPM values are generally smaller than the raw count values. 
 
-Currently there are 4 `scenarios` implemented in the package: \
+Currently there are 6 `scenarios` implemented in the package: \
  
 * *random*: for each cell in a sample, the cell-type is chosen randomly. This scenario is 
 depending on the background distribution of the cell-types in the created dataset. If for example
@@ -163,12 +163,34 @@ to create samples, where 50% are B-cells and the rest is filled randomly with ot
 * *spill-over*: this simulates samples with only a single cell-type present. Like with *spike-in*
 you need to set this cell-type with the additional parameter `spillover_cell_type`. \
 
+* *unique*: this creates simulations of only one single cell-type. You have to provide the name
+of this cell-type with the `unique_cell_type` parameter. 
+
+* *custom*: here you are able to create your own set of cell-type fractions. When using this scenario,
+you additionally need to provide a dataframe in the `custom_scenario_data` parameter, where each row represents
+one sample (therefore the number of rows need to match the `nsamples` parameter). Each column has to represent
+one cell-type, which also occurs in the dataset and describes the fraction of this cell-type in a sample. The fractions
+per sample need to sum up to 1. An example can be seen here:
+
+```{r, format="markdown"}
+unique_scenario_dataframe <- data.frame(
+  "B cells" = c(0.2, 0.1, 0.5, 0.3),
+  "T cells" = c(0.3, 0.8, 0.2, 0.5),
+  "NK cells" = c(0.5, 0.1, 0.3, 0.2),
+  row.names = c("sample1","sample2","sample3","sample4")
+)
+unique_scenario_dataframe
+```
+
+
 ## Results
 
 The `simulation` object contains three named entries: \
 
-* `pseudo_bulk`: a sparse matrix with - in this case - 50 columns and about 60k rows 
+* `pseudo_bulk_raw`: a sparse matrix with - in this case - 50 columns and about 60k rows 
 (this is the number of features/genes). This is the simulated expression matrix. \
+
+* `pseudo_bulk`: same as above, but CPM normalized samples. \
 
 * `cell_fractions`: a dataframe with 50 rows and 15 columns (this is the number of cell-types).
 It gives the fractions for each cell-type in each sample. \
@@ -220,14 +242,14 @@ dataset_file <- simulator::dataset(annotation = annotation,
 
 ```{r}
 # change paths accordingly
-counts <- "~/ma/data/Travaglini/Travaglini_Krasnow_2020_Lung_SS2.h5ad"
+h5ad_file <- "~/ma/data/Travaglini/Travaglini_Krasnow_2020_Lung_SS2.h5ad"
 annotation <- fread("~/ma/data/Travaglini/obs_extended.csv")
 # renaming the columns
 colnames(annotation)[which(colnames(annotation) == "free_annotation")]<-"cell_type"
 colnames(annotation)[which(colnames(annotation) == "index")]<-"ID"
 
 dataset_h5ad <- simulator::dataset_h5ad(annotation = annotation,
-                                        h5ad_file = counts, 
+                                        h5ad_file = h5ad_file, 
                                         name = "Travaglini")
 ```
 
@@ -267,8 +289,8 @@ You can handle this issue during simulation using the `whitelist` parameter:
 
 ```{r, fig.width=8, fig.height=8}
 simulation <-  simulator::simulate_bulk(data = dataset_file,
-                                        scenario = "spike-in", 
-                                        scaling_factor = "none", 
+                                        scenario = "spike_in", 
+                                        scaling_factor = "NONE", 
                                         spike_in_cell_type = "NK cell",
                                         spike_in_amount = 0.5,
                                         ncells=1000, 
@@ -289,30 +311,42 @@ ggplot(frac_long, aes(x=fraction, y=sample, fill=cell_type))+
 In the same way, you can also provide a `blacklist` parameter, where you name the
 cell-types you **don't** want to be included in your simulation.
 
-## Using scaling factors (Census)
-[I am still working on this section..]
 
-[Census](http://cole-trapnell-lab.github.io/monocle-release/docs/#census) is an 
-approach which tries to convert TPM counts into relative transcript counts. This 
-basically means, you get the mRNA counts per cell, which can differ between cell-types. \
-[@Qiu2017] state in their paper, that it should only be applied to TPM/FPKM normalized
-data, but I tried it out with raw expression counts as well, which worked as well. \
-Census calculates a vector with a scaling value for each cell in a sample. The simulated
-expression matrix will be multiplied with this vector in order to census-normalize the 
-pseudo-bulk sample. \
-You can switch this feature on, by setting the `scaling_factor` parameter to `census`.
+## Filtering and Aggregation
 
-```{r}
-simulation <-  simulator::simulate_bulk(data = dataset_file,
-                                        scenario = "spike-in", 
-                                        scaling_factor = "census",   # use census scaling factor
-                                        spike_in_cell_type = "NK cell",
-                                        spike_in_amount = 0.5,
-                                        ncells=1000, 
-                                        nsamples = 50, 
-                                        ncores = 12,
-                                        whitelist = c("NK cell","B cell","T cell CD8", "T cell CD4", "Macrophage", "Monocyte conventional", "Monocyte non-conventional"))
+It is possible to filter your dataset by variance and remove genes with only 0 expression values. Also low expressed cell-types can be removed.
+
+```{r, eval=FALSE}
+
+ds_filtered <- dataset(annotation=annotation,
+                       count_matrix = count_matrix,
+                       name="filter_test", 
+                       type_abundance_cutoff=10, 
+                       filter_genes = T, 
+                       variance_cutoff = .1)
+
 ```
+
+Here we removed all cells which belong to a cell-type that has only 10 or less cells annotated with the `type_abundance_cutoff` parameter. \
+`filter_genes` will remove all genes which have an expression value of 0 over all cells. \
+With `variance_cutoff` you can set a cutoff to remove all genes with a variance over all cells below this value.\
+
+\
+
+The pseudo-bulk sample will be generated by aggregating the expression values from all sampled cells and is then normalized. The default aggregation method is `mean`, but you also have the options `sum` and `median`. You can select them like this:
+
+```{r, eval=FALSE}
+
+sim_aggregation <- simulate_bulk(data=ds,
+                                 scenario="random",
+                                 scaling_factor="NONE",
+                                 sample_aggreation = "median",  # use median as aggregation
+                                 nsamples = 100, 
+                                 ncells=1000,
+                                 ncores=4)
+
+```
+
 
 
 

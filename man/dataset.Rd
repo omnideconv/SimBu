@@ -11,6 +11,7 @@ dataset(
   count_type = "raw",
   spike_in_col = NULL,
   read_number_col = NULL,
+  additional_cols = NULL,
   filter_genes = T,
   variance_cutoff = 0,
   type_abundance_cutoff = 0
@@ -27,7 +28,9 @@ dataset(
 
 \item{spike_in_col}{which column in annotation contains information on spike-in counts, which can be used to re-scale counts; mandatory for spike-in scaling factor in simulation}
 
-\item{read_number_col}{which column in annotation contains information on total read numbers in a cell; mandatory for spike-in scaling factor in simulation}
+\item{read_number_col}{which column in annotation contains information on total read numbers in a cell; mandatory for "spike-in" scaling factor and "read-number" in simulation}
+
+\item{additional_cols}{list of column names in annotation, that should be stored as well in dataset object}
 
 \item{filter_genes}{boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}}
 

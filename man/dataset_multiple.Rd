@@ -10,6 +10,7 @@ dataset_multiple(
   count_type = "raw",
   spike_in_col = NULL,
   read_number_col = NULL,
+  additional_cols = NULL,
   filter_genes = T,
   variance_cutoff = 0,
   type_abundance_cutoff = 0

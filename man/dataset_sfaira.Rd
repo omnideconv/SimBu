@@ -11,6 +11,7 @@ dataset_sfaira(
   count_type = "raw",
   spike_in_col = NULL,
   read_number_col = NULL,
+  additional_cols = NULL,
   force = F,
   filter_genes = T,
   variance_cutoff = 0,
@@ -27,6 +28,8 @@ dataset_sfaira(
 \item{count_type}{what type of counts are in the dataset; default is 'TPM'}
 
 \item{spike_in_col}{which column in annotation contains information on spike-in counts, which can be used to re-scale counts}
+
+\item{read_number_col}{which column in annotation contains information on total read numbers in a cell; mandatory for "spike-in" scaling factor and "read-number" in simulation}
 
 \item{filter_genes}{boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}}
 
