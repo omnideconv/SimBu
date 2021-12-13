@@ -26,7 +26,6 @@ require(matrixStats)
 #' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number},\code{custom}
 #' @param scaling_vector vector with scaling values for each cell; calculated by the \code{calc_scaling_vector} function
 #' @param simulation_vector named vector with wanted cell-types and their fractions
-#' @param scaling_factor_aggregation aggregation function how to apply the scaling factor, possible are: \code{multiply}(default) and \code{division}
 #' @param sample_aggreation aggregation method on how to generate a sample; possible are: \code{mean}(default), \code{sum}, \code{median}
 #' @param total_cells numeric; number of total cells for this simulation
 #' @param total_read_counts numeric; sets the total read count value for each sample
@@ -38,7 +37,6 @@ simulate_sample <- function(data,
                             scaling_factor,
                             scaling_vector,
                             simulation_vector,
-                            scaling_factor_aggregation,
                             sample_aggreation,
                             total_cells,
                             total_read_counts, ncores){
@@ -48,34 +46,33 @@ simulate_sample <- function(data,
   }
 
   if(!all.equal(sum(simulation_vector), 1)){
-    print(sum(simulation_vector))
-    print(simulation_vector)
-    stop("The cell-type fractions need to sum up to 1.")
+    print(paste0("vector: ", unlist(simulation_vector),", sum: ", sum(simulation_vector)))
+    stop("The sum of the cell-type fractions can not be larger than 1.")
   }
 
   # loop over all wanted cell-types and sample to have the final amount
+  error_reads_total <- 0
   sampled_cells <- lapply(seq_along(simulation_vector), function(x){
     # get all cells with the current type
     cells_of_type_x <- data@annotation[data@annotation[["cell_type"]] == names(simulation_vector[x]),]
 
     # how many cells of this type do we need?
     if(is.null(total_read_counts)){
-      out <- dplyr::slice_sample(cells_of_type_x, n=total_cells*simulation_vector[x], replace=T)
-      out <- out[["cell_ID"]]
+      cells <- dplyr::slice_sample(cells_of_type_x, n=total_cells*simulation_vector[x], replace=T)
+      cells <- cells[["cell_ID"]]
     }else{
-      # fill sample with cells of current cell-type until total_read_counts value is reached
-      counts_per_cell_type <- ceiling(total_read_counts * simulation_vector[x]) # total count value that this cell-type can reach max
-      read_counts_current <- 0
-      out <- list()
-      while(read_counts_current < counts_per_cell_type){
-        sampled_cell <- dplyr::slice_sample(cells_of_type_x, n=1)
-        read_counts_current <- read_counts_current + sampled_cell[["total_counts_custom"]]
-        out <- append(out, values = sampled_cell[["cell_ID"]])
-      }
+      total_counts_x <- total_read_counts * simulation_vector[x] # total count value that this cell-type can reach max
+      out <- sample_cells_by_read_depth(cells = cells_of_type_x, depth = total_counts_x)
+      cells <- out$cells
+      missing_reads <- out$missing_reads
+      error_reads_total <<- error_reads_total + missing_reads
     }
-    return(out)
+    return(cells)
   })
 
+  if(!is.null(total_read_counts)){
+    message(paste0("Total sequencing depth of ",total_read_counts, " was missed by ", round(error_reads_total/total_read_counts, digits = 5)*100,"%."))
+  }
   # annotation
   names(sampled_cells) <- names(simulation_vector)
   simulated_annotation <- utils::stack(sampled_cells)
@@ -85,18 +82,14 @@ simulate_sample <- function(data,
 
   # apply scaling vector on the sampled cells in the count matrix
   scaling_vector <- scaling_vector[unlist(sampled_cells)]
-  switch (scaling_factor_aggregation,
-    "multiply" = m <- Matrix::t(Matrix::t(m) * scaling_vector),
-    "division" = m <- Matrix::t(Matrix::t(m) / scaling_vector)
-  )
+  m <- Matrix::t(Matrix::t(m) * scaling_vector)
 
   # calculate the mean expression value per gene to get a single pseudo-bulk sample
   switch (sample_aggreation,
-    "mean" = simulated_count_vector <- rowMeans(as.matrix(m)),
-    "sum" = simulated_count_vector <- rowSums(as.matrix(m)),
+    "mean" = simulated_count_vector <- rowMeans(m),
+    "sum" = simulated_count_vector <- Matrix::rowSums(m),
     "median" = simulated_count_vector <- matrixStats::rowMedians(as.matrix(m))
   )
-  print(paste0("Simulated sample: ", sum(simulated_count_vector)))
 
   return(simulated_count_vector = simulated_count_vector)
 
@@ -118,8 +111,8 @@ simulate_sample <- function(data,
 #' @param spillover_cell_type name of cell-type used for \code{spill-over} scenario
 #' @param custom_scenario_data dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.
 #' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1; mandatory for \code{custom} scaling factor
-#' @param scaling_factor_aggregation aggregation function how to apply the scaling factor, possible are: \code{multiply}(default) and \code{division}
-#' @param sample_aggreation aggregation method on how to generate a sample; possible are: \code{mean}(default), \code{sum}, \code{median}
+#' @param balance_unique_mirror_scenario balancing value for the \code{uniform} and \code{mirror_db} scenarios: increasing it will result in more diverse simulated fractions. To get the same fractions in each sample, set to 0. Default is 0.01.
+#' @param sample_aggreation aggregation method on how to generate a sample; possible are: \code{sum}(default), \code{mean}, \code{median}
 #' @param nsamples numeric; number of samples in pseudo-bulk RNAseq dataset
 #' @param ncells numeric; number of cells in each dataset
 #' @param total_read_counts numeric; sets the total read count value for each sample
@@ -159,8 +152,8 @@ simulate_bulk <- function(data,
                           unique_cell_type = NULL,
                           custom_scenario_data = NULL,
                           custom_scaling_vector = NULL,
-                          scaling_factor_aggregation = "multiply",
-                          sample_aggreation = "mean",
+                          balance_unique_mirror_scenario=0.01,
+                          sample_aggreation = "sum",
                           nsamples=100,
                           ncells=1000,
                           total_read_counts = NULL,
@@ -194,15 +187,25 @@ simulate_bulk <- function(data,
     data@counts <- as(data@counts[,remaining_cells], "sparseMatrix")
   }
 
+  # read-number information is necessary if sampling by sequencing depth is used
+  if((!is.null(total_read_counts))&(!"read_number" %in% colnames(data@annotation))){
+    stop("The provided dataset has no read number information stored. Please add it during generation of the dataset if you want to use total_read_counts as a parameter!")
+  }
+
   ##### different cell-type scenarios #####
 
   # each existing cell-type will be appearing in equal amounts
   if(scenario == "uniform"){
     all_types <- unique(data@annotation[["cell_type"]])
-    simulation_vector <- rep(1/length(all_types), length(all_types))
-    names(simulation_vector) <- all_types
-    # duplicate this nsamples amount of times
-    simulation_vector_list <- lapply(rep(1:nsamples), function(x){return(simulation_vector)})
+    n_cell_types <- length(all_types)
+    uniform_value <- 1/length(all_types)
+    simulation_vector_list <- lapply(rep(1:nsamples), function(x){
+      m <- round(matrix(abs(rnorm(length(all_types), mean=1/length(all_types), sd=balance_unique_mirror_scenario)), ncol=n_cell_types), 3)
+      m <- sweep(m, 1, rowSums(m), FUN="/")
+      simulation_vector <- as.vector(m[1,])
+      names(simulation_vector) <- all_types
+      return(simulation_vector)
+    })
     # give each sample a name
     sample_names <- paste0("uniform_sample",rep(1:nsamples))
     names(simulation_vector_list) <- sample_names
@@ -224,13 +227,18 @@ simulate_bulk <- function(data,
   }
   # generate cell-type fractions, which mirror the fraction of each cell-type in the used dataset
   if(scenario == "mirror_db"){
+    n_cell_types <- length(unique(data@annotation[["cell_type"]]))
     # generate 'nsamples' random samples
     simulation_vector_list <- lapply(rep(1:nsamples), function(x){
       # each cell-type will be represented as many times as it occurs in the used dataset
-      simulation_vector <- table(data@annotation$cell_type)/nrow(data@annotation)
-      names <- names(simulation_vector)
-      simulation_vector <- as.vector(simulation_vector)
-      names(simulation_vector) <- names
+      mirror_values <- table(data@annotation$cell_type)/nrow(data@annotation)
+      m <- unlist(lapply(mirror_values, function(y){
+        return(abs(round(rnorm(1, mean=y, sd=balance_unique_mirror_scenario),3)))
+      }))
+      m <- matrix(m, ncol=n_cell_types)
+      m <- sweep(m, 1, rowSums(m), FUN="/")
+      simulation_vector <- as.vector(m[1,])
+      names(simulation_vector) <- unique(data@annotation[["cell_type"]])
       return(simulation_vector)
     })
     sample_names <- paste0("mirror_db_sample", rep(1:nsamples))
@@ -312,7 +320,6 @@ simulate_bulk <- function(data,
                             scaling_factor = scaling_factor,
                             scaling_vector = scaling_vector,
                             simulation_vector = x,
-                            scaling_factor_aggregation = scaling_factor_aggregation,
                             sample_aggreation = sample_aggreation,
                             total_cells = ncells,
                             total_read_counts = total_read_counts,
@@ -325,22 +332,35 @@ simulate_bulk <- function(data,
     return(sample)
   }, mc.cores = ncores))
 
-
   colnames(bulk) <- sample_names
 
   cell_fractions <- data.frame(t(data.frame(simulation_vector_list)))
 
-  # remove non-unique features from simulated dataset
+  # remove non-unique features/genes from simulated dataset
   if(length(unique(rownames(bulk))) != dim(bulk)[1]){
     un <- unique(rownames(bulk))
     bulk <- bulk[un,]
+  }
+
+  # if sequencing depth is provided: rarefy samples to equal sequencing depth
+  if(!is.null(total_read_counts)){
+    if(sample_aggreation != "sum"){
+      warning("You are not using 'sum' as sample aggregation method. Rarefying the generated samples to the provided sequencing depth could lead to unwanted results.")
+    }
+    #TODO change this 'if'.. should not be based on un-checked user input
+    # if raw counts are used and the single cell matrix was changed by a scaling factor, we need rarefaction
+    if("raw" %in% data@annotation$count_type && scaling_factor != "NONE"){
+      message("The provided expression data are raw counts and a scaling factor was applied. The samples will be rarefied to match the wanted sequencing depth.")
+      bulk <- phyloseq::otu_table(bulk, taxa_are_rows = T)
+      bulk <- as.data.frame(phyloseq::rarefy_even_depth(physeq = bulk, sample.size = total_read_counts, rngseed = 1310, verbose = F, trimOTUs = F))
+    }
   }
 
   # normalize count matrix to CPMs
   tryCatch({
     bulk_cpm <- cpm_normalize(bulk)
   }, error=function(e){
-    print(e$message)
+    warning(e$message)
     stop()
   })
 
@@ -512,4 +532,56 @@ merge_simulations <- function(simulation_list){
   return(list(pseudo_bulk = bulk,
               cell_fractions = cell_fractions,
               expression_set = expr_set))
+}
+
+
+
+#' Sample cells based of sequencing depth
+#'
+#' This function allows to sample cells from a dataframe including the number of reads per cell until a pre-defined
+#' sequencing depth is met or no cells are left with low enough read numbers to reach this depth.
+#'
+#' @param cells dataframe; needs to contain a "read_number" column
+#' @param total_read_counts numeric; the total number of reads the sampled cells will sum up to (approximatly)
+#'
+#' @return list of cell IDs
+#'
+sample_cells_by_read_depth <- function(cells, depth){
+  read_counts_current <- 0
+  out <- list()
+  missing_reads <- 0
+  # sample cells and fill up the read_counts
+  while(TRUE){
+    sampled_cell <- dplyr::slice_sample(cells, n=1)
+    cell_reads <- sampled_cell[["read_number"]]
+
+    if((read_counts_current + cell_reads) > depth){
+      sampled_cell <- NULL
+      # the next sampled cell has too many reads -> check if other cells exist, which "fit in"
+      difference_to_fill <-  depth - read_counts_current
+      remaining_cells <- cells[cells[["read_number"]] <= difference_to_fill, ]  # these are all cells of type x, which have less reads than are we still have "available"
+      # check if any cells are left, that can fill the remaining reads
+      if(dim(remaining_cells)[1] == 0){
+        #message(paste0("No more cells to sample from with read depth of ", difference_to_fill, " or lower."))
+        missing_reads <- missing_reads + difference_to_fill
+        break
+      }
+      # look for cell with number of reads lower then difference
+      while (TRUE) {
+        cell_checked <- dplyr::slice_sample(remaining_cells, n=1)
+        cell_reads <- cell_checked[["read_number"]]
+        if(cell_reads <= difference_to_fill){
+          sampled_cell <- cell_checked
+          cell_reads <- sampled_cell[["read_number"]]
+          break
+        }
+      }
+    }
+    if(!is.null(sampled_cell)){
+      read_counts_current <- read_counts_current + cell_reads
+      out <- append(out, values = sampled_cell[["cell_ID"]])
+    }
+  }
+
+  return(list(cells=out, missing_reads=missing_reads))
 }
