@@ -7,14 +7,15 @@
 simulate_bulk(
   data,
   scenario = c("uniform", "random", "mirror_db", "spike_in", "unique", "custom"),
-  scaling_factor = c("NONE", "census", "spike-in", "custom", "read-number"),
+  scaling_factor = c("NONE", "census", "spike-in", "custom", "read-number",
+    "annotation_column"),
   spike_in_cell_type = NULL,
   spike_in_amount = NULL,
   unique_cell_type = NULL,
   custom_scenario_data = NULL,
   custom_scaling_vector = NULL,
-  scaling_factor_aggregation = "multiply",
-  sample_aggreation = "mean",
+  balance_unique_mirror_scenario = 0.01,
+  sample_aggreation = "sum",
   nsamples = 100,
   ncells = 1000,
   total_read_counts = NULL,
@@ -34,13 +35,15 @@ simulate_bulk(
 
 \item{spike_in_amount}{fraction of cell-type used for \code{spike-in} scenario; must be between \code{0} and \code{0.99}}
 
+\item{unique_cell_type}{name of cell-type for \code{unique} scenario}
+
 \item{custom_scenario_data}{dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.}
 
 \item{custom_scaling_vector}{named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1; mandatory for \code{custom} scaling factor}
 
-\item{scaling_factor_aggregation}{aggregation function how to apply the scaling factor, possible are: \code{multiply}(default) and \code{division}}
+\item{balance_unique_mirror_scenario}{balancing value for the \code{uniform} and \code{mirror_db} scenarios: increasing it will result in more diverse simulated fractions. To get the same fractions in each sample, set to 0. Default is 0.01.}
 
-\item{sample_aggreation}{aggregation method on how to generate a sample; possible are: \code{mean}(default), \code{sum}, \code{median}}
+\item{sample_aggreation}{aggregation method on how to generate a sample; possible are: \code{sum}(default), \code{mean}, \code{median}}
 
 \item{nsamples}{numeric; number of samples in pseudo-bulk RNAseq dataset}
 

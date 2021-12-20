@@ -9,7 +9,6 @@ simulate_sample(
   scaling_factor,
   scaling_vector,
   simulation_vector,
-  scaling_factor_aggregation,
   sample_aggreation,
   total_cells,
   total_read_counts,
@@ -24,8 +23,6 @@ simulate_sample(
 \item{scaling_vector}{vector with scaling values for each cell; calculated by the \code{calc_scaling_vector} function}
 
 \item{simulation_vector}{named vector with wanted cell-types and their fractions}
-
-\item{scaling_factor_aggregation}{aggregation function how to apply the scaling factor, possible are: \code{multiply}(default) and \code{division}}
 
 \item{sample_aggreation}{aggregation method on how to generate a sample; possible are: \code{mean}(default), \code{sum}, \code{median}}
 
