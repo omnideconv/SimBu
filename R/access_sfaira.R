@@ -53,7 +53,6 @@ setup_sfaira <- function(python_path, env_name, basedir){
 #' @param synapse_pw character; password for synapse portal (https://www.synapse.org)
 #'
 #' @return a anndata object, stores counts, metadata and other information on the dataset
-#' @export
 #'
 #' @examples
 download_sfaira <- function(setup_list, id, force=F, synapse_user=NULL, synapse_pw=NULL){
@@ -97,7 +96,6 @@ download_sfaira <- function(setup_list, id, force=F, synapse_user=NULL, synapse_
 #' @param force logical; TRUE if you want to force to download all datasets, otherwise only the ones with cell-type annotation will be returned. Default if FALSE
 #'
 #' @return
-#' @export
 #'
 #' @examples
 download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, assays=NULL, force=F){

@@ -1,0 +1,63 @@
+---
+title: "Inputs & Outputs"
+author: "Alexander Dietrich"
+bibliography: references.bib
+biblio-style: apalike
+link-citations: yes
+colorlinks: yes
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{simulator_documentation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(SimBu)
+library(Seurat)
+```
+
+This chapter covers the different input and output options of the package in detail.
+
+# Input
+
+The input for your simulations is always the custom `dataset` object. You can create this object with different constructing functions, which will explained below. It is also possible to merge multiple `dataset` objects into one. 
+
+## Sfaira
+
+To use the public database sfaira, you first need to setup a connection to it. To do so, follow the steps in the "Getting started" vignette. You can now use the `dataset_sfaira_multiple` or `dataset_sfaira` to create a `dataset` object like this:
+
+```{r, eval=FALSE}
+ds_human_pancreas <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
+                                                    organisms = "human", 
+                                                    tissues = "pancreas", 
+                                                    name="human_pancreas")
+
+ds_miller <- SimBu::dataset_sfaira(sfaira_setup = setup_list,
+                                   sfaira_id="human_lung_2020_10x3v2_miller_001_10.1016/j.devcel.2020.01.033",
+                                   name = "Miller")
+```
+
+As you can see, `dataset_sfaira_multiple` allows to download multiple datasets of the same organism, tissue or assay; with `dataset_sfaira` you can access a single dataset directly. You can use the `sfaira_overview` function to find a table of all possible datasets as well as their IDs. 
+
+## Custom data
+
+When building `dataset` objects with your own data, you need to provide a count matrix with the genes in rows and cells in columns. Additionally, an annotation table is needed, with the cell-type annotations. It needs to consist at least out of 2 columns: `ID` and `cell_type`, where `ID` has to be identical to the column names of the count matrix. If not all cells appear in the annotation or count matrix, the intersection of both is used to build the `dataset`. \
+The straight foreward ap
+
+
+### Seurat
+
+It is possible to use a Seurat object to build a `dataset`; you need an additional dataframe for the annotation
+
+```{r, eval=FALSE}
+ds_seurat <- SimBu::dataset_seurat()
+```
+

@@ -26,7 +26,7 @@ require(matrixStats)
 #' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number},\code{custom}
 #' @param scaling_vector vector with scaling values for each cell; calculated by the \code{calc_scaling_vector} function
 #' @param simulation_vector named vector with wanted cell-types and their fractions
-#' @param sample_aggreation aggregation method on how to generate a sample; possible are: \code{mean}(default), \code{sum}, \code{median}
+#' @param sample_aggregation aggregation method on how to generate a sample; possible are: \code{mean}(default), \code{sum}, \code{median}
 #' @param total_cells numeric; number of total cells for this simulation
 #' @param total_read_counts numeric; sets the total read count value for each sample
 #' @param ncores numeric; number of cores used to create simulation
@@ -37,7 +37,7 @@ simulate_sample <- function(data,
                             scaling_factor,
                             scaling_vector,
                             simulation_vector,
-                            sample_aggreation,
+                            sample_aggregation,
                             total_cells,
                             total_read_counts, ncores){
 
@@ -85,7 +85,7 @@ simulate_sample <- function(data,
   m <- Matrix::t(Matrix::t(m) * scaling_vector)
 
   # calculate the mean expression value per gene to get a single pseudo-bulk sample
-  switch (sample_aggreation,
+  switch (sample_aggregation,
     "mean" = simulated_count_vector <- rowMeans(m),
     "sum" = simulated_count_vector <- Matrix::rowSums(m),
     "median" = simulated_count_vector <- matrixStats::rowMedians(as.matrix(m))
@@ -112,7 +112,7 @@ simulate_sample <- function(data,
 #' @param custom_scenario_data dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.
 #' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1; mandatory for \code{custom} scaling factor
 #' @param balance_unique_mirror_scenario balancing value for the \code{uniform} and \code{mirror_db} scenarios: increasing it will result in more diverse simulated fractions. To get the same fractions in each sample, set to 0. Default is 0.01.
-#' @param sample_aggreation aggregation method on how to generate a sample; possible are: \code{sum}(default), \code{mean}, \code{median}
+#' @param sample_aggregation aggregation method on how to generate a sample; possible are: \code{sum}(default), \code{mean}, \code{median}
 #' @param nsamples numeric; number of samples in pseudo-bulk RNAseq dataset
 #' @param ncells numeric; number of cells in each dataset
 #' @param total_read_counts numeric; sets the total read count value for each sample
@@ -153,7 +153,7 @@ simulate_bulk <- function(data,
                           custom_scenario_data = NULL,
                           custom_scaling_vector = NULL,
                           balance_unique_mirror_scenario=0.01,
-                          sample_aggreation = "sum",
+                          sample_aggregation = "sum",
                           nsamples=100,
                           ncells=1000,
                           total_read_counts = NULL,
@@ -320,7 +320,7 @@ simulate_bulk <- function(data,
                             scaling_factor = scaling_factor,
                             scaling_vector = scaling_vector,
                             simulation_vector = x,
-                            sample_aggreation = sample_aggreation,
+                            sample_aggregation = sample_aggregation,
                             total_cells = ncells,
                             total_read_counts = total_read_counts,
                             ncores=ncores)
@@ -344,7 +344,7 @@ simulate_bulk <- function(data,
 
   # if sequencing depth is provided: rarefy samples to equal sequencing depth
   if(!is.null(total_read_counts)){
-    if(sample_aggreation != "sum"){
+    if(sample_aggregation != "sum"){
       warning("You are not using 'sum' as sample aggregation method. Rarefying the generated samples to the provided sequencing depth could lead to unwanted results.")
     }
     #TODO change this 'if'.. should not be based on un-checked user input
