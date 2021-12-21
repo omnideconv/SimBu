@@ -146,7 +146,7 @@ dataset <- function(annotation, count_matrix, name, count_type="raw", spike_in_c
 #' @examples
 dataset_multiple <- function(dataset_list, name, count_type="raw", spike_in_col=NULL, read_number_col=NULL, additional_cols=NULL,filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
   if(length(dataset_list) <= 1){
-    stop("You need at least 2 datasets to create a database!")
+    stop("You need at least 2 datasets to merge them into one!")
   }
 
   # only use genes which appear in all databases

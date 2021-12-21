@@ -32,7 +32,6 @@ require(matrixStats)
 #' @param ncores numeric; number of cores used to create simulation
 #'
 #' @return returns a vector with expression values for all genes in the provided dataset
-#' @export
 simulate_sample <- function(data,
                             scaling_factor,
                             scaling_vector,
@@ -388,7 +387,6 @@ simulate_bulk <- function(data,
 #' @param ncores number of cores
 #'
 #' @return a named vector with a scaling value for each cell in the dataset
-#' @export
 #'
 calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, ncores){
 

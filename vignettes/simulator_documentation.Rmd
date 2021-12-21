@@ -187,15 +187,15 @@ unique_scenario_dataframe
 
 The `simulation` object contains three named entries: \
 
-* `pseudo_bulk_raw`: a sparse matrix with - in this case - 50 columns and about 60k rows 
-(this is the number of features/genes). This is the simulated expression matrix. \
+* `pseudo_bulk`: a sparse matrix with genes in rows and the simulated samples in columns. By default TPM normalized.\
 
-* `pseudo_bulk`: same as above, but CPM normalized samples. \
+* `pseudo_bulk_raw`: a sparse matrix, same dimensions as `pseudo_bulk`, but raw counts. Depending on the scaling factor method used, the distribution of these values can be shifted.\
 
-* `cell_fractions`: a dataframe with 50 rows and 15 columns (this is the number of cell-types).
-It gives the fractions for each cell-type in each sample. \
+* `cell_fractions`: a table where rows represent the simulated samples and columns represent the different simulated cell-types. The entries in the table store the specific cell-type fraction per sample.\
 
-* `expression_set`: a Biobase [ExpressionSet](https://rdrr.io/bioc/Biobase/man/class.ExpressionSet.html) \
+* `scaling_vector`: a named list, with the used scaling value for each cell from the single cell dataset. \
+
+* `expression_set`: a Biobase [ExpressionSet](https://rdrr.io/bioc/Biobase/man/class.ExpressionSet.html), containing annotation data as well as the TPM normalized expression matrix. \
 
 Finally here is a boxplot of the resulting simulation:
 

@@ -50,14 +50,71 @@ As you can see, `dataset_sfaira_multiple` allows to download multiple datasets o
 ## Custom data
 
 When building `dataset` objects with your own data, you need to provide a count matrix with the genes in rows and cells in columns. Additionally, an annotation table is needed, with the cell-type annotations. It needs to consist at least out of 2 columns: `ID` and `cell_type`, where `ID` has to be identical to the column names of the count matrix. If not all cells appear in the annotation or count matrix, the intersection of both is used to build the `dataset`. \
-The straight foreward ap
+Additionally, the name of the dataset has to be given. \
+The straight forward approach can be executed like this:
 
+```{r, eval=FALSE}
+ds_basic <- SimBu::dataset(count_matrix = count_matrix,
+                           annotation = annotaton,
+                           name = "basic_dataset")
+```
 
 ### Seurat
 
-It is possible to use a Seurat object to build a `dataset`; you need an additional dataframe for the annotation
+It is possible to use a Seurat object to build a `dataset`; you need an additional dataframe for the annotation:
 
 ```{r, eval=FALSE}
-ds_seurat <- SimBu::dataset_seurat()
+ds_seurat <- SimBu::dataset_seurat(seurat_obj = seurat_object,
+                                   annotation = annotation,
+                                   name = "seurat_dataset")
 ```
 
+
+### h5ad files
+
+It is possible to use an h5ad file directly, a file format which stores [AnnData](https://anndata.readthedocs.io/en/latest/) objects; again you need an additional dataframe for the annotation: 
+
+```{r, eval=FALSE}
+
+ds_h5ad <- SimBu::dataset_h5ad(h5ad_file = h5ad_file_path,
+                               annotation = annotation,
+                               name = "h5ad_dataset")
+
+```
+
+## Merging datasets
+
+You are able to merge multiple datasets by using the `dataset_multiple` function:
+
+```{r, eval=FALSE}
+
+ds_multiple <- SimBu::dataset_multiple(dataset_list = list(ds_1, ds_2, ds_3),
+                                       name = "ds_multiple")
+
+```
+
+
+# Simulations
+Once the `dataset` is generated, you can use `simulate_bulk` to generate pseudo-bulk samples, resulting in an artificial RNA-seq dataset. \
+Similar to datasets, it is also possible to merge simulations:
+
+```{r, eval=FALSE}
+merged_simulations <- SimBu::merge_simulations(list(sim_1, sim_2, sim_3))
+```
+
+
+
+# Output
+
+
+The output of this function is a named list with 5 entries:
+
+* `pseudo_bulk`: a sparse matrix with genes in rows and the simulated samples in columns. By default TPM normalized.\
+
+* `pseudo_bulk_raw`: a sparse matrix, same dimensions as `pseudo_bulk`, but raw counts. Depending on the scaling factor method used, the distribution of these values can be shifted.\
+
+* `cell_fractions`: a table where rows represent the simulated samples and columns represent the different simulated cell-types. The entries in the table store the specific cell-type fraction per sample.\
+
+* `scaling_vector`: a named list, with the used scaling value for each cell from the single cell dataset. \
+
+* `expression_set`: a Biobase [ExpressionSet](https://rdrr.io/bioc/Biobase/man/class.ExpressionSet.html), containing annotation data as well as the TPM normalized expression matrix. \

@@ -15,7 +15,7 @@ simulate_bulk(
   custom_scenario_data = NULL,
   custom_scaling_vector = NULL,
   balance_unique_mirror_scenario = 0.01,
-  sample_aggreation = "sum",
+  sample_aggregation = "sum",
   nsamples = 100,
   ncells = 1000,
   total_read_counts = NULL,
@@ -43,7 +43,7 @@ simulate_bulk(
 
 \item{balance_unique_mirror_scenario}{balancing value for the \code{uniform} and \code{mirror_db} scenarios: increasing it will result in more diverse simulated fractions. To get the same fractions in each sample, set to 0. Default is 0.01.}
 
-\item{sample_aggreation}{aggregation method on how to generate a sample; possible are: \code{sum}(default), \code{mean}, \code{median}}
+\item{sample_aggregation}{aggregation method on how to generate a sample; possible are: \code{sum}(default), \code{mean}, \code{median}}
 
 \item{nsamples}{numeric; number of samples in pseudo-bulk RNAseq dataset}
 

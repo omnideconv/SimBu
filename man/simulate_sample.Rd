@@ -9,7 +9,7 @@ simulate_sample(
   scaling_factor,
   scaling_vector,
   simulation_vector,
-  sample_aggreation,
+  sample_aggregation,
   total_cells,
   total_read_counts,
   ncores
@@ -24,7 +24,7 @@ simulate_sample(
 
 \item{simulation_vector}{named vector with wanted cell-types and their fractions}
 
-\item{sample_aggreation}{aggregation method on how to generate a sample; possible are: \code{mean}(default), \code{sum}, \code{median}}
+\item{sample_aggregation}{aggregation method on how to generate a sample; possible are: \code{mean}(default), \code{sum}, \code{median}}
 
 \item{total_cells}{numeric; number of total cells for this simulation}
 
