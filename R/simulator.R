@@ -264,7 +264,7 @@ simulate_bulk <- function(data,
       # generate n_cell_type amount of random fractions from the uniform distribution, which will sum up to 1
       m <- matrix(runif(n_cell_types, 0, 1), ncol=n_cell_types)
       simulation_vector <- as.vector(m[1,])
-      simulation_vector <- spike_in_amount * simulation_vector/sum(simulation_vector)
+      simulation_vector <- (1 - spike_in_amount) * simulation_vector/sum(simulation_vector)
       simulation_vector <- append(simulation_vector, spike_in_amount)
       names(simulation_vector) <- all_cell_types
       return(simulation_vector)
