@@ -15,7 +15,7 @@ To install this package, use the following command:
 
 ``` r
 install.packages("devtools")
-devtools::install_github("omnideconv/simulator") # auth_token=XXX for private repository
+devtools::install_github("omnideconv/SimBu") # auth_token=XXX for private repository
 ```
 
 If you want to use the public data integration the package offers
