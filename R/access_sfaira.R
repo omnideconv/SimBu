@@ -24,6 +24,10 @@ setup_sfaira <- function(python_path, env_name, basedir){
     reticulate::use_condaenv(env_name, required = T)
     sfaira <- reticulate::import("sfaira")
 
+    # print version of currently used sfaira version
+    check_cmd <- "sfaira --version"
+    system(check_cmd)
+
     # create directories for sfaira downloads
     if(!dir.exists(basedir)) dir.create(basedir)
     cachedir <- paste0(basedir, "/cache")

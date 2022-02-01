@@ -66,9 +66,10 @@ A recommended step by step installation would look like this:
 ```
 conda create --name sfaira python=3.9 pip
 conda activate sfaira
-/path/to/conda/envs/sfaira/bin/pip install git+https://github.com/theislab/sfaira.git@dev #this ensures that the correct pip is used
+/path/to/conda/envs/sfaira/bin/pip install git+https://github.com/theislab/sfaira.git@main #this ensures that the correct pip is used
 ```
 Watch out that you are using pip inside of the new environment, not the global pip!\
+Also, we recommend to use the latest sfaira version, at this time it is 0.3.9.\
 
 You do not need to activate the new conda environment each time in order to use it in the R package.\
 To setup sfaira inside of the R package use this command: 

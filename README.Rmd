@@ -35,7 +35,7 @@ If you want to use the public data integration the package offers ([sfaira](http
 ```
 conda create --name sfaira python=3.9 pip
 conda activate sfaira
-/path/to/conda/envs/sfaira/bin/pip install git+https://github.com/theislab/sfaira.git@dev #this ensures that the correct pip is used
+/path/to/conda/envs/sfaira/bin/pip install git+https://github.com/theislab/sfaira.git@main #this ensures that the correct pip is used
 ```
 
 ## Usage
