@@ -333,7 +333,7 @@ simulate_bulk <- function(data,
 
   colnames(bulk) <- sample_names
 
-  cell_fractions <- data.frame(t(data.frame(simulation_vector_list)))
+  cell_fractions <- data.frame(t(data.frame(simulation_vector_list)), check.names = F)
 
   # remove non-unique features/genes from simulated dataset
   if(length(unique(rownames(bulk))) != dim(bulk)[1]){
