@@ -21,11 +21,14 @@ devtools::install_github("omnideconv/SimBu") # auth_token=XXX for private reposi
 If you want to use the public data integration the package offers
 ([sfaira](https://theislab.github.io/Datasets) database), you
 additionally have to install sfaira into a new conda environment; follow
-these steps in your terminal: (You need python 3.7+ to install sfaira!)
+these steps in your terminal: (You need python 3.7+ to install
+sfaira!)  
+We recommend to use the latest version of sfaira, currently this is
+0.3.9.
 
     conda create --name sfaira python=3.9 pip
     conda activate sfaira
-    /path/to/conda/envs/sfaira/bin/pip install git+https://github.com/theislab/sfaira.git@dev #this ensures that the correct pip is used
+    /path/to/conda/envs/sfaira/bin/pip install git+https://github.com/theislab/sfaira.git@main #this ensures that the correct pip is used
 
 ## Usage
 
