@@ -7,7 +7,7 @@ link-citations: yes
 colorlinks: yes
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{simulator_documentation}
+  %\VignetteIndexEntry{Inputs & Outputs}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -36,7 +36,7 @@ To use the public database sfaira, you first need to setup a connection to it. T
 
 ```{r, eval=FALSE}
 ds_human_pancreas <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
-                                                    organisms = "human", 
+                                                    organisms = "Homo sapiens", 
                                                     tissues = "pancreas", 
                                                     name="human_pancreas")
 

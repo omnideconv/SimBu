@@ -16,5 +16,5 @@ a dataframe with information on each dataset
 Gives an overview of the possible datasets you can use from the sfaira database
 }
 \examples{
-all_datasets <- sfaira_overview(setup_list)
+\dontrun{all_datasets <- sfaira_overview(setup_list)}
 }

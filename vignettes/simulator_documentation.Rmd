@@ -7,7 +7,7 @@ link-citations: yes
 colorlinks: yes
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{simulator_documentation}
+  %\VignetteIndexEntry{Getting started with the pseudo-bulk simulator R package}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -66,9 +66,10 @@ A recommended step by step installation would look like this:
 ```
 conda create --name sfaira python=3.9 pip
 conda activate sfaira
-/path/to/conda/envs/sfaira/bin/pip install git+https://github.com/theislab/sfaira.git@dev #this ensures that the correct pip is used
+/path/to/conda/envs/sfaira/bin/pip install git+https://github.com/theislab/sfaira.git@main #this ensures that the correct pip is used
 ```
 Watch out that you are using pip inside of the new environment, not the global pip!\
+Also, we recommend to use the latest sfaira version, at this time it is 0.3.9.\
 
 You do not need to activate the new conda environment each time in order to use it in the R package.\
 To setup sfaira inside of the R package use this command: 
@@ -105,7 +106,7 @@ The `name` parameter is used later on to give each sample a unique name.
 
 ```{r, warning=TRUE, message=TRUE}
 ds_human_pancreas <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
-                                                        organisms = "human", 
+                                                        organisms = "Homo sapiens", 
                                                         tissues = "pancreas", 
                                                         name="human_pancreas")
 ```
