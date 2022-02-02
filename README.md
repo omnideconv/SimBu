@@ -4,6 +4,8 @@
 # SimBu
 
 <!-- badges: start -->
+
+[![R-CMD-check](https://github.com/omnideconv/simulator/workflows/R-CMD-check/badge.svg)](https://github.com/omnideconv/simulator/actions)
 <!-- badges: end -->
 
 The goal of SimBu is to simulate pseudo-bulk RNAseq datasets from public
