@@ -78,7 +78,7 @@ download_sfaira <- function(setup_list, id, force=F, synapse_user=NULL, synapse_
       return(NULL)
     }
     #streamline features & meta-data
-    ds$datasets[[id]]$streamline_features(match_to_reference=list("human"= "Homo_sapiens.GRCh38.102", "mouse"= "Mus_musculus.GRCm38.102"))
+    ds$datasets[[id]]$streamline_features(match_to_release = pkg.globals$sfaira_streamline_feature_version)
     ds$datasets[[id]]$streamline_metadata(schema="sfaira")
     return(ds$datasets[[id]]$adata)
   }, error = function(e){
@@ -135,7 +135,7 @@ download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, a
     ds$load()
     #streamline features and meta-data
     print("Streamlining features & meta-data...")
-    ds$streamline_features(match_to_reference=list("human"= "Homo_sapiens.GRCh38.102", "mouse"= "Mus_musculus.GRCm38.102"))
+    ds$streamline_features(match_to_release = pkg.globals$sfaira_streamline_feature_version)
     ds$streamline_metadata(schema = "sfaira")
     return(ds$adata)
 
@@ -155,7 +155,7 @@ download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, a
 #' @export
 #'
 #' @examples
-#' all_datasets <- sfaira_overview(setup_list)
+#' \dontrun{all_datasets <- sfaira_overview(setup_list)}
 sfaira_overview <- function(setup_list){
   sfaira <- setup_list[["sfaira"]]
   ds <- sfaira$data$Universe(data_path = setup_list[["rawdir"]],

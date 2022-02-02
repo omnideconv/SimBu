@@ -7,7 +7,7 @@ link-citations: yes
 colorlinks: yes
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{simulator_documentation}
+  %\VignetteIndexEntry{Getting started with the pseudo-bulk simulator R package}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -106,7 +106,7 @@ The `name` parameter is used later on to give each sample a unique name.
 
 ```{r, warning=TRUE, message=TRUE}
 ds_human_pancreas <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
-                                                        organisms = "human", 
+                                                        organisms = "Homo sapiens", 
                                                         tissues = "pancreas", 
                                                         name="human_pancreas")
 ```

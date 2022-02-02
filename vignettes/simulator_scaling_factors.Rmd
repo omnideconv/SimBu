@@ -8,7 +8,7 @@ link-citations: yes
 colorlinks: yes
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{simulator_documentation}
+  %\VignetteIndexEntry{Introducing mRNA bias into simulations with scaling factors}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
