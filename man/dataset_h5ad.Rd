@@ -2,43 +2,46 @@
 % Please edit documentation in R/dataset.R
 \name{dataset_h5ad}
 \alias{dataset_h5ad}
-\title{constructor for a dataset using a h5ad file for the counts}
+\title{Function to generate a \link[SummarizedExperiment]{SummarizedExperiment} using a h5ad file for the counts}
 \usage{
 dataset_h5ad(
   annotation,
-  h5ad_file,
-  name,
-  count_type = "raw",
+  h5ad_file_counts = NULL,
+  h5ad_file_tpm = NULL,
+  name = "SimBu_dataset",
   spike_in_col = NULL,
   read_number_col = NULL,
   additional_cols = NULL,
   filter_genes = T,
   variance_cutoff = 0,
-  type_abundance_cutoff = 0
+  type_abundance_cutoff = 0,
+  scale_tpm = T
 )
 }
 \arguments{
 \item{annotation}{dataframe; needs columns 'ID' and 'cell_type'; 'ID' needs to be equal with cell_names in count_matrix}
 
-\item{h5ad_file}{h5ad file with count data}
+\item{h5ad_file_counts}{h5ad file with raw count data}
 
-\item{name}{name of the dataset; will be used for new unique IDs of cells}
+\item{h5ad_file_tpm}{h5ad file with TPM count data}
 
-\item{count_type}{what type of counts are in the dataset; default is 'TPM'}
-
-\item{spike_in_col}{which column in annotation contains information on spike-in counts, which can be used to re-scale counts}
+\item{name}{name of the dataset; will be used for new unique IDs of cells#' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts; mandatory for spike-in scaling factor in simulation}
 
 \item{read_number_col}{which column in annotation contains information on total read numbers in a cell; mandatory for "spike-in" scaling factor and "read-number" in simulation}
+
+\item{additional_cols}{list of column names in annotation, that should be stored as well in dataset object}
 
 \item{filter_genes}{boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}}
 
 \item{variance_cutoff}{numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff}
 
 \item{type_abundance_cutoff}{numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types}
+
+\item{scale_tpm}{boolean, if TRUE (default) the cells in tpm_matrix will be scaled to sum up to 1e6}
 }
 \value{
-dataset object
+Return a \link[SummarizedExperiment]{SummarizedExperiment} object
 }
 \description{
-constructor for a dataset using a h5ad file for the counts
+Function to generate a \link[SummarizedExperiment]{SummarizedExperiment} using a h5ad file for the counts
 }

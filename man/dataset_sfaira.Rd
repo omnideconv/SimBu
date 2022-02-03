@@ -8,14 +8,14 @@ dataset_sfaira(
   sfaira_id,
   sfaira_setup,
   name,
-  count_type = "raw",
   spike_in_col = NULL,
   read_number_col = NULL,
   additional_cols = NULL,
   force = F,
   filter_genes = T,
   variance_cutoff = 0,
-  type_abundance_cutoff = 0
+  type_abundance_cutoff = 0,
+  scale_tpm = T
 )
 }
 \arguments{
@@ -24,8 +24,6 @@ dataset_sfaira(
 \item{sfaira_setup}{the sfaira setup; given by \code{\link{setup_sfaira}}}
 
 \item{name}{name of the dataset; will be used for new unique IDs of cells}
-
-\item{count_type}{what type of counts are in the dataset; default is 'TPM'}
 
 \item{spike_in_col}{which column in annotation contains information on spike-in counts, which can be used to re-scale counts}
 
@@ -36,6 +34,8 @@ dataset_sfaira(
 \item{variance_cutoff}{numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff}
 
 \item{type_abundance_cutoff}{numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types}
+
+\item{scale_tpm}{boolean, if TRUE (default) the cells in tpm_matrix will be scaled to sum up to 1e6}
 }
 \value{
 dataset object
