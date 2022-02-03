@@ -1,30 +1,3 @@
-#' class for a dataset
-#'
-#' @description
-#' This is the main class to store single-cell datasets and use them for pseudo-bulk simulations.
-#'
-#' @slot annotation data.frame. a single dataframe with cell-type annotation of each cell in dataset
-#' @slot counts Matrix. a sparse matrix for the counts
-#' @slot name character. name of the dataset
-#'
-#' @return a datasets object
-#' @export
-#'
-#' @examples
-setClass("dataset", slots=list(annotation="data.frame",
-                               counts="Matrix",
-                               name="character"))
-
-# constructor for dataset
-setMethod(
-  f="initialize",
-  signature="dataset",
-  definition = function(.Object, annotation, count_matrix, name, count_type, spike_in_col, read_number_col, additional_cols, filter_genes, variance_cutoff, type_abundance_cutoff){
-
-  }
-)
-
-
 #' Generate SummarizedExperiment using multiple parameters
 #'
 #' @return Return a \link[SummarizedExperiment]{SummarizedExperiment} object
@@ -194,54 +167,83 @@ dataset <- function(annotation, count_matrix, additional_counts = NULL, name = "
   )
 }
 
-#' constructor to merge multiple datasets into one
+#' Merge multiple \link[SummarizedExperiment]{SummarizedExperiment} datasets into one
 #'
-#' @param dataset_list  list of dataset objects
+#' Only count matrices with the same name will be combined.
+#'
+#' @param dataset_list  list of \link[SummarizedExperiment]{SummarizedExperiment} objects
+#' @param default_count_matrix name of the count matrix, appearing in all datasets in the \code{dataset_list}, which will be the default count_matrix for the SummarizedExperiment (just as the \code{count_matrix} parameter in \link[SimBu]{dataset})
 #' @param name name of the new dataset
 #'
 #' @return dataset object
 #' @export
 #'
-#' @examples
-dataset_multiple <- function(dataset_list, name, count_type="raw", spike_in_col=NULL, read_number_col=NULL, additional_cols=NULL,filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
+dataset_multiple <- function(dataset_list, default_count_matrix, name = "SimBu_dataset", spike_in_col=NULL, read_number_col=NULL, additional_cols=NULL,filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0){
   if(length(dataset_list) <= 1){
     stop("You need at least 2 datasets to merge them into one!")
   }
 
-  # only use genes which appear in all databases
-  genes_list <- lapply(dataset_list, function(x){rownames(x@counts)})
-  genes_it <- Reduce(intersect, genes_list)
-  if(length(genes_it)==0){
-    stop("There are no common genes between your datasets; cannot build a database from this.")
+  assays_list <- lapply(dataset_list, function(x){names(assays(x))})
+  assays_it <- Reduce(intersect, assays_list)
+  if(!default_count_matrix %in% assays_it){
+    stop("Cannot find the default_count_matrix in all provided datasets. Please check for correct spelling.")
+  }
+  if(length(assays_it) == 0){
+    stop("Cannot find one count matrix / assay in each dataset with same name; stopping.")
+  }else{
+    message(paste0("The new dataset will contain the ",assays_it," matrix/matrices, which is/are present in all given datasets.", collapse = ", "))
   }
 
-  # subset count matrices accordingly
-  count_matrices <- lapply(dataset_list, function(x){
-    x@counts[genes_it, ]
+  # only use genes which appear in all databases
+  genes_list <- lapply(dataset_list, function(x){rownames(x)})
+  genes_it <- Reduce(intersect, genes_list)
+  if(length(genes_it) == 0){
+    stop("There are no common genes between your datasets; cannot build new dataset from this.")
+  }
+
+  # subset SummarizedExperiment accordingly
+  subset_se <- lapply(dataset_list, function(x){
+    return(x[rownames(x) %in% genes_it,])
   })
 
-  # combine count matrices to a single one
-  count_matrix <- do.call(cbind, count_matrices)
+  # for all assays combine count matrices of all datasets to a single one
+  assays <- lapply(assays_it, function(assay_current){
+    matrices <- lapply(subset_se, function(dataset_current){
+      assays(dataset_current)[[assay_current]]
+    })
+    do.call(cbind, matrices)
+  })
+  names(assays) <- assays_it
 
   # combine all annotation dataframes to a single dataframe
-  anno_df <- rbindlist(lapply(dataset_list, function(x){x@annotation}), fill = T)
+  anno_df <- rbindlist(lapply(subset_se, function(x){data.frame(colData(x))}), fill = T)
+  # rename cell_ID column to ID -> will be renamed again in generate_summarized_experiment (maybe not best practise, but thats how i implemented it :D)
+  colnames(anno_df)[which(colnames(anno_df) == "cell_ID")] <- "ID"
 
   # check if there is a spike-in value for each sample; else cannot use it
   if(sum(is.na(anno_df[["spike_in"]])) > 0){
     anno_df[["spike_in"]] <- NULL
   }
 
-  methods::new(Class="dataset",
-               annotation=annotation,
-               count_matrix=count_matrix,
-               name=name,
-               count_type=count_type,
-               spike_in_col=spike_in_col,
-               read_number_col=read_number_col,
-               additional_cols=additional_cols,
-               filter_genes=filter_genes,
-               variance_cutoff=variance_cutoff,
-               type_abundance_cutoff=type_abundance_cutoff
+  # prepare count matrices
+  count_matrix <- assays[[default_count_matrix]]
+  assays[[default_count_matrix]] <- NULL
+  if(length(assays) != 0){
+    additional_counts <- assays
+  }else{
+    additional_counts <- NULL
+  }
+
+  generate_summarized_experiment(annotation=anno_df,
+                                 count_matrix=count_matrix,
+                                 additional_counts=additional_counts,
+                                 name=name,
+                                 spike_in_col=spike_in_col,
+                                 read_number_col=read_number_col,
+                                 additional_cols=additional_cols,
+                                 filter_genes=filter_genes,
+                                 variance_cutoff=variance_cutoff,
+                                 type_abundance_cutoff=type_abundance_cutoff
   )
 
 }
