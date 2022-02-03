@@ -6,25 +6,19 @@
 \usage{
 simulate_sample(
   data,
-  scaling_factor,
   scaling_vector,
   simulation_vector,
-  sample_aggregation,
   total_cells,
   total_read_counts,
   ncores
 )
 }
 \arguments{
-\item{data}{\code{\link{database}} or \code{\link{dataset}} object}
-
-\item{scaling_factor}{name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number},\code{custom}}
+\item{data}{\link[SummarizedExperiment]{SummarizedExperiment} object}
 
 \item{scaling_vector}{vector with scaling values for each cell; calculated by the \code{calc_scaling_vector} function}
 
 \item{simulation_vector}{named vector with wanted cell-types and their fractions}
-
-\item{sample_aggregation}{aggregation method on how to generate a sample; possible are: \code{mean}(default), \code{sum}, \code{median}}
 
 \item{total_cells}{numeric; number of total cells for this simulation}
 
@@ -33,7 +27,7 @@ simulate_sample(
 \item{ncores}{numeric; number of cores used to create simulation}
 }
 \value{
-returns a vector with expression values for all genes in the provided dataset
+returns two vectors (one based on counts, one based on tpm; depends on which matrices are present in data) with expression values for all genes in the provided dataset
 }
 \description{
 function to sample cells according to given cell-type fractions. This creates a single pseudo-bulk sample by calculating the
