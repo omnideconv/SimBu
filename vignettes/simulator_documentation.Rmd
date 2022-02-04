@@ -50,77 +50,59 @@ experiments.
 
 # Getting started
 
-This chapter covers all you need to know to quickly simulate some pseudo-bulk samples!
+This chapter covers all you need to know to quickly simulate some pseudo-bulk samples!\
 
-## Setup the simulator
-This package can simulate samples from local or public data. We will start with the public data
-integration, since it requires mostly no manual download of datasets. As a public database, 
-sfaira [@Fischer2020] is used, which is a dataset and model repository for single-cell RNA-sequencing
-data. It gives access to about 233 datasets from human and mouse with more than 3 million cells in total. 
-You can browse them interactively here: [https://theislab.github.io/sfaira-portal/Datasets](https://theislab.github.io/sfaira-portal/Datasets). Note 
-that only annotated datasets will be downloaded! \
-In order to use this database, we first need to install it. We recommend to use [conda](https://docs.conda.io/projects/conda/en/latest/index.html) to create a new
-environment and install sfaira into this directory. This ensures that no other packages interfere with the installation. \
-*Note:* currently the simulator seems to work only with the develop version of sfaira.\
-A recommended step by step installation would look like this:
-```
-conda create --name sfaira python=3.9 pip
-conda activate sfaira
-/path/to/conda/envs/sfaira/bin/pip install git+https://github.com/theislab/sfaira.git@main #this ensures that the correct pip is used
-```
-Watch out that you are using pip inside of the new environment, not the global pip!\
-Also, we recommend to use the latest sfaira version, at this time it is 0.3.9.\
+This package can simulate samples from local or public data. This vignette will work with artificially generated
+data as it serves as an overview for the features implemented in SimBu. For the public data integration using
+sfaira [@Fischer2020], please refer to the ["Public Data Integration"](sfaira_vignette.Rmd) vignette.\
 
-You do not need to activate the new conda environment each time in order to use it in the R package.\
-To setup sfaira inside of the R package use this command: 
+We will create some toy data to use for our simulations; two matrices with 300 cells each and 1000 genes/features. 
+One represents raw count data, while the other matrix represents scaled TPM-like data. We will assign these cells to some
+immune cell types.
 
-```{r, warning=TRUE, message=TRUE}
-setup_list <- SimBu::setup_sfaira(python_path = "/nfs/home/students/adietrich/.conda/envs/sfaira/bin/python3",
-                                      env_name = "sfaira", 
-                                      basedir = "/nfs/home/students/adietrich/ma/data/sfaira")
-```
+```{r}
+counts <- matrix(rpois(3e5, 5), ncol=300)
+tpm <- matrix(rpois(3e5, 5), ncol=300)
+tpm <- tpm / sum(tpm) *1e6 
 
-The `python_path` parameter is used to set the path to the python executable **inside** of the
-newly created conda environment. Similarly, the `env_name` parameter is the name of this newly
-created conda environment. These two parameters need to be set correctly, so that sfaira can be
-used later on. You can find out the python-path in a conda environment named `sfaira` like this:\
-```
-activate sfaira
-which python3
-```
+colnames(counts) <- paste0("cell_",rep(1:300))
+colnames(tpm) <- paste0("cell_",rep(1:300))
+rownames(counts) <- paste0("gene_",rep(1:1000))
+rownames(tpm) <- paste0("gene_",rep(1:1000))
 
-The third parameter describes the name of a directory in which the raw files, meta data and cached
-data from downloading datasets from sfaira are stored into. \
-You need to save the output of the command above in a variable for later use. \
-If you do not wish to use sfaira, just skip this step entirely. 
+annotation <- data.frame("ID"=paste0("cell_",rep(1:300)), 
+                         "cell_type"=c(rep("T cells CD4",50), 
+                                       rep("T cells CD8",50),
+                                       rep("Macrophages",100),
+                                       rep("NK cells",10),
+                                       rep("B cells",70),
+                                       rep("Monocytes",20)))
+```
 
 ## Creating a dataset
 
-The simulator package works with two internally defined data-structures: *datasets* and *databases*. \
-We will now create a dataset of samples from human pancreas using the `organisms` and `tissues` parameter.
-You can provide a single word (like we do here) or for example a list of tissues
-you want to download: `c("pancreas","lung")`. An additional parameter is the `assays` parameter,
-where you subset the database further to only download datasets from certain sequencing
-assays (for examples `Smart-seq2`). \
-The `name` parameter is used later on to give each sample a unique name.
+SimBu uses the [SummarizedExperiment](https://bioconductor.org/packages/release/bioc/html/SummarizedExperiment.html) class as storage
+for count data as well as annotation data. Currently it is possible to store two matrices at the same time: raw counts and TPM-like data (this can also be some other scaled count matrix, such as RPKM, but we recommend to use TPMs). These two matrices have to have the same
+dimensions and have to contain the same genes and cells. You can also supply only a single matrix.\
+SimBu scales the matrix that is added via the `tpm_matrix` slot by default to 1e6 per cell, if you do not want this, you can switch it off by setting the `scale_tpm` parameter to `FALSE`.
+Additionally, the cell type annotation of the cells has to be given in a dataframe, which has to include the two columns `ID` and `cell_type`. If additional columns from this annotation should be transferred to the dataset, simply give the names of them in the `additional_cols` parameter.\
 
-```{r, warning=TRUE, message=TRUE}
-ds_human_pancreas <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
-                                                        organisms = "Homo sapiens", 
-                                                        tissues = "pancreas", 
-                                                        name="human_pancreas")
-```
-Currently there are two datasets in sfaira from human pancreas, which have cell-type annotation.
-The package will download them for you automatically and merge them together into a single expression
-matrix and a streamlined annotation table, which we can use for our simulation. \
-It can happen, that some datasets from sfaira are not (yet) ready for the automatic download,
-an error message will then appear in R, telling you which file to download and where to put it. \
+To generate a dataset that can be used in SimBu, you can use the `dataset()` method; other methods exist as well, which are covered in the ["Inputs & Outputs"](simulator_input_output.Rmd) vignette.
 
-If you wish to see all datasets which are included in sfaira you can use the following command:
 ```{r}
-all_datasets <- SimBu::sfaira_overview(setup_list = setup_list)
-head(all_datasets)
+ds <- SimBu::dataset(annotation = annotation,
+                     count_matrix = counts,
+                     tpm_matrix = tpm,
+                     name = "test_dataset")
 ```
+
+SimBu offers basic filtering options for your dataset, which you can apply during dataset generation: \
+
+* *filter_genes*: if TRUE, genes which have expression values of 0 in all cells will be removed. \
+
+* *variance_cutoff*: remove all genes with a expression variance below the chosen cutoff. \
+
+* *type_abundance_cutoff*: remove all cells, which belong to a cell type that appears less the the given amount. \
 
 
 ## Simulate pseudo bulk datasets
@@ -128,22 +110,16 @@ head(all_datasets)
 We are now ready to simulate the first pseudo bulk samples with the created dataset:
 
 ```{r}
-simulation <- SimBu::simulate_bulk(data = ds_human_pancreas,
-                                       scenario = "random", 
-                                       scaling_factor = "NONE", 
-                                       ncells=1000, 
-                                       nsamples = 50, 
-                                       ncores = 4)
+simulation <- SimBu::simulate_bulk(data = ds,
+                                   scenario = "random", 
+                                   scaling_factor = "NONE", 
+                                   ncells=1000, 
+                                   nsamples = 20, 
+                                   ncores = 4)
 ```
 
-`ncells` sets the number of cells in each sample, while `nsamples` sets the total amount
-of simulated samples. \
-You can also control the number of cells per sample by using the `total_read_counts`
-parameter, which sets the total number of counts per sample. This can be used to simulate different
-sequencing depths. If you wish to use this parameter, it is important to know what type of
-expression data you have (raw or normalized). If you for example use TPMs as expression values
-and set the total read counts to `1e7`, this will get you really huge samples with many cells, since
-TPM values are generally smaller than the raw count values. 
+`ncells` sets the number of cells in each sample, while `nsamples` sets the total amount of simulated samples. \
+If you want to simulate a specific sequencing depth in your simulations, you can use the `total_read_counts` parameter to do so. Note that this parameter is only applied on the counts matrix (if supplied), as TPMs will be scaled to 1e6 by default.
 
 Currently there are 6 `scenarios` implemented in the package: \
  
@@ -188,167 +164,47 @@ unique_scenario_dataframe
 
 The `simulation` object contains three named entries: \
 
-* `pseudo_bulk`: a sparse matrix with genes in rows and the simulated samples in columns. By default TPM normalized.\
+* `bulk`: a SummarizedExperiment object with the pseudo-bulk dataset(s) stored in the `assays`. They can be accessed like this:
 
-* `pseudo_bulk_raw`: a sparse matrix, same dimensions as `pseudo_bulk`, but raw counts. Depending on the scaling factor method used, the distribution of these values can be shifted.\
+```{r, eval=FALSE}
+assays(simulation$bulk)[["bulk_counts"]]
+assays(simulation$bulk)[["bulk_tpm"]]
+```
+
+If only a single matrix was given to the dataset initially, only one assay is filled.
 
 * `cell_fractions`: a table where rows represent the simulated samples and columns represent the different simulated cell-types. The entries in the table store the specific cell-type fraction per sample.\
 
 * `scaling_vector`: a named list, with the used scaling value for each cell from the single cell dataset. \
 
-* `expression_set`: a Biobase [ExpressionSet](https://rdrr.io/bioc/Biobase/man/class.ExpressionSet.html), containing annotation data as well as the TPM normalized expression matrix. \
-
 Finally here is a boxplot of the resulting simulation:
 
 ```{r, fig.width=8, fig.height=8}
-fractions <- simulation$cell_fractions
-fractions$sample <- rownames(fractions)
-frac_long <- gather(fractions, cell_type, fraction, 1:length(fractions)-1)
-
-ggplot(frac_long, aes(x=fraction, y=sample, fill=cell_type))+
-  geom_col()+
-  ggtitle("Cell-type fractions for 50 pseudo-bulk RNAseq samples")+
-  scale_fill_manual(values = colorRampPalette(brewer.pal(8, "Set2"))(length(unique(frac_long$cell_type))))
+SimBu::plot_simulation(simulation = simulation)
 ```
 
 
 # More features
 
-## Using your own data
-
-The simulator also has the option to create datasets with your own scRNAseq experiments.
-You can create datasets in three different ways: \
-
-* Using a expression matrix & annotation file
-
-```{r}
-# change paths accordingly
-counts <- Matrix(as.matrix(fread("~/ma/data/Maynard/X_tpm.csv")), sparse = T)
-genes <- fread("~/ma/data/Maynard/var.csv")
-cells <- fread("~/ma/data/Maynard/obs.csv")
-cellnames <- cells$Run
-genenames <- genes$symbol
-dimnames(counts)<-list(cellnames, genenames)
-counts <- t(counts)
-
-annotation <- fread("~/ma/data/Maynard/annotation_obs.csv")[,c("Run","cell_type")]
-colnames(annotation) <- c("ID", "cell_type")
-
-dataset_file <- SimBu::dataset(annotation = annotation,
-                                   count_matrix = counts,
-                                   name="Maynard")
-```
-
-* Using a h5ad expression data & annotation file
-
-```{r}
-# change paths accordingly
-h5ad_file <- "~/ma/data/Travaglini/Travaglini_Krasnow_2020_Lung_SS2.h5ad"
-annotation <- fread("~/ma/data/Travaglini/obs_extended.csv")
-# renaming the columns
-colnames(annotation)[which(colnames(annotation) == "free_annotation")]<-"cell_type"
-colnames(annotation)[which(colnames(annotation) == "index")]<-"ID"
-
-dataset_h5ad <- SimBu::dataset_h5ad(annotation = annotation,
-                                        h5ad_file = h5ad_file, 
-                                        name = "Travaglini")
-```
-
-
-* Using a Seurat Object and annotation file
-
-```{r}
-# download Seurat object from tabula muris
-# https://figshare.com/ndownloader/files/13088531
-load("~/ma/data/tabula_muris/tabula_muris_bladder.Robj")
-seurat_obj <- Seurat::UpdateSeuratObject(tiss)
-annotation <- seurat_obj@meta.data
-# renaming the columns
-colnames(annotation)[which(colnames(annotation) == "free_annotation")]<-"cell_type"
-annotation$ID <- rownames(annotation)
-
-dataset_seurat <- SimBu::dataset_seurat(annotation = annotation,
-                                            seurat_obj = seurat_obj,
-                                            name="TabulaMuris_Bladder")
-```
-
-
-**Important:** the annotation dataframe you are feeding into the dataset, needs these two
-columns: `ID` for the cell ID, which has to be in common with the cell IDs in the 
-expression matrix and `cell_type`, which gives the cell-type for a cell. \
 
 ## Simulate using a whitelist (and blacklist) of cell-types
 
-Sometimes, you are only interested in specific cell-types, but the dataset you are using
-has way too many cell-types:
-
-```{r}
-unique(dataset_file@annotation$cell_type)
-length(unique(dataset_file@annotation$cell_type))
-```
-You can handle this issue during simulation using the `whitelist` parameter:
+Sometimes, you are only interested in specific cell-types (for example T cells), but the dataset you are using has too many other cell-types; you can handle this issue during simulation using the `whitelist` parameter:
 
 ```{r, fig.width=8, fig.height=8}
-simulation <-  SimBu::simulate_bulk(data = dataset_file,
-                                        scenario = "spike_in", 
-                                        scaling_factor = "NONE", 
-                                        spike_in_cell_type = "NK cell",
-                                        spike_in_amount = 0.5,
-                                        ncells=1000, 
-                                        nsamples = 50, 
-                                        ncores = 12,
-                                        whitelist = c("NK cell","B cell","T cell CD8", "T cell CD4", "Macrophage", "Monocyte conventional", "Monocyte non-conventional"))
+simulation <- SimBu::simulate_bulk(data = ds,
+                                   scenario = "random", 
+                                   scaling_factor = "NONE", 
+                                   ncells=1000, 
+                                   nsamples = 20, 
+                                   ncores = 4,
+                                   whitelist = c("T cells CD4", "T cells CD8"))
 
-fractions <- simulation$cell_fractions
-fractions$sample <- rownames(fractions)
-frac_long <- gather(fractions, cell_type, fraction, 1:length(fractions)-1)
-
-ggplot(frac_long, aes(x=fraction, y=sample, fill=cell_type))+
-  geom_col()+
-  ggtitle("Cell-type fractions for 50 pseudo-bulk RNAseq samples")+
-  scale_fill_manual(values = colorRampPalette(brewer.pal(8, "Set2"))(length(unique(frac_long$cell_type))))
+plot_simulation(simulation = simulation)
 ```
 
 In the same way, you can also provide a `blacklist` parameter, where you name the
 cell-types you **don't** want to be included in your simulation.
-
-
-## Filtering and Aggregation
-
-It is possible to filter your dataset by variance and remove genes with only 0 expression values. Also low expressed cell-types can be removed.
-
-```{r, eval=FALSE}
-
-ds_filtered <- SimBu::dataset(annotation=annotation,
-                       count_matrix = count_matrix,
-                       name="filter_test", 
-                       type_abundance_cutoff=10, 
-                       filter_genes = T, 
-                       variance_cutoff = .1)
-
-```
-
-Here we removed all cells which belong to a cell-type that has only 10 or less cells annotated with the `type_abundance_cutoff` parameter. \
-`filter_genes` will remove all genes which have an expression value of 0 over all cells. \
-With `variance_cutoff` you can set a cutoff to remove all genes with a variance over all cells below this value.\
-
-\
-
-The pseudo-bulk sample will be generated by aggregating the expression values from all sampled cells and is then normalized. The default aggregation method is `sum`, but you also have the options `mean` and `median`. You can select them like this:
-
-```{r, eval=FALSE}
-
-sim_aggregation <- SimBu::simulate_bulk(data=ds,
-                                 scenario="random",
-                                 scaling_factor="NONE",
-                                 sample_aggreation = "median",  # use median as aggregation
-                                 nsamples = 100, 
-                                 ncells=1000,
-                                 ncores=4)
-
-```
-
-
 
 
 # References

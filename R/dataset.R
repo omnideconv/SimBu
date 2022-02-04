@@ -71,9 +71,13 @@ generate_summarized_experiment <- function(annotation, count_matrix, tpm_matrix,
 
   assays <- list()
 
+  # filter genes
+  matrices <- filter_matrix(count_matrix, tpm_matrix, filter_genes, variance_cutoff)
+  count_matrix <- matrices$m1
+  tpm_matrix <- matrices$m2
+
   if(!is.null(count_matrix)){
     count_matrix <- compare_matrix_with_annotation(count_matrix, annotation)
-    count_matrix <- filter_matrix(count_matrix, filter_genes, variance_cutoff)
     colnames(count_matrix) <- new_ids
     # remove low abundant cells
     count_matrix <- count_matrix[,which(!colnames(count_matrix) %in% low_abundant_cells)]
@@ -85,7 +89,6 @@ generate_summarized_experiment <- function(annotation, count_matrix, tpm_matrix,
   if(!is.null(tpm_matrix)){
     if(!check_if_tpm(tpm_matrix)){warning("Warning: Some cells in your TPM matrix are not scaled between 7e5 and 1e6, as it would be expected for TPM data.")}
     tpm_matrix <- compare_matrix_with_annotation(tpm_matrix, annotation)
-    tpm_matrix <- filter_matrix(tpm_matrix, filter_genes, variance_cutoff)
     colnames(tpm_matrix) <- new_ids
     # remove low abundant cells
     tpm_matrix <- tpm_matrix[,which(!colnames(tpm_matrix) %in% low_abundant_cells)]
@@ -155,8 +158,8 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
   }
 
   # check if all datasets have counts / tpms
-  check_counts <- lapply(dataset_list, function(x){return("counts" %in% names(assays(x)))})
-  check_tpm <- lapply(dataset_list, function(x){return("tpm" %in% names(assays(x)))})
+  check_counts <- lapply(dataset_list, function(x){return("counts" %in% names(SummarizedExperiment::assays(x)))})
+  check_tpm <- lapply(dataset_list, function(x){return("tpm" %in% names(SummarizedExperiment::assays(x)))})
   counts_present <- F
   tpm_present <- F
   if(all(check_counts)){
@@ -189,20 +192,20 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
   # for all count assays combine count matrices of all datasets to a single one
   if(counts_present){
     matrices <- lapply(subset_se, function(dataset_current){
-      assays(dataset_current)[["counts"]]
+      SummarizedExperiment::assays(dataset_current)[["counts"]]
     })
     counts <- do.call(cbind, matrices)
   }else{counts <- NULL}
   # for all tpm assays combine count matrices of all datasets to a single one
   if(tpm_present){
     matrices <- lapply(subset_se, function(dataset_current){
-      assays(dataset_current)[["tpm"]]
+      SummarizedExperiment::assays(dataset_current)[["tpm"]]
     })
     tpm <- do.call(cbind, matrices)
   }else{tpm <- NULL}
 
   # combine all annotation dataframes to a single dataframe
-  anno_df <- rbindlist(lapply(subset_se, function(x){data.frame(colData(x))}), fill = T)
+  anno_df <- rbindlist(lapply(subset_se, function(x){data.frame(SummarizedExperiment::colData(x))}), fill = T)
   # rename cell_ID column to ID -> will be renamed again in generate_summarized_experiment (maybe not best practise, but thats how i implemented it :D)
   colnames(anno_df)[which(colnames(anno_df) == "cell_ID")] <- "ID"
 
@@ -509,7 +512,7 @@ check_annotation <- function(annotation, cell_column="cell_type", id_column=1){
 #' @return boolean
 check_if_tpm <- function(tpm_matrix, lower_limit=7e5){
   checks <- lapply(Matrix::colSums(tpm_matrix), function(x){
-    return(x < 1e6 && x > lower_limit)
+    return(x <= 1e6 && x > lower_limit)
   })
   return(all(unlist(checks)))
 }
@@ -535,22 +538,32 @@ compare_matrix_with_annotation <- function(m, annotation){
   return(m)
 }
 
-filter_matrix <- function(m, filter_genes, variance_cutoff){
+# ugliest function ever
+# TODO please redo this at some point...
+filter_matrix <- function(m1, m2, filter_genes, variance_cutoff){
 
-  genes <- rownames(m)
+  if(!is.null(m1)){genes <- rownames(m1)}else{genes <- rownames(m2)}
 
   if(filter_genes){
     print("Filtering genes...")
     # filter by expression
-    low_expressed_genes <- rownames(m[which(Matrix::rowSums(m) == 0),])
+    if(!is.null(m1)){low_expressed_genes_1 <- rownames(m1[which(Matrix::rowSums(m1) == 0),])}else{low_expressed_genes_1=genes}
+    if(!is.null(m2)){low_expressed_genes_2 <- rownames(m2[which(Matrix::rowSums(m2) == 0),])}else{low_expressed_genes_2=genes}
+    low_expressed_genes <- unlist(Reduce(intersect, list(low_expressed_genes_1, low_expressed_genes_2)))
+
     #filter by variance
-    m <- as(m, "dgCMatrix")
-    low_variance_genes <- rownames(m[which(sparseMatrixStats::rowVars(m) < variance_cutoff),])
+    if(!is.null(m1)){m1 <- as(m1, "dgCMatrix")}
+    if(!is.null(m2)){m2 <- as(m2, "dgCMatrix")}
+    if(!is.null(m1)){low_variance_genes_1 <- rownames(m1[which(sparseMatrixStats::rowVars(m1) < variance_cutoff),])}else{low_variance_genes_1=genes}
+    if(!is.null(m2)){low_variance_genes_2 <- rownames(m2[which(sparseMatrixStats::rowVars(m2) < variance_cutoff),])}else{low_variance_genes_2=genes}
+    low_variance_genes <- unlist(Reduce(intersect, list(low_variance_genes_1, low_variance_genes_2)))
     genes_to_keep <- genes[which(!genes %in% unique(c(low_expressed_genes, low_variance_genes)))]
 
     # remove low expressed and low variance genes from count matrix
-    m <- m[which(genes %in% genes_to_keep),]
+    if(!is.null(m1)){m1 <- m1[which(genes %in% genes_to_keep),]}
+    if(!is.null(m2)){m2 <- m2[which(genes %in% genes_to_keep),]}
   }
 
-  return(m)
+  return(list(m1=m1,
+              m2=m2))
 }
