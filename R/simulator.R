@@ -34,7 +34,8 @@ simulate_sample <- function(data,
                             scaling_vector,
                             simulation_vector,
                             total_cells,
-                            total_read_counts, ncores){
+                            total_read_counts,
+                            ncores){
 
   if(!all(names(simulation_vector) %in% unique(colData(data)[["cell_type"]]))){
     stop("Some cell-types in the provided simulation vector are not in the annotation.")
@@ -52,16 +53,9 @@ simulate_sample <- function(data,
     cells_of_type_x <- data.frame(colData(data)[colData(data)[["cell_type"]] == names(simulation_vector[x]),])
 
     # how many cells of this type do we need?
-    if(is.null(total_read_counts)){
-      cells <- dplyr::slice_sample(cells_of_type_x, n=total_cells*simulation_vector[x], replace=T)
-      cells <- cells[["cell_ID"]]
-    }else{
-      total_counts_x <- total_read_counts * simulation_vector[x] # total count value that this cell-type can reach max
-      out <- sample_cells_by_read_depth(cells = cells_of_type_x, depth = total_counts_x)
-      cells <- out$cells
-      missing_reads <- out$missing_reads
-      error_reads_total <<- error_reads_total + missing_reads
-    }
+    cells <- dplyr::slice_sample(cells_of_type_x, n=total_cells*simulation_vector[x], replace=T)
+    cells <- cells[["cell_ID"]]
+
     return(cells)
   })
 
@@ -78,10 +72,26 @@ simulate_sample <- function(data,
 
   simulated_count_vector <- NULL
   simulated_tpm_vector <- NULL
-  # apply scaling factor and sum up counts/tpms of all cells per gene to get single bulk sample
+
+  # apply scaling factor
+  # + sum up counts/tpms of all cells per gene to get single bulk sample
+  # + apply possible scaling of sample
   if("counts" %in% names(SummarizedExperiment::assays(data))){
     m <- Matrix::t(Matrix::t(SummarizedExperiment::assays(data_sampled)[["counts"]]) * scaling_vector)
     simulated_count_vector <- Matrix::rowSums(m)
+
+    # if total_read_counts is used, rarefy/scale count data to get the desired sequencing depth
+    if(!is.null(total_read_counts)){
+      sum_counts <- sum(simulated_count_vector)
+
+      if(sum_counts > total_read_counts){
+        v <- phyloseq::otu_table(simulated_count_vector, taxa_are_rows = T)
+        simulated_count_vector <- data.frame(phyloseq::rarefy_even_depth(physeq=otu, sample.size = 1e5, trimOTUs = F))[,1]
+
+      }else if(sum_counts < total_read_counts){
+        simulated_count_vector <- simulated_count_vector / sum(simulated_count_vector) * total_read_counts
+      }
+    }
   }
   if("tpm" %in% names(SummarizedExperiment::assays(data))){
     m <- Matrix::t(Matrix::t(SummarizedExperiment::assays(data_sampled)[["tpm"]]) * scaling_vector)
@@ -178,11 +188,6 @@ simulate_bulk <- function(data,
     if(dim(data)[2] == 0){
       stop("No cells are left after using this blacklist; please check that the correct names are used.")
     }
-  }
-
-  # read-number information is necessary if sequencing depth is used
-  if((!is.null(total_read_counts))&(!"read_number" %in% colnames(colData(data)))){
-    stop("The provided dataset has no read number information stored. Please add it during generation of the dataset if you want to use 'total_read_counts' as a parameter!")
   }
 
   ##### different cell-type scenarios #####
