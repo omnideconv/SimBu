@@ -492,12 +492,29 @@ plot_simulation <- function(simulation){
 #'
 #' @param simulation_list a list of simulations
 #'
-#' @return named list; \code{pseudo_bulk} is a sparse matrix with the simulated counts;
+#' @return named list; \code{bulk} a \link[SummarizedExperiment]{SummarizedExperiment} object, where the assays store the simulated bulk RNAseq datasets. Can hold either one or two assays, depending on how many matrices were present in the dataset
 #' \code{cell-fractions} is a dataframe with the simulated cell-fractions per sample;
-#' \code{expression_set} is a Bioconductor Expression Set \url{http://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf}
+#' \code{scaling_vector} scaling value for each cell in dataset
 #' @export
 #'
 merge_simulations <- function(simulation_list){
+
+  # merge SummarizedExperiments
+  if(length(simulation_list) <= 1){
+    stop("You need at least 2 simulations to merge them into one!")
+  }
+
+  n_assays <- unlist(lapply(simulation_list, function(x){
+    return(length(names(SummarizedExperiment::assays(x$bulk))))
+  }))
+
+  if(length(unique(n_assays)) != 1){
+    stop("The simulations you want to merge have different numbers of assays. Stopping.")
+  }
+
+  merged_se <- do.call(cbind, sapply(simulation_list, "[[", "bulk"))
+
+
   # merge cell fractions dataframe
   sample_names <- unlist(lapply(simulation_list, function(x){rownames(x[["cell_fractions"]])}))
   sample_names <- paste0(sample_names,"_",rep(1:length(sample_names)))
@@ -505,72 +522,13 @@ merge_simulations <- function(simulation_list){
   rownames(cell_fractions) <- sample_names
   cell_fractions[is.na(cell_fractions)] <- 0
 
-  # merge count matrix
-  intersect_genes <- Reduce(intersect, lapply(simulation_list, function(x){rownames(x[["pseudo_bulk"]])}))
-  count_matrices <- lapply(simulation_list, function(x){
-    m <- x[["pseudo_bulk"]]
-    m[intersect_genes,]
-  })
-  bulk <- do.call("cbind",count_matrices)
-  colnames(bulk) <- sample_names
 
-  # build bioconductor expression set
-  expr_set <- Biobase::ExpressionSet(assayData = bulk,
-                                     phenoData = new("AnnotatedDataFrame", data=cell_fractions))
+  # list of scaling vectors
+  scaling_vector <- sapply(simulation_list, "[[", "scaling_vector")
+  colnames(scaling_vector) <- paste0("simulation_",rep(1:length(simulation_list)))
 
-  return(list(pseudo_bulk = bulk,
+
+  return(list(bulk = merged_se,
               cell_fractions = cell_fractions,
-              expression_set = expr_set))
-}
-
-
-
-#' Sample cells based of sequencing depth
-#'
-#' This function allows to sample cells from a dataframe including the number of reads per cell until a pre-defined
-#' sequencing depth is met or no cells are left with low enough read numbers to reach this depth.
-#'
-#' @param cells dataframe; needs to contain a "read_number" column
-#' @param total_read_counts numeric; the total number of reads the sampled cells will sum up to (approximatly)
-#'
-#' @return list of cell IDs
-#'
-sample_cells_by_read_depth <- function(cells, depth){
-  read_counts_current <- 0
-  out <- list()
-  missing_reads <- 0
-  # sample cells and fill up the read_counts
-  while(TRUE){
-    sampled_cell <- dplyr::slice_sample(cells, n=1)
-    cell_reads <- sampled_cell[["read_number"]]
-
-    if((read_counts_current + cell_reads) > depth){
-      sampled_cell <- NULL
-      # the next sampled cell has too many reads -> check if other cells exist, which "fit in"
-      difference_to_fill <-  depth - read_counts_current
-      remaining_cells <- cells[cells[["read_number"]] <= difference_to_fill, ]  # these are all cells of type x, which have less reads than are we still have "available"
-      # check if any cells are left, that can fill the remaining reads
-      if(dim(remaining_cells)[1] == 0){
-        #message(paste0("No more cells to sample from with read depth of ", difference_to_fill, " or lower."))
-        missing_reads <- missing_reads + difference_to_fill
-        break
-      }
-      # look for cell with number of reads lower then difference
-      while (TRUE) {
-        cell_checked <- dplyr::slice_sample(remaining_cells, n=1)
-        cell_reads <- cell_checked[["read_number"]]
-        if(cell_reads <= difference_to_fill){
-          sampled_cell <- cell_checked
-          cell_reads <- sampled_cell[["read_number"]]
-          break
-        }
-      }
-    }
-    if(!is.null(sampled_cell)){
-      read_counts_current <- read_counts_current + cell_reads
-      out <- append(out, values = sampled_cell[["cell_ID"]])
-    }
-  }
-
-  return(list(cells=out, missing_reads=missing_reads))
+              scaling_vector = scaling_vector))
 }

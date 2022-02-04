@@ -146,6 +146,8 @@ dataset <- function(annotation, count_matrix = NULL, tpm_matrix = NULL, name = "
 
 #' Merge multiple \link[SummarizedExperiment]{SummarizedExperiment} datasets into one
 #'
+#' The objects need to have the same number of assays in order to work.
+#'
 #' @param dataset_list  list of \link[SummarizedExperiment]{SummarizedExperiment} objects
 #' @param name name of the new dataset
 #'
@@ -157,62 +159,27 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
     stop("You need at least 2 datasets to merge them into one!")
   }
 
-  # check if all datasets have counts / tpms
-  check_counts <- lapply(dataset_list, function(x){return("counts" %in% names(SummarizedExperiment::assays(x)))})
-  check_tpm <- lapply(dataset_list, function(x){return("tpm" %in% names(SummarizedExperiment::assays(x)))})
-  counts_present <- F
-  tpm_present <- F
-  if(all(check_counts)){
-    counts_present <- T
-  }else{
-    message("Count matrices could not be found in all provided datasets")
-  }
-  if(all(check_tpm)){
-    tpm_present <- T
-  }else{
-    message("TPM matrices could not be found in all provided datasets")
+  n_assays <- unlist(lapply(dataset_list, function(x){
+    return(length(names(SummarizedExperiment::assays(x))))
+  }))
+
+  if(length(unique(n_assays)) != 1){
+    stop("The datasets you want to merge have different numbers of assays. Stopping.")
   }
 
-  if(!counts_present && !tpm_present){
-    stop("Stoping.")
-  }
+  # merge SEs
+  merged_se <- do.call(cbind, dataset_list)
 
-  # only use genes which appear in all datasets
-  genes_list <- lapply(dataset_list, function(x){rownames(x)})
-  genes_it <- Reduce(intersect, genes_list)
-  if(length(genes_it) == 0){
-    stop("There are no common genes between your datasets; cannot build new dataset from this.")
-  }
-
-  # subset SummarizedExperiment accordingly
-  subset_se <- lapply(dataset_list, function(x){
-    return(x[rownames(x) %in% genes_it,])
-  })
-
-  # for all count assays combine count matrices of all datasets to a single one
-  if(counts_present){
-    matrices <- lapply(subset_se, function(dataset_current){
-      SummarizedExperiment::assays(dataset_current)[["counts"]]
-    })
-    counts <- do.call(cbind, matrices)
-  }else{counts <- NULL}
-  # for all tpm assays combine count matrices of all datasets to a single one
-  if(tpm_present){
-    matrices <- lapply(subset_se, function(dataset_current){
-      SummarizedExperiment::assays(dataset_current)[["tpm"]]
-    })
-    tpm <- do.call(cbind, matrices)
-  }else{tpm <- NULL}
+  if("counts" %in% names(SummarizedExperiment::assays(merged_se))){counts <- Matrix::Matrix(SummarizedExperiment::assays(merged_se)[["counts"]], sparse = T)}
+  if("tpm" %in% names(SummarizedExperiment::assays(merged_se))){counts <- Matrix::Matrix(SummarizedExperiment::assays(merged_se)[["tpm"]], sparse = T)}
 
   # combine all annotation dataframes to a single dataframe
-  anno_df <- rbindlist(lapply(subset_se, function(x){data.frame(SummarizedExperiment::colData(x))}), fill = T)
-  # rename cell_ID column to ID -> will be renamed again in generate_summarized_experiment (maybe not best practise, but thats how i implemented it :D)
-  colnames(anno_df)[which(colnames(anno_df) == "cell_ID")] <- "ID"
+  anno_df <- data.frame(SummarizedExperiment::colData(merged_se))
 
   # check if there is a spike-in value for each sample; else cannot use it
-  if(sum(is.na(anno_df[["spike_in"]])) > 0){
-    anno_df[["spike_in"]] <- NULL
-  }
+  #if(sum(is.na(anno_df[["spike_in"]])) > 0){
+  #  anno_df[["spike_in"]] <- NULL
+  #}
 
   generate_summarized_experiment(annotation=anno_df,
                                  count_matrix=counts,

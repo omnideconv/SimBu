@@ -119,7 +119,9 @@ simulation <- SimBu::simulate_bulk(data = ds,
 ```
 
 `ncells` sets the number of cells in each sample, while `nsamples` sets the total amount of simulated samples. \
-If you want to simulate a specific sequencing depth in your simulations, you can use the `total_read_counts` parameter to do so. Note that this parameter is only applied on the counts matrix (if supplied), as TPMs will be scaled to 1e6 by default.
+If you want to simulate a specific sequencing depth in your simulations, you can use the `total_read_counts` parameter to do so. Note that this parameter is only applied on the counts matrix (if supplied), as TPMs will be scaled to 1e6 by default.\
+
+SimBu can add mRNA bias by using different scaling factors to the simulations using the `scaling_factor` parameter. A detailed explanation can be found in the ["Scaling factor"](simulator_scaling_factors.Rmd) vignette. \
 
 Currently there are 6 `scenarios` implemented in the package: \
  
