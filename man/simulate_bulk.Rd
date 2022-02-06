@@ -14,8 +14,7 @@ simulate_bulk(
   unique_cell_type = NULL,
   custom_scenario_data = NULL,
   custom_scaling_vector = NULL,
-  balance_unique_mirror_scenario = 0.01,
-  sample_aggregation = "sum",
+  balance_uniform_mirror_scenario = 0.01,
   nsamples = 100,
   ncells = 1000,
   total_read_counts = NULL,
@@ -25,7 +24,7 @@ simulate_bulk(
 )
 }
 \arguments{
-\item{data}{\code{\link{dataset}} object}
+\item{data}{\link[SummarizedExperiment]{SummarizedExperiment} object}
 
 \item{scenario}{select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{mirror_db},\code{unique},\code{spill-over}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.}
 
@@ -41,9 +40,7 @@ simulate_bulk(
 
 \item{custom_scaling_vector}{named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1; mandatory for \code{custom} scaling factor}
 
-\item{balance_unique_mirror_scenario}{balancing value for the \code{uniform} and \code{mirror_db} scenarios: increasing it will result in more diverse simulated fractions. To get the same fractions in each sample, set to 0. Default is 0.01.}
-
-\item{sample_aggregation}{aggregation method on how to generate a sample; possible are: \code{sum}(default), \code{mean}, \code{median}}
+\item{balance_uniform_mirror_scenario}{balancing value for the \code{uniform} and \code{mirror_db} scenarios: increasing it will result in more diverse simulated fractions. To get the same fractions in each sample, set to 0. Default is 0.01.}
 
 \item{nsamples}{numeric; number of samples in pseudo-bulk RNAseq dataset}
 
@@ -56,17 +53,14 @@ simulate_bulk(
 \item{blacklist}{list; give a list of cell-types you want to remove for the simulation; if NULL, all are used; is applied after whitelist}
 
 \item{ncores}{numeric; number of cores to use}
-
-\item{spillover_cell_type}{name of cell-type used for \code{spill-over} scenario}
 }
 \value{
-named list; \code{pseudo_bulk} is a sparse matrix with the simulated counts;
+named list; \code{bulk} a \link[SummarizedExperiment]{SummarizedExperiment} object, where the assays store the simulated bulk RNAseq datasets. Can hold either one or two assays, depending on how many matrices were present in the dataset
 \code{cell-fractions} is a dataframe with the simulated cell-fractions per sample;
 \code{scaling_vector} scaling value for each cell in dataset
-\code{expression_set} is a Bioconductor Expression Set \url{http://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf}
 }
 \description{
-This function allows you to create a full pseudo-bulk RNAseq dataset. You need to provide a \code{\link{dataset}} or \code{\link{database}} from which the cells
+This function allows you to create a full pseudo-bulk RNAseq dataset. You need to provide a \link[SummarizedExperiment]{SummarizedExperiment} from which the cells
 will be sampled for the simulation. Also a \code{scenario} has to be selected, where you can choose how the cells will be sampled and a
 \code{scaling_factor} on how the read counts will be transformed proir to the simulation.
 }

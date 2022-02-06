@@ -19,5 +19,5 @@ calc_scaling_vector(data, scaling_factor, custom_scaling_vector, ncores)
 a named vector with a scaling value for each cell in the dataset
 }
 \description{
-Calculate scaling factor for a dataset
+Each scaling factor has a default matrix it will try to use (counts or TPM). If the required matrix is not available, the other one is used and a warning is given.
 }

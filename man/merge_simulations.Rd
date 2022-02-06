@@ -10,9 +10,9 @@ merge_simulations(simulation_list)
 \item{simulation_list}{a list of simulations}
 }
 \value{
-named list; \code{pseudo_bulk} is a sparse matrix with the simulated counts;
+named list; \code{bulk} a \link[SummarizedExperiment]{SummarizedExperiment} object, where the assays store the simulated bulk RNAseq datasets. Can hold either one or two assays, depending on how many matrices were present in the dataset
 \code{cell-fractions} is a dataframe with the simulated cell-fractions per sample;
-\code{expression_set} is a Bioconductor Expression Set \url{http://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf}
+\code{scaling_vector} scaling value for each cell in dataset
 }
 \description{
 we recommend to only merge simulations from the same dataset object, otherwise the count matrices might not correspond on the gene level
