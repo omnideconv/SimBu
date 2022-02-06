@@ -53,8 +53,6 @@ simulate_bulk(
 \item{blacklist}{list; give a list of cell-types you want to remove for the simulation; if NULL, all are used; is applied after whitelist}
 
 \item{ncores}{numeric; number of cores to use}
-
-\item{spillover_cell_type}{name of cell-type used for \code{spill-over} scenario}
 }
 \value{
 named list; \code{bulk} a \link[SummarizedExperiment]{SummarizedExperiment} object, where the assays store the simulated bulk RNAseq datasets. Can hold either one or two assays, depending on how many matrices were present in the dataset

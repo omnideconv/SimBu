@@ -61,8 +61,8 @@ One represents raw count data, while the other matrix represents scaled TPM-like
 immune cell types.
 
 ```{r}
-counts <- matrix(rpois(3e5, 5), ncol=300)
-tpm <- matrix(rpois(3e5, 5), ncol=300)
+counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = T)
+tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = T)
 tpm <- tpm / sum(tpm) *1e6 
 
 colnames(counts) <- paste0("cell_",rep(1:300))

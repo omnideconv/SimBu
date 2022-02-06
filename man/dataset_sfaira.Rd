@@ -29,6 +29,10 @@ dataset_sfaira(
 
 \item{read_number_col}{which column in annotation contains information on total read numbers in a cell; mandatory for "spike-in" scaling factor and "read-number" in simulation}
 
+\item{additional_cols}{list of column names in annotation, that should be stored as well in dataset object}
+
+\item{force}{boolean, if TRUE, datasets without annotation will be downloaded, FALSE otherwise (default)}
+
 \item{filter_genes}{boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}}
 
 \item{variance_cutoff}{numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff}

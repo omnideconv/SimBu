@@ -1,5 +1,17 @@
 #' Generate SummarizedExperiment using multiple parameters
 #'
+#' @param annotation dataframe; needs columns 'ID' and 'cell_type'; 'ID' needs to be equal with cell_names in count_matrix
+#' @param count_matrix sparse count matrix; raw count data is expected with genes in rows, cells in columns
+#' @param tpm_matrix sparse count matrix; TPM like count data is expected with genes in rows, cells in columns
+#' @param name name of the dataset; will be used for new unique IDs of cells
+#' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts; mandatory for spike-in scaling factor in simulation
+#' @param read_number_col which column in annotation contains information on total read numbers in a cell; mandatory for "spike-in" scaling factor and "read-number" in simulation
+#' @param additional_cols list of column names in annotation, that should be stored as well in dataset object
+#' @param filter_genes boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}
+#' @param variance_cutoff numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff
+#' @param type_abundance_cutoff numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types
+#' @param scale_tpm boolean, if TRUE (default) the cells in tpm_matrix will be scaled to sum up to 1e6
+#'
 #' @return Return a \link[SummarizedExperiment]{SummarizedExperiment} object
 #'
 generate_summarized_experiment <- function(annotation, count_matrix, tpm_matrix, name, spike_in_col, read_number_col, additional_cols, filter_genes, variance_cutoff, type_abundance_cutoff, scale_tpm){
@@ -150,6 +162,13 @@ dataset <- function(annotation, count_matrix = NULL, tpm_matrix = NULL, name = "
 #'
 #' @param dataset_list  list of \link[SummarizedExperiment]{SummarizedExperiment} objects
 #' @param name name of the new dataset
+#' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts; mandatory for spike-in scaling factor in simulation
+#' @param read_number_col which column in annotation contains information on total read numbers in a cell; mandatory for "spike-in" scaling factor and "read-number" in simulation
+#' @param additional_cols list of column names in annotation, that should be stored as well in dataset object
+#' @param filter_genes boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}
+#' @param variance_cutoff numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff
+#' @param type_abundance_cutoff numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types
+#' @param scale_tpm boolean, if TRUE (default) the cells in tpm_matrix will be scaled to sum up to 1e6
 #'
 #' @return \link[SummarizedExperiment]{SummarizedExperiment} object
 #' @export
@@ -170,8 +189,12 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
   # merge SEs
   merged_se <- do.call(cbind, dataset_list)
 
-  if("counts" %in% names(SummarizedExperiment::assays(merged_se))){counts <- Matrix::Matrix(SummarizedExperiment::assays(merged_se)[["counts"]], sparse = T)}
-  if("tpm" %in% names(SummarizedExperiment::assays(merged_se))){counts <- Matrix::Matrix(SummarizedExperiment::assays(merged_se)[["tpm"]], sparse = T)}
+  if("counts" %in% names(SummarizedExperiment::assays(merged_se))){
+    counts <- Matrix::Matrix(SummarizedExperiment::assays(merged_se)[["counts"]], sparse = T)
+  }else{counts <- NULL}
+  if("tpm" %in% names(SummarizedExperiment::assays(merged_se))){
+    tpm <- Matrix::Matrix(SummarizedExperiment::assays(merged_se)[["tpm"]], sparse = T)
+  }else{tpm <- NULL}
 
   # combine all annotation dataframes to a single dataframe
   anno_df <- data.frame(SummarizedExperiment::colData(merged_se))
@@ -202,6 +225,7 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
 #' @param h5ad_file_counts h5ad file with raw count data
 #' @param h5ad_file_tpm h5ad file with TPM count data
 #' @param name name of the dataset; will be used for new unique IDs of cells#' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts; mandatory for spike-in scaling factor in simulation
+#' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts; mandatory for spike-in scaling factor in simulation
 #' @param read_number_col which column in annotation contains information on total read numbers in a cell; mandatory for "spike-in" scaling factor and "read-number" in simulation
 #' @param additional_cols list of column names in annotation, that should be stored as well in dataset object
 #' @param filter_genes boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}
@@ -227,7 +251,7 @@ dataset_h5ad <- function(annotation, h5ad_file_counts = NULL, h5ad_file_tpm = NU
     if(file_type == "h5ad"){
       ad <- anndata::read_h5ad(h5ad_file_counts)
       ad <- ad$transpose()
-      count_matrix <- Matrix(as.matrix(ad$X), sparse = T)
+      count_matrix <- Matrix::Matrix(as.matrix(ad$X), sparse = T)
       rownames(count_matrix) <- ad$obs_names
       colnames(count_matrix) <- ad$var_names
     }else{
@@ -244,7 +268,7 @@ dataset_h5ad <- function(annotation, h5ad_file_counts = NULL, h5ad_file_tpm = NU
     if(file_type == "h5ad"){
       ad <- anndata::read_h5ad(h5ad_file_tpm)
       ad <- ad$transpose()
-      tpm_matrix <- Matrix(as.matrix(ad$X), sparse = T)
+      tpm_matrix <- Matrix::Matrix(as.matrix(ad$X), sparse = T)
       rownames(tpm_matrix) <- ad$obs_names
       colnames(tpm_matrix) <- ad$var_names
     }else{
@@ -328,6 +352,8 @@ dataset_seurat <- function(annotation, seurat_obj_counts=NULL, seurat_obj_tpm=NU
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
 #' @param read_number_col which column in annotation contains information on total read numbers in a cell; mandatory for "spike-in" scaling factor and "read-number" in simulation
+#' @param additional_cols list of column names in annotation, that should be stored as well in dataset object
+#' @param force boolean, if TRUE, datasets without annotation will be downloaded, FALSE otherwise (default)
 #' @param filter_genes boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}
 #' @param variance_cutoff numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff
 #' @param type_abundance_cutoff numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types
@@ -336,7 +362,6 @@ dataset_seurat <- function(annotation, seurat_obj_counts=NULL, seurat_obj_tpm=NU
 #' @return dataset object
 #' @export
 #'
-#' @examples
 dataset_sfaira <- function(sfaira_id, sfaira_setup, name,
                            spike_in_col=NULL, read_number_col=NULL, additional_cols=NULL, force=F, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=T){
 
@@ -373,6 +398,7 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name,
 
 }
 
+
 #' Build a dataset using multiple sfaira entries
 #'
 #' You can apply different filters on the whole data-zoo of sfaria; the resulting single-cell datasets will
@@ -384,7 +410,8 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name,
 #' @param assays list of assays
 #' @param sfaira_setup the sfaira setup; given by \code{\link{setup_sfaira}}
 #' @param name name of the dataset; will be used for new unique IDs of cells
-#' @param count_type what type of counts are in the dataset; default is 'TPM'
+#' @param read_number_col which column in annotation contains information on total read numbers in a cell; mandatory for "spike-in" scaling factor and "read-number" in simulation
+#' @param additional_cols list of column names in annotation, that should be stored as well in dataset object
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts
 #' @param filter_genes boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}
 #' @param variance_cutoff numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff
@@ -394,7 +421,6 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name,
 #' @return dataset object
 #' @export
 #'
-#' @examples
 dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, sfaira_setup, name,
                                     spike_in_col=NULL, read_number_col=NULL, additional_cols=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=T){
   if(is.null(sfaira_setup)){
@@ -437,7 +463,6 @@ dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, s
 #'
 #' @return annotation dataframe with correct column names
 #'
-#' @examples
 check_annotation <- function(annotation, cell_column="cell_type", id_column=1){
 
   # check the ID column
@@ -519,10 +544,10 @@ filter_matrix <- function(m1, m2, filter_genes, variance_cutoff){
     low_expressed_genes <- unlist(Reduce(intersect, list(low_expressed_genes_1, low_expressed_genes_2)))
 
     #filter by variance
-    if(!is.null(m1)){m1 <- as(m1, "dgCMatrix")}
-    if(!is.null(m2)){m2 <- as(m2, "dgCMatrix")}
-    if(!is.null(m1)){low_variance_genes_1 <- rownames(m1[which(sparseMatrixStats::rowVars(m1) < variance_cutoff),])}else{low_variance_genes_1=genes}
-    if(!is.null(m2)){low_variance_genes_2 <- rownames(m2[which(sparseMatrixStats::rowVars(m2) < variance_cutoff),])}else{low_variance_genes_2=genes}
+    if(!is.null(m1)){m1_m <- methods::as(m1, "dgCMatrix")}
+    if(!is.null(m2)){m2_m <- methods::as(m2, "dgCMatrix")}
+    if(!is.null(m1)){low_variance_genes_1 <- rownames(m1_m[which(sparseMatrixStats::rowVars(m1_m) < variance_cutoff),])}else{low_variance_genes_1=genes}
+    if(!is.null(m2)){low_variance_genes_2 <- rownames(m2_m[which(sparseMatrixStats::rowVars(m2_m) < variance_cutoff),])}else{low_variance_genes_2=genes}
     low_variance_genes <- unlist(Reduce(intersect, list(low_variance_genes_1, low_variance_genes_2)))
     genes_to_keep <- genes[which(!genes %in% unique(c(low_expressed_genes, low_variance_genes)))]
 

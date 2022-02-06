@@ -1,20 +1,3 @@
-require(parallel)
-require(data.table)
-require(Matrix)
-require(Seurat)
-require(anndata)
-require(tools)
-require(Biobase)
-require(reticulate)
-require(tidyr)
-require(tools)
-require(methods)
-require(sparseMatrixStats)
-require(ggplot2)
-require(scales)
-require(matrixStats)
-
-
 ###### simulation ######
 
 #' simulate single pseudo-bulk sample
@@ -86,7 +69,7 @@ simulate_sample <- function(data,
 
       if(sum_counts > total_read_counts){
         v <- phyloseq::otu_table(simulated_count_vector, taxa_are_rows = T)
-        simulated_count_vector <- data.frame(phyloseq::rarefy_even_depth(physeq=otu, sample.size = 1e5, trimOTUs = F))[,1]
+        simulated_count_vector <- data.frame(phyloseq::rarefy_even_depth(physeq=v, sample.size = 1e5, trimOTUs = F))[,1]
 
       }else if(sum_counts < total_read_counts){
         simulated_count_vector <- simulated_count_vector / sum(simulated_count_vector) * total_read_counts
@@ -118,7 +101,6 @@ simulate_sample <- function(data,
 #' @param spike_in_cell_type name of cell-type used for \code{spike-in} scenario
 #' @param spike_in_amount fraction of cell-type used for \code{spike-in} scenario; must be between \code{0} and \code{0.99}
 #' @param unique_cell_type name of cell-type for \code{unique} scenario
-#' @param spillover_cell_type name of cell-type used for \code{spill-over} scenario
 #' @param custom_scenario_data dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.
 #' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1; mandatory for \code{custom} scaling factor
 #' @param balance_uniform_mirror_scenario balancing value for the \code{uniform} and \code{mirror_db} scenarios: increasing it will result in more diverse simulated fractions. To get the same fractions in each sample, set to 0. Default is 0.01.
@@ -198,7 +180,7 @@ simulate_bulk <- function(data,
     n_cell_types <- length(all_types)
     uniform_value <- 1/length(all_types)
     simulation_vector_list <- lapply(rep(1:nsamples), function(x){
-      m <- round(matrix(abs(rnorm(length(all_types), mean=1/length(all_types), sd=balance_uniform_mirror_scenario)), ncol=n_cell_types), 3)
+      m <- round(matrix(abs(stats::rnorm(length(all_types), mean=1/length(all_types), sd=balance_uniform_mirror_scenario)), ncol=n_cell_types), 3)
       m <- sweep(m, 1, rowSums(m), FUN="/")
       simulation_vector <- as.vector(m[1,])
       names(simulation_vector) <- all_types
@@ -214,7 +196,7 @@ simulate_bulk <- function(data,
     simulation_vector_list <- lapply(rep(1:nsamples), function(x){
       n_cell_types <- length(unique(SummarizedExperiment::colData(data)[["cell_type"]]))
       # generate n_cell_type amount of random fractions from the uniform distribution, which will sum up to 1
-      m <- round(matrix(runif(n_cell_types, 0, 1), ncol=n_cell_types),3)
+      m <- round(matrix(stats::runif(n_cell_types, 0, 1), ncol=n_cell_types),3)
       m <- sweep(m, 1, rowSums(m), FUN="/")
       simulation_vector <- as.vector(m[1,])
       names(simulation_vector) <- unique(SummarizedExperiment::colData(data)[["cell_type"]])
@@ -231,7 +213,7 @@ simulate_bulk <- function(data,
       # each cell-type will be represented as many times as it occurs in the used dataset
       mirror_values <- table(SummarizedExperiment::colData(data)[["cell_type"]])/ncol(data)
       m <- unlist(lapply(mirror_values, function(y){
-        return(abs(round(rnorm(1, mean=y, sd=balance_uniform_mirror_scenario),3)))
+        return(abs(round(stats::rnorm(1, mean=y, sd=balance_uniform_mirror_scenario),3)))
       }))
       m <- matrix(m, ncol=n_cell_types)
       m <- sweep(m, 1, rowSums(m), FUN="/")
@@ -261,7 +243,7 @@ simulate_bulk <- function(data,
     simulation_vector_list <- lapply(rep(1:nsamples), function(x){
       n_cell_types <- length(unique(SummarizedExperiment::colData(data)[["cell_type"]]))-1
       # generate n_cell_type amount of random fractions from the uniform distribution, which will sum up to 1
-      m <- matrix(runif(n_cell_types, 0, 1), ncol=n_cell_types)
+      m <- matrix(stats::runif(n_cell_types, 0, 1), ncol=n_cell_types)
       simulation_vector <- as.vector(m[1,])
       simulation_vector <- (1 - spike_in_amount) * simulation_vector/sum(simulation_vector)
       simulation_vector <- append(simulation_vector, spike_in_amount)
@@ -325,14 +307,14 @@ simulate_bulk <- function(data,
 
 
   if(length(names(SummarizedExperiment::assays(data))) == 2){
-    bulk_counts <- Matrix(sapply(all_samples, "[[", 1), sparse=T) # 1st index in each sample is based on counts
-    bulk_tpm <- Matrix(sapply(all_samples, "[[", 2), sparse=T) # 2nd index in each sample is based on TPM
+    bulk_counts <- Matrix::Matrix(sapply(all_samples, "[[", 1), sparse=T) # 1st index in each sample is based on counts
+    bulk_tpm <- Matrix::Matrix(sapply(all_samples, "[[", 2), sparse=T) # 2nd index in each sample is based on TPM
     assays <- list(bulk_counts = bulk_counts, bulk_tpm = bulk_tpm)
   }else if("tpm" %in% names(SummarizedExperiment::assays(data))){
-    bulk_tpm <- Matrix(sapply(all_samples, "[[", 1), sparse=T)
+    bulk_tpm <- Matrix::Matrix(sapply(all_samples, "[[", 1), sparse=T)
     assays <- list(bulk_tpm = bulk_tpm)
   }else if("counts" %in% names(SummarizedExperiment::assays(data))){
-    bulk_counts <- Matrix(sapply(all_samples, "[[", 1), sparse=T)
+    bulk_counts <- Matrix::Matrix(sapply(all_samples, "[[", 1), sparse=T)
     assays <- list(bulk_counts = bulk_counts)
   }
 
@@ -458,11 +440,11 @@ cpm_normalize <- function(matrix){
 #'
 #' @param simulation the result of simulate_bulk()
 #' @param filename the filename where to save the expression matrix to
+#' @param assay name of the assay in simulation to save
 #'
 #'
-#' @examples
-save_simulation <- function(simulation, filename){
-  write.table(exprs(simulation$expression_set), filename, quote = F, sep="\t")
+save_simulation <- function(simulation, filename, assay){
+  utils::write.table(SummarizedExperiment::assays(simulation$bulk)[[assay]], filename, quote = F, sep="\t")
 }
 
 
@@ -476,13 +458,13 @@ save_simulation <- function(simulation, filename){
 plot_simulation <- function(simulation){
   fractions <- simulation$cell_fractions
   fractions$sample <- factor(rownames(fractions), levels = rownames(fractions))
-  frac_long <- gather(fractions, cell_type, fraction, 1:length(fractions)-1)
+  frac_long <- tidyr::gather(fractions, cell_type, fraction, 1:length(fractions)-1)
 
   ggplot2::ggplot(frac_long, aes(x=fraction, y=sample, fill=cell_type))+
-    geom_col()+
-    ggtitle(paste0("Cell-type fractions for \n",nrow(fractions)," pseudo-bulk RNAseq samples"))+
-    scale_fill_manual(values = colorRampPalette(brewer.pal(9, "Paired"))(length(unique(frac_long$cell_type))))+
-    theme_bw()
+    ggplot2::geom_col()+
+    ggplot2::ggtitle(paste0("Cell-type fractions for \n",nrow(fractions)," pseudo-bulk RNAseq samples"))+
+    ggplot2::scale_fill_manual(values = grDevices::colorRampPalette(RColorBrewer::brewer.pal(9, "Paired"))(length(unique(frac_long$cell_type))))+
+    ggplot2::theme_bw()
 }
 
 
@@ -518,7 +500,7 @@ merge_simulations <- function(simulation_list){
   # merge cell fractions dataframe
   sample_names <- unlist(lapply(simulation_list, function(x){rownames(x[["cell_fractions"]])}))
   sample_names <- paste0(sample_names,"_",rep(1:length(sample_names)))
-  cell_fractions <- data.frame(rbindlist(lapply(simulation_list, function(x){x[["cell_fractions"]]}), fill=T, use.names=T), check.names = F)
+  cell_fractions <- data.frame(data.table::rbindlist(lapply(simulation_list, function(x){x[["cell_fractions"]]}), fill=T, use.names=T), check.names = F)
   rownames(cell_fractions) <- sample_names
   cell_fractions[is.na(cell_fractions)] <- 0
 

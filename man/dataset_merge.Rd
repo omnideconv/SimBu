@@ -20,10 +20,24 @@ dataset_merge(
 \item{dataset_list}{list of \link[SummarizedExperiment]{SummarizedExperiment} objects}
 
 \item{name}{name of the new dataset}
+
+\item{spike_in_col}{which column in annotation contains information on spike-in counts, which can be used to re-scale counts; mandatory for spike-in scaling factor in simulation}
+
+\item{read_number_col}{which column in annotation contains information on total read numbers in a cell; mandatory for "spike-in" scaling factor and "read-number" in simulation}
+
+\item{additional_cols}{list of column names in annotation, that should be stored as well in dataset object}
+
+\item{filter_genes}{boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}}
+
+\item{variance_cutoff}{numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff}
+
+\item{type_abundance_cutoff}{numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types}
+
+\item{scale_tpm}{boolean, if TRUE (default) the cells in tpm_matrix will be scaled to sum up to 1e6}
 }
 \value{
 \link[SummarizedExperiment]{SummarizedExperiment} object
 }
 \description{
-Merge multiple \link[SummarizedExperiment]{SummarizedExperiment} datasets into one
+The objects need to have the same number of assays in order to work.
 }
