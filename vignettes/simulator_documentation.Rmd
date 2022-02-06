@@ -8,7 +8,7 @@ colorlinks: yes
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Getting started with the pseudo-bulk simulator R package}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{rmarkdown::render}
   %\VignetteEncoding{UTF-8}
 ---
 
