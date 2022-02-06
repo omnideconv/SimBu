@@ -13,7 +13,6 @@
 #' @return a vector for each cell-type, with a scaling factor which can be used to transform the counts of the matrix
 #' @export
 #'
-#' @examples
 census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1, method=c("monocle","paper","expr_genes")){
   #order_cells <- colnames(matrix)
   ncuts <- dim(matrix)[2]/1000
@@ -25,7 +24,7 @@ census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1, me
   idx <- 1
   out <- unlist(parallel::mclapply(cuts, function(x){
     x <- unlist(x, use.names = F)
-    chunk <- Matrix(matrix[,x])
+    chunk <- Matrix::Matrix(matrix[,x])
     if(method == "monocle"){
       cen <- census_monocle(chunk, exp_capture_rate=exp_capture_rate, expr_threshold=expr_threshold)
     }else if (method == "paper"){
@@ -81,7 +80,6 @@ census_monocle <- function(expr_matrix, exp_capture_rate, expr_threshold){
     }, error=function(e){
       print(x)
       print(e)
-      break
     })
   }))
 
@@ -114,7 +112,6 @@ census_paper <- function(expr_matrix, exp_capture_rate, expr_threshold){
       }, error=function(e){
         print(idx)
         print(e)
-        break
       })
   }))
   return(total)

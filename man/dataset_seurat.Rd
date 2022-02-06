@@ -2,43 +2,48 @@
 % Please edit documentation in R/dataset.R
 \name{dataset_seurat}
 \alias{dataset_seurat}
-\title{constructor for dataset using a seurat object for the counts}
+\title{Function to generate a \link[SummarizedExperiment]{SummarizedExperiment} using a \link[Seurat]{Seurat} object}
 \usage{
 dataset_seurat(
   annotation,
-  seurat_obj,
-  name,
-  count_type = "raw",
+  seurat_obj_counts = NULL,
+  seurat_obj_tpm = NULL,
+  name = "SimBu_dataset",
   spike_in_col = NULL,
   read_number_col = NULL,
   additional_cols = NULL,
   filter_genes = T,
   variance_cutoff = 0,
-  type_abundance_cutoff = 0
+  type_abundance_cutoff = 0,
+  scale_tpm = T
 )
 }
 \arguments{
 \item{annotation}{dataframe; needs columns 'ID' and 'cell_type'; 'ID' needs to be equal with cell_names in count_matrix}
 
-\item{seurat_obj}{Seurat object; needs to have counts at position assays$RNA$counts}
+\item{seurat_obj_counts}{\link[Seurat]{Seurat} object with raw counts}
+
+\item{seurat_obj_tpm}{\link[Seurat]{Seurat} object with TPM counts}
 
 \item{name}{name of the dataset; will be used for new unique IDs of cells}
 
-\item{count_type}{what type of counts are in the dataset; default is 'TPM'}
-
-\item{spike_in_col}{which column in annotation contains information on spike-in counts, which can be used to re-scale counts}
+\item{spike_in_col}{which column in annotation contains information on spike-in counts, which can be used to re-scale counts; mandatory for spike-in scaling factor in simulation}
 
 \item{read_number_col}{which column in annotation contains information on total read numbers in a cell; mandatory for "spike-in" scaling factor and "read-number" in simulation}
+
+\item{additional_cols}{list of column names in annotation, that should be stored as well in dataset object}
 
 \item{filter_genes}{boolean, if TRUE, removes all genes with 0 expression over all samples & genes with variance below \code{variance_cutoff}}
 
 \item{variance_cutoff}{numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff}
 
 \item{type_abundance_cutoff}{numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types}
+
+\item{scale_tpm}{boolean, if TRUE (default) the cells in tpm_matrix will be scaled to sum up to 1e6}
 }
 \value{
-dataset object
+Return a \link[SummarizedExperiment]{SummarizedExperiment} object
 }
 \description{
-constructor for dataset using a seurat object for the counts
+Function to generate a \link[SummarizedExperiment]{SummarizedExperiment} using a \link[Seurat]{Seurat} object
 }

@@ -58,7 +58,6 @@ setup_sfaira <- function(python_path, env_name, basedir){
 #'
 #' @return a anndata object, stores counts, metadata and other information on the dataset
 #'
-#' @examples
 download_sfaira <- function(setup_list, id, force=F, synapse_user=NULL, synapse_pw=NULL){
   sfaira <- setup_list[["sfaira"]]
   ds <- sfaira$data$Universe(data_path = setup_list[["rawdir"]],
@@ -101,7 +100,6 @@ download_sfaira <- function(setup_list, id, force=F, synapse_user=NULL, synapse_
 #'
 #' @return
 #'
-#' @examples
 download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, assays=NULL, force=F){
   sfaira <- setup_list[["sfaira"]]
 
@@ -173,7 +171,7 @@ sfaira_overview <- function(setup_list){
                 organism=x$organism))
   })
 
-  suppressWarnings(out <- rbindlist(info_list))
+  suppressWarnings(out <- data.table::rbindlist(info_list))
   out$annotated[which(is.na(out$annotated))]<-F
   return(out)
 }

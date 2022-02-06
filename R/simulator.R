@@ -1,20 +1,3 @@
-require(parallel)
-require(data.table)
-require(Matrix)
-require(Seurat)
-require(anndata)
-require(tools)
-require(Biobase)
-require(reticulate)
-require(tidyr)
-require(tools)
-require(methods)
-require(sparseMatrixStats)
-require(ggplot2)
-require(scales)
-require(matrixStats)
-
-
 ###### simulation ######
 
 #' simulate single pseudo-bulk sample
@@ -22,25 +5,22 @@ require(matrixStats)
 #' function to sample cells according to given cell-type fractions. This creates a single pseudo-bulk sample by calculating the
 #' mean expression value per gene over all sampled cells.
 #' Note: if total_read_counts is used, the cell-fractions are applied to the number of counts, not the number of cells!
-#' @param data \code{\link{database}} or \code{\link{dataset}} object
-#' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number},\code{custom}
+#' @param data \link[SummarizedExperiment]{SummarizedExperiment} object
 #' @param scaling_vector vector with scaling values for each cell; calculated by the \code{calc_scaling_vector} function
 #' @param simulation_vector named vector with wanted cell-types and their fractions
-#' @param sample_aggregation aggregation method on how to generate a sample; possible are: \code{mean}(default), \code{sum}, \code{median}
 #' @param total_cells numeric; number of total cells for this simulation
 #' @param total_read_counts numeric; sets the total read count value for each sample
 #' @param ncores numeric; number of cores used to create simulation
 #'
-#' @return returns a vector with expression values for all genes in the provided dataset
+#' @return returns two vectors (one based on counts, one based on tpm; depends on which matrices are present in data) with expression values for all genes in the provided dataset
 simulate_sample <- function(data,
-                            scaling_factor,
                             scaling_vector,
                             simulation_vector,
-                            sample_aggregation,
                             total_cells,
-                            total_read_counts, ncores){
+                            total_read_counts,
+                            ncores){
 
-  if(!all(names(simulation_vector) %in% unique(data@annotation[["cell_type"]]))){
+  if(!all(names(simulation_vector) %in% unique(SummarizedExperiment::colData(data)[["cell_type"]]))){
     stop("Some cell-types in the provided simulation vector are not in the annotation.")
   }
 
@@ -53,65 +33,77 @@ simulate_sample <- function(data,
   error_reads_total <- 0
   sampled_cells <- lapply(seq_along(simulation_vector), function(x){
     # get all cells with the current type
-    cells_of_type_x <- data@annotation[data@annotation[["cell_type"]] == names(simulation_vector[x]),]
+    cells_of_type_x <- data.frame(SummarizedExperiment::colData(data)[SummarizedExperiment::colData(data)[["cell_type"]] == names(simulation_vector[x]),])
 
     # how many cells of this type do we need?
-    if(is.null(total_read_counts)){
-      cells <- dplyr::slice_sample(cells_of_type_x, n=total_cells*simulation_vector[x], replace=T)
-      cells <- cells[["cell_ID"]]
-    }else{
-      total_counts_x <- total_read_counts * simulation_vector[x] # total count value that this cell-type can reach max
-      out <- sample_cells_by_read_depth(cells = cells_of_type_x, depth = total_counts_x)
-      cells <- out$cells
-      missing_reads <- out$missing_reads
-      error_reads_total <<- error_reads_total + missing_reads
-    }
+    cells <- dplyr::slice_sample(cells_of_type_x, n=total_cells*simulation_vector[x], replace=T)
+    cells <- cells[["cell_ID"]]
+
     return(cells)
   })
 
-  if(!is.null(total_read_counts)){
-    message(paste0("Total sequencing depth of ",total_read_counts, " was missed by ", round(error_reads_total/total_read_counts, digits = 5)*100,"%."))
-  }
   # annotation
   names(sampled_cells) <- names(simulation_vector)
   simulated_annotation <- utils::stack(sampled_cells)
 
-  # get the corresponding columns from the count matrix in the data
-  m <- data@counts[, unlist(sampled_cells)]
+  # get the corresponding columns from the data
+  data_sampled <- data[, unlist(sampled_cells)]
 
-  # apply scaling vector on the sampled cells in the count matrix
+  # apply scaling vector on the sampled cells in the matrices
   scaling_vector <- scaling_vector[unlist(sampled_cells)]
-  m <- Matrix::t(Matrix::t(m) * scaling_vector)
+  matrices <- lapply(names(SummarizedExperiment::assays(data_sampled)), function(x){})
 
-  # calculate the mean expression value per gene to get a single pseudo-bulk sample
-  switch (sample_aggregation,
-    "mean" = simulated_count_vector <- rowMeans(m),
-    "sum" = simulated_count_vector <- Matrix::rowSums(m),
-    "median" = simulated_count_vector <- matrixStats::rowMedians(as.matrix(m))
-  )
+  simulated_count_vector <- NULL
+  simulated_tpm_vector <- NULL
 
-  return(simulated_count_vector = simulated_count_vector)
+  # apply scaling factor
+  # + sum up counts/tpms of all cells per gene to get single bulk sample
+  # + apply possible scaling of sample
+  if("counts" %in% names(SummarizedExperiment::assays(data))){
+    m <- Matrix::t(Matrix::t(SummarizedExperiment::assays(data_sampled)[["counts"]]) * scaling_vector)
+    simulated_count_vector <- Matrix::rowSums(m)
+
+    # if total_read_counts is used, rarefy/scale count data to get the desired sequencing depth
+    if(!is.null(total_read_counts)){
+      sum_counts <- sum(simulated_count_vector)
+
+      if(sum_counts > total_read_counts){
+        v <- phyloseq::otu_table(simulated_count_vector, taxa_are_rows = T)
+        simulated_count_vector <- data.frame(phyloseq::rarefy_even_depth(physeq=v, sample.size = 1e5, trimOTUs = F))[,1]
+
+      }else if(sum_counts < total_read_counts){
+        simulated_count_vector <- simulated_count_vector / sum(simulated_count_vector) * total_read_counts
+      }
+    }
+  }
+  if("tpm" %in% names(SummarizedExperiment::assays(data))){
+    m <- Matrix::t(Matrix::t(SummarizedExperiment::assays(data_sampled)[["tpm"]]) * scaling_vector)
+    simulated_tpm_vector <- Matrix::rowSums(m)
+    # scale tpm based sample to 1e6
+    simulated_tpm_vector <- (simulated_tpm_vector / sum(simulated_tpm_vector)) * 1e6
+  }
+
+  return(list(simulated_count_vector = simulated_count_vector,
+              simulated_tpm_vector = simulated_tpm_vector))
 
 }
 
 
 #' simulate whole pseudo-bulk RNAseq dataset
 #'
-#' This function allows you to create a full pseudo-bulk RNAseq dataset. You need to provide a \code{\link{dataset}} or \code{\link{database}} from which the cells
+#' This function allows you to create a full pseudo-bulk RNAseq dataset. You need to provide a \link[SummarizedExperiment]{SummarizedExperiment} from which the cells
 #' will be sampled for the simulation. Also a \code{scenario} has to be selected, where you can choose how the cells will be sampled and a
 #' \code{scaling_factor} on how the read counts will be transformed proir to the simulation.
 #'
-#' @param data \code{\link{dataset}} object
+#' @param data \link[SummarizedExperiment]{SummarizedExperiment} object
 #' @param scenario select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{mirror_db},\code{unique},\code{spill-over}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
 #' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number}, \code{custom} or \code{NONE} for no scaling factor
 #' @param spike_in_cell_type name of cell-type used for \code{spike-in} scenario
 #' @param spike_in_amount fraction of cell-type used for \code{spike-in} scenario; must be between \code{0} and \code{0.99}
 #' @param unique_cell_type name of cell-type for \code{unique} scenario
-#' @param spillover_cell_type name of cell-type used for \code{spill-over} scenario
 #' @param custom_scenario_data dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.
 #' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1; mandatory for \code{custom} scaling factor
-#' @param balance_unique_mirror_scenario balancing value for the \code{uniform} and \code{mirror_db} scenarios: increasing it will result in more diverse simulated fractions. To get the same fractions in each sample, set to 0. Default is 0.01.
-#' @param sample_aggregation aggregation method on how to generate a sample; possible are: \code{sum}(default), \code{mean}, \code{median}
+#' @param balance_uniform_mirror_scenario balancing value for the \code{uniform} and \code{mirror_db} scenarios: increasing it will result in more diverse simulated fractions. To get the same fractions in each sample, set to 0. Default is 0.01.
 #' @param nsamples numeric; number of samples in pseudo-bulk RNAseq dataset
 #' @param ncells numeric; number of cells in each dataset
 #' @param total_read_counts numeric; sets the total read count value for each sample
@@ -119,10 +111,9 @@ simulate_sample <- function(data,
 #' @param blacklist list; give a list of cell-types you want to remove for the simulation; if NULL, all are used; is applied after whitelist
 #' @param ncores numeric; number of cores to use
 #'
-#' @return named list; \code{pseudo_bulk} is a sparse matrix with the simulated counts;
+#' @return named list; \code{bulk} a \link[SummarizedExperiment]{SummarizedExperiment} object, where the assays store the simulated bulk RNAseq datasets. Can hold either one or two assays, depending on how many matrices were present in the dataset
 #' \code{cell-fractions} is a dataframe with the simulated cell-fractions per sample;
 #' \code{scaling_vector} scaling value for each cell in dataset
-#' \code{expression_set} is a Bioconductor Expression Set \url{http://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf}
 #' @export
 #'
 #' @examples
@@ -151,8 +142,7 @@ simulate_bulk <- function(data,
                           unique_cell_type = NULL,
                           custom_scenario_data = NULL,
                           custom_scaling_vector = NULL,
-                          balance_unique_mirror_scenario=0.01,
-                          sample_aggregation = "sum",
+                          balance_uniform_mirror_scenario=0.01,
                           nsamples=100,
                           ncells=1000,
                           total_read_counts = NULL,
@@ -162,44 +152,35 @@ simulate_bulk <- function(data,
 
   # keep only cell-types which are in whitelist in annotation & count matrix
   if(!is.null(whitelist)){
-    if(!all(whitelist %in% data@annotation[["cell_type"]])){
+    if(!all(whitelist %in% SummarizedExperiment::colData(data)[["cell_type"]])){
       stop("Did not find all cell-types of whitelist in annotation.")
     }
-    data@annotation <- data@annotation[data@annotation[["cell_type"]] %in% whitelist,]
-    if(length(data@annotation) == 0){
+    data <- data[,SummarizedExperiment::colData(data)[SummarizedExperiment::colData(data)[["cell_type"]] %in% whitelist,][["cell_ID"]]]
+    if(dim(data)[2] == 0){
       stop("No cells are left after using this whitelist; please check that the correct names are used.")
     }
-    remaining_cells <- data@annotation[["cell_ID"]]
-    data@counts <- as(data@counts[,remaining_cells], "sparseMatrix")
   }
 
   # remove cell-types which are in blacklist from annotation & count matrix
   if(!is.null(blacklist)){
-    if(!all(blacklist %in% data@annotation[["cell_type"]])){
+    if(!all(blacklist %in% SummarizedExperiment::colData(data)[["cell_type"]])){
       stop("Did not find all cell-types of blacklist in annotation.")
     }
-    data@annotation <- data@annotation[!data@annotation[["cell_type"]] %in% blacklist,]
-    if(length(data@annotation) == 0){
+    data <- data[,SummarizedExperiment::colData(data)[!SummarizedExperiment::colData(data)[["cell_type"]] %in% blacklist,][["cell_ID"]]]
+    if(dim(data)[2] == 0){
       stop("No cells are left after using this blacklist; please check that the correct names are used.")
     }
-    remaining_cells <- data@annotation[["cell_ID"]]
-    data@counts <- as(data@counts[,remaining_cells], "sparseMatrix")
-  }
-
-  # read-number information is necessary if sampling by sequencing depth is used
-  if((!is.null(total_read_counts))&(!"read_number" %in% colnames(data@annotation))){
-    stop("The provided dataset has no read number information stored. Please add it during generation of the dataset if you want to use total_read_counts as a parameter!")
   }
 
   ##### different cell-type scenarios #####
 
   # each existing cell-type will be appearing in equal amounts
   if(scenario == "uniform"){
-    all_types <- unique(data@annotation[["cell_type"]])
+    all_types <- unique(SummarizedExperiment::colData(data)[["cell_type"]])
     n_cell_types <- length(all_types)
     uniform_value <- 1/length(all_types)
     simulation_vector_list <- lapply(rep(1:nsamples), function(x){
-      m <- round(matrix(abs(rnorm(length(all_types), mean=1/length(all_types), sd=balance_unique_mirror_scenario)), ncol=n_cell_types), 3)
+      m <- round(matrix(abs(stats::rnorm(length(all_types), mean=1/length(all_types), sd=balance_uniform_mirror_scenario)), ncol=n_cell_types), 3)
       m <- sweep(m, 1, rowSums(m), FUN="/")
       simulation_vector <- as.vector(m[1,])
       names(simulation_vector) <- all_types
@@ -213,12 +194,12 @@ simulate_bulk <- function(data,
   if(scenario == "random"){
     # generate 'nsamples' random samples
     simulation_vector_list <- lapply(rep(1:nsamples), function(x){
-      n_cell_types <- length(unique(data@annotation[["cell_type"]]))
+      n_cell_types <- length(unique(SummarizedExperiment::colData(data)[["cell_type"]]))
       # generate n_cell_type amount of random fractions from the uniform distribution, which will sum up to 1
-      m <- round(matrix(runif(n_cell_types, 0, 1), ncol=n_cell_types),3)
+      m <- round(matrix(stats::runif(n_cell_types, 0, 1), ncol=n_cell_types),3)
       m <- sweep(m, 1, rowSums(m), FUN="/")
       simulation_vector <- as.vector(m[1,])
-      names(simulation_vector) <- unique(data@annotation[["cell_type"]])
+      names(simulation_vector) <- unique(SummarizedExperiment::colData(data)[["cell_type"]])
       return(simulation_vector)
     })
     sample_names <- paste0("random_sample", rep(1:nsamples))
@@ -226,18 +207,18 @@ simulate_bulk <- function(data,
   }
   # generate cell-type fractions, which mirror the fraction of each cell-type in the used dataset
   if(scenario == "mirror_db"){
-    n_cell_types <- length(unique(data@annotation[["cell_type"]]))
+    n_cell_types <- length(unique(SummarizedExperiment::colData(data)[["cell_type"]]))
     # generate 'nsamples' random samples
     simulation_vector_list <- lapply(rep(1:nsamples), function(x){
       # each cell-type will be represented as many times as it occurs in the used dataset
-      mirror_values <- table(data@annotation$cell_type)/nrow(data@annotation)
+      mirror_values <- table(SummarizedExperiment::colData(data)[["cell_type"]])/ncol(data)
       m <- unlist(lapply(mirror_values, function(y){
-        return(abs(round(rnorm(1, mean=y, sd=balance_unique_mirror_scenario),3)))
+        return(abs(round(stats::rnorm(1, mean=y, sd=balance_uniform_mirror_scenario),3)))
       }))
       m <- matrix(m, ncol=n_cell_types)
       m <- sweep(m, 1, rowSums(m), FUN="/")
       simulation_vector <- as.vector(m[1,])
-      names(simulation_vector) <- unique(data@annotation[["cell_type"]])
+      names(simulation_vector) <- unique(SummarizedExperiment::colData(data)[["cell_type"]])
       return(simulation_vector)
     })
     sample_names <- paste0("mirror_db_sample", rep(1:nsamples))
@@ -252,17 +233,17 @@ simulate_bulk <- function(data,
     if(spike_in_amount > 0.99 || spike_in_amount < 0){
       stop("The spike-in cell-type fraction needs to be between 0 and 0.99.")
     }
-    if(!spike_in_cell_type %in% unique(data@annotation[["cell_type"]])){
+    if(!spike_in_cell_type %in% unique(SummarizedExperiment::colData(data)[["cell_type"]])){
       stop("The spike-in cell-type could not be found in your dataset/database.")
     }
 
-    random_cell_types <- setdiff(unique(data@annotation[["cell_type"]]), spike_in_cell_type)
+    random_cell_types <- setdiff(unique(SummarizedExperiment::colData(data)[["cell_type"]]), spike_in_cell_type)
     all_cell_types <- c(random_cell_types, spike_in_cell_type)
 
     simulation_vector_list <- lapply(rep(1:nsamples), function(x){
-      n_cell_types <- length(unique(data@annotation[["cell_type"]]))-1
+      n_cell_types <- length(unique(SummarizedExperiment::colData(data)[["cell_type"]]))-1
       # generate n_cell_type amount of random fractions from the uniform distribution, which will sum up to 1
-      m <- matrix(runif(n_cell_types, 0, 1), ncol=n_cell_types)
+      m <- matrix(stats::runif(n_cell_types, 0, 1), ncol=n_cell_types)
       simulation_vector <- as.vector(m[1,])
       simulation_vector <- (1 - spike_in_amount) * simulation_vector/sum(simulation_vector)
       simulation_vector <- append(simulation_vector, spike_in_amount)
@@ -313,73 +294,55 @@ simulate_bulk <- function(data,
   ##### generate the samples #####
 
   # sample cells and generate pseudo-bulk profiles
-  idx <- 1
-  bulk <- do.call(cbind, parallel::mclapply(simulation_vector_list, function(x){
-    sample<-simulate_sample(data=data,
-                            scaling_factor = scaling_factor,
-                            scaling_vector = scaling_vector,
-                            simulation_vector = x,
-                            sample_aggregation = sample_aggregation,
-                            total_cells = ncells,
-                            total_read_counts = total_read_counts,
-                            ncores=ncores)
+  all_samples <- parallel::mclapply(simulation_vector_list, function(x){
+    samples <- simulate_sample(data=data,
+                             scaling_vector = scaling_vector,
+                             simulation_vector = x,
+                             total_cells = ncells,
+                             total_read_counts = total_read_counts,
+                             ncores=ncores)
 
-    progress <- 100*(round(idx/length(simulation_vector_list), digits=3))
-    print(paste(progress,"%"))
-    idx <<- idx+1
+    return(samples)
+  }, mc.cores = ncores)
 
-    return(sample)
-  }, mc.cores = ncores))
 
-  colnames(bulk) <- sample_names
+  if(length(names(SummarizedExperiment::assays(data))) == 2){
+    bulk_counts <- Matrix::Matrix(sapply(all_samples, "[[", 1), sparse=T) # 1st index in each sample is based on counts
+    bulk_tpm <- Matrix::Matrix(sapply(all_samples, "[[", 2), sparse=T) # 2nd index in each sample is based on TPM
+    assays <- list(bulk_counts = bulk_counts, bulk_tpm = bulk_tpm)
+  }else if("tpm" %in% names(SummarizedExperiment::assays(data))){
+    bulk_tpm <- Matrix::Matrix(sapply(all_samples, "[[", 1), sparse=T)
+    assays <- list(bulk_tpm = bulk_tpm)
+  }else if("counts" %in% names(SummarizedExperiment::assays(data))){
+    bulk_counts <- Matrix::Matrix(sapply(all_samples, "[[", 1), sparse=T)
+    assays <- list(bulk_counts = bulk_counts)
+  }
 
-  cell_fractions <- data.frame(t(data.frame(simulation_vector_list)), check.names = F)
+  # new SummarizedExperiment with bulk datasets based on counts or TPM or both
+  se_bulk <- SummarizedExperiment::SummarizedExperiment(assays = assays)
+  colnames(se_bulk) <- sample_names
 
   # remove non-unique features/genes from simulated dataset
-  if(length(unique(rownames(bulk))) != dim(bulk)[1]){
-    un <- unique(rownames(bulk))
-    bulk <- bulk[un,]
+  if(length(unique(rownames(se_bulk))) != dim(se_bulk)[1]){
+    un <- unique(rownames(se_bulk))
+    se_bulk <- se_bulk[un,]
   }
 
-  # if sequencing depth is provided: rarefy samples to equal sequencing depth
-  if(!is.null(total_read_counts)){
-    if(sample_aggregation != "sum"){
-      warning("You are not using 'sum' as sample aggregation method. Rarefying the generated samples to the provided sequencing depth could lead to unwanted results.")
-    }
-    #TODO change this 'if'.. should not be based on un-checked user input
-    # if raw counts are used and the single cell matrix was changed by a scaling factor, we need rarefaction
-    if("raw" %in% data@annotation$count_type && scaling_factor != "NONE"){
-      message("The provided expression data are raw counts and a scaling factor was applied. The samples will be rarefied to match the wanted sequencing depth.")
-      bulk <- phyloseq::otu_table(bulk, taxa_are_rows = T)
-      bulk <- as.data.frame(phyloseq::rarefy_even_depth(physeq = bulk, sample.size = total_read_counts, rngseed = 1310, verbose = F, trimOTUs = F))
-    }
-  }
+  # cell_fractions for all simulated samples
+  cell_fractions <- data.frame(t(data.frame(simulation_vector_list)), check.names = F)
 
-  # normalize count matrix to CPMs
-  tryCatch({
-    bulk_cpm <- cpm_normalize(bulk)
-  }, error=function(e){
-    warning(e$message)
-    stop()
-  })
+  print("Finished simulation.")
 
-
-  # build bioconductor expression set
-  expr_set <- Biobase::ExpressionSet(assayData = bulk_cpm,
-                                     phenoData = new("AnnotatedDataFrame", data=cell_fractions))
-
-  cat("Finished simulation.\n")
-
-  return(list(pseudo_bulk = bulk_cpm,
-              pseudo_bulk_raw = bulk,
+  return(list(bulk = se_bulk,
               cell_fractions = cell_fractions,
-              scaling_vector = scaling_vector,
-              expression_set = expr_set))
+              scaling_vector = scaling_vector))
 
 }
 
 
 #' Calculate scaling factor for a dataset
+#'
+#' Each scaling factor has a default matrix it will try to use (counts or TPM). If the required matrix is not available, the other one is used and a warning is given.
 #'
 #' @param data dataset object
 #' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number}, \code{custom} or \code{NONE} for no scaling factor
@@ -390,9 +353,13 @@ simulate_bulk <- function(data,
 #'
 calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, ncores){
 
-  m <- data@counts
-
   if(scaling_factor == "census"){
+    if("tpm" %in% names(SummarizedExperiment::assays(data))){
+      m <- SummarizedExperiment::assays(data)[["tpm"]]
+    }else{
+      warning("Scaling factor 'Census' requires TPM data, which is not available in the given dataset. Counts will be used instead.")
+      m <- SummarizedExperiment::assays(data)[["counts"]]
+    }
     scaling_vector <- census(m, ncores = ncores, method="monocle", expr_threshold = 0.1)
     scaling_vector <- scaling_vector/10e6
   }else if(scaling_factor == "spike-in"){
@@ -404,8 +371,14 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, nco
     if(!"read_number" %in% colnames(data@annotation)){
       stop("No column with total read number information in annotation data. Check your dataset again!")
     }
+    if("tpm" %in% names(SummarizedExperiment::assays(data))){
+      m <- SummarizedExperiment::assays(data)[["counts"]]
+    }else{
+      warning("Scaling factor 'spike-in' requires counts data, which is not available in the given dataset. TPMs will be used instead.")
+      m <- SummarizedExperiment::assays(data)[["tpm"]]
+    }
     # get subset of spike-in counts from the sampled cells
-    tmp <- data@annotation[,c("cell_ID","spike_in","read_number")]
+    tmp <- SummarizedExperiment::colData(data)[,c("cell_ID","spike_in","read_number")]
     #tmp <- merge(tmp, simulated_annotation, by.x="cell_ID",by.y="values", all.y=T) # need to merge to also get lines for duplicate cell entries
     scaling_vector <- (tmp$read_number - tmp$spike_in)/tmp$read_number
     names(scaling_vector) <- tmp$cell_ID
@@ -414,7 +387,7 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, nco
     if(!"read_number" %in% colnames(data@annotation)){
       stop("The annotation in your dataset does not contain read-number information; you cannot apply the read-number scaling factor.")
     }
-    tmp <- data@annotation[,c("cell_ID","read_number")]
+    tmp <- SummarizedExperiment::colData(data)[,c("cell_ID","read_number")]
     #tmp <- merge(tmp, simulated_annotation, by.x="cell_ID",by.y="values", all.y=T)
     scaling_vector <- tmp$read_number
     names(scaling_vector) <- tmp$cell_ID
@@ -424,31 +397,31 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, nco
     # cell-types that do not occur in this vector will have scaling-factor of 1
     if(is.null(custom_scaling_vector)){stop("For the custom scaling factor you need to provide a custom_scaling_vector!")}
 
-    missing_cell_types <- as.vector(unique(data@annotation$cell_type)[which(!unique(data@annotation$cell_type) %in% names(custom_scaling_vector))])
+    missing_cell_types <- as.vector(unique(SummarizedExperiment::colData(data)[["cell_type"]])[which(!unique(SummarizedExperiment::colData(data)[["cell_type"]]) %in% names(custom_scaling_vector))])
     complete_vector <- rep(1, length(missing_cell_types))
     names(complete_vector) <- missing_cell_types
     complete_vector <- data.frame(value=append(complete_vector, custom_scaling_vector), check.names=F)
-    df <- merge(complete_vector, data@annotation, by.x=0,by.y="cell_type", all.y=T)[,c("value","cell_ID")]
+    df <- merge(complete_vector, data.frame(SummarizedExperiment::colData(data)), by.x=0,by.y="cell_type", all.y=T)[,c("value","cell_ID")]
     scaling_vector <- df$value
     names(scaling_vector) <- df$cell_ID
 
   }else if(scaling_factor == "NONE"){
-    scaling_vector <- rep(1, nrow(data@annotation))
-    names(scaling_vector) <- data@annotation$cell_ID
+    scaling_vector <- rep(1, ncol(data))
+    names(scaling_vector) <- SummarizedExperiment::colData(data)[["cell_ID"]]
   }else if(!is.null(scaling_factor)){
-    print(paste0("Scaling by ", scaling_factor,"-column in annotation table; if no scaling is wished instead, use 'NONE'."))
-    if(!scaling_factor %in% colnames(data@annotation)){stop(paste0("A column with the name ", scaling_factor," cannot be found in the annotation."))}
-    if(!is.numeric(data@annotation[,c(scaling_factor)])){stop(paste0("The column with the name ", scaling_factor," is not numeric and cannot be used for scaling."))}
+    message(paste0("Scaling by ", scaling_factor,"-column in annotation table; if no scaling is wished instead, use 'NONE'."))
+    if(!scaling_factor %in% colnames(SummarizedExperiment::colData(data))){stop(paste0("A column with the name ", scaling_factor," cannot be found in the annotation."))}
+    if(!is.numeric(SummarizedExperiment::colData(data)[,c(scaling_factor)])){stop(paste0("The column with the name ", scaling_factor," is not numeric and cannot be used for scaling."))}
 
-    tmp <- data@annotation[,c("cell_ID",scaling_factor)]
+    tmp <- SummarizedExperiment::colData(data)[,c("cell_ID",scaling_factor)]
     colnames(tmp) <- c("a","b")
     scaling_vector <- tmp$b
     names(scaling_vector) <- tmp$a
 
   }else{
     warning("No valid scaling factor method provided. Scaling all cells by 1.")
-    scaling_vector <- rep(1, nrow(data@annotation))
-    names(scaling_vector) <- data@annotation$cell_ID
+    scaling_vector <- rep(1, ncol(data))
+    names(scaling_vector) <- SummarizedExperiment::colData(data)[["cell_ID"]]
   }
 
   return(scaling_vector)
@@ -467,11 +440,11 @@ cpm_normalize <- function(matrix){
 #'
 #' @param simulation the result of simulate_bulk()
 #' @param filename the filename where to save the expression matrix to
+#' @param assay name of the assay in simulation to save
 #'
 #'
-#' @examples
-save_simulation <- function(simulation, filename){
-  write.table(exprs(simulation$expression_set), filename, quote = F, sep="\t")
+save_simulation <- function(simulation, filename, assay){
+  utils::write.table(SummarizedExperiment::assays(simulation$bulk)[[assay]], filename, quote = F, sep="\t")
 }
 
 
@@ -485,13 +458,13 @@ save_simulation <- function(simulation, filename){
 plot_simulation <- function(simulation){
   fractions <- simulation$cell_fractions
   fractions$sample <- factor(rownames(fractions), levels = rownames(fractions))
-  frac_long <- gather(fractions, cell_type, fraction, 1:length(fractions)-1)
+  frac_long <- tidyr::gather(fractions, cell_type, fraction, 1:length(fractions)-1)
 
   ggplot2::ggplot(frac_long, aes(x=fraction, y=sample, fill=cell_type))+
-    geom_col()+
-    ggtitle(paste0("Cell-type fractions for \n",nrow(fractions)," pseudo-bulk RNAseq samples"))+
-    scale_fill_manual(values = colorRampPalette(brewer.pal(9, "Paired"))(length(unique(frac_long$cell_type))))+
-    theme_bw()
+    ggplot2::geom_col()+
+    ggplot2::ggtitle(paste0("Cell-type fractions for \n",nrow(fractions)," pseudo-bulk RNAseq samples"))+
+    ggplot2::scale_fill_manual(values = grDevices::colorRampPalette(RColorBrewer::brewer.pal(9, "Paired"))(length(unique(frac_long$cell_type))))+
+    ggplot2::theme_bw()
 }
 
 
@@ -501,85 +474,43 @@ plot_simulation <- function(simulation){
 #'
 #' @param simulation_list a list of simulations
 #'
-#' @return named list; \code{pseudo_bulk} is a sparse matrix with the simulated counts;
+#' @return named list; \code{bulk} a \link[SummarizedExperiment]{SummarizedExperiment} object, where the assays store the simulated bulk RNAseq datasets. Can hold either one or two assays, depending on how many matrices were present in the dataset
 #' \code{cell-fractions} is a dataframe with the simulated cell-fractions per sample;
-#' \code{expression_set} is a Bioconductor Expression Set \url{http://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf}
+#' \code{scaling_vector} scaling value for each cell in dataset
 #' @export
 #'
 merge_simulations <- function(simulation_list){
+
+  # merge SummarizedExperiments
+  if(length(simulation_list) <= 1){
+    stop("You need at least 2 simulations to merge them into one!")
+  }
+
+  n_assays <- unlist(lapply(simulation_list, function(x){
+    return(length(names(SummarizedExperiment::assays(x$bulk))))
+  }))
+
+  if(length(unique(n_assays)) != 1){
+    stop("The simulations you want to merge have different numbers of assays. Stopping.")
+  }
+
+  merged_se <- do.call(cbind, sapply(simulation_list, "[[", "bulk"))
+
+
   # merge cell fractions dataframe
   sample_names <- unlist(lapply(simulation_list, function(x){rownames(x[["cell_fractions"]])}))
   sample_names <- paste0(sample_names,"_",rep(1:length(sample_names)))
-  cell_fractions <- data.frame(rbindlist(lapply(simulation_list, function(x){x[["cell_fractions"]]}), fill=T, use.names=T), check.names = F)
+  cell_fractions <- data.frame(data.table::rbindlist(lapply(simulation_list, function(x){x[["cell_fractions"]]}), fill=T, use.names=T), check.names = F)
   rownames(cell_fractions) <- sample_names
   cell_fractions[is.na(cell_fractions)] <- 0
 
-  # merge count matrix
-  intersect_genes <- Reduce(intersect, lapply(simulation_list, function(x){rownames(x[["pseudo_bulk"]])}))
-  count_matrices <- lapply(simulation_list, function(x){
-    m <- x[["pseudo_bulk"]]
-    m[intersect_genes,]
-  })
-  bulk <- do.call("cbind",count_matrices)
-  colnames(bulk) <- sample_names
 
-  # build bioconductor expression set
-  expr_set <- Biobase::ExpressionSet(assayData = bulk,
-                                     phenoData = new("AnnotatedDataFrame", data=cell_fractions))
+  # list of scaling vectors
+  scaling_vector <- sapply(simulation_list, "[[", "scaling_vector")
+  colnames(scaling_vector) <- paste0("simulation_",rep(1:length(simulation_list)))
 
-  return(list(pseudo_bulk = bulk,
+
+  return(list(bulk = merged_se,
               cell_fractions = cell_fractions,
-              expression_set = expr_set))
-}
-
-
-
-#' Sample cells based of sequencing depth
-#'
-#' This function allows to sample cells from a dataframe including the number of reads per cell until a pre-defined
-#' sequencing depth is met or no cells are left with low enough read numbers to reach this depth.
-#'
-#' @param cells dataframe; needs to contain a "read_number" column
-#' @param total_read_counts numeric; the total number of reads the sampled cells will sum up to (approximatly)
-#'
-#' @return list of cell IDs
-#'
-sample_cells_by_read_depth <- function(cells, depth){
-  read_counts_current <- 0
-  out <- list()
-  missing_reads <- 0
-  # sample cells and fill up the read_counts
-  while(TRUE){
-    sampled_cell <- dplyr::slice_sample(cells, n=1)
-    cell_reads <- sampled_cell[["read_number"]]
-
-    if((read_counts_current + cell_reads) > depth){
-      sampled_cell <- NULL
-      # the next sampled cell has too many reads -> check if other cells exist, which "fit in"
-      difference_to_fill <-  depth - read_counts_current
-      remaining_cells <- cells[cells[["read_number"]] <= difference_to_fill, ]  # these are all cells of type x, which have less reads than are we still have "available"
-      # check if any cells are left, that can fill the remaining reads
-      if(dim(remaining_cells)[1] == 0){
-        #message(paste0("No more cells to sample from with read depth of ", difference_to_fill, " or lower."))
-        missing_reads <- missing_reads + difference_to_fill
-        break
-      }
-      # look for cell with number of reads lower then difference
-      while (TRUE) {
-        cell_checked <- dplyr::slice_sample(remaining_cells, n=1)
-        cell_reads <- cell_checked[["read_number"]]
-        if(cell_reads <= difference_to_fill){
-          sampled_cell <- cell_checked
-          cell_reads <- sampled_cell[["read_number"]]
-          break
-        }
-      }
-    }
-    if(!is.null(sampled_cell)){
-      read_counts_current <- read_counts_current + cell_reads
-      out <- append(out, values = sampled_cell[["cell_ID"]])
-    }
-  }
-
-  return(list(cells=out, missing_reads=missing_reads))
+              scaling_vector = scaling_vector))
 }

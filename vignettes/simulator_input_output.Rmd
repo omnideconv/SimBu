@@ -28,47 +28,27 @@ This chapter covers the different input and output options of the package in det
 
 # Input
 
-The input for your simulations is always the custom `dataset` object. You can create this object with different constructing functions, which will explained below. It is also possible to merge multiple `dataset` objects into one. 
-
-## Sfaira
-
-To use the public database sfaira, you first need to setup a connection to it. To do so, follow the steps in the "Getting started" vignette. You can now use the `dataset_sfaira_multiple` or `dataset_sfaira` to create a `dataset` object like this:
-
-```{r, eval=FALSE}
-ds_human_pancreas <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
-                                                    organisms = "Homo sapiens", 
-                                                    tissues = "pancreas", 
-                                                    name="human_pancreas")
-
-ds_miller <- SimBu::dataset_sfaira(sfaira_setup = setup_list,
-                                   sfaira_id="human_lung_2020_10x3v2_miller_001_10.1016/j.devcel.2020.01.033",
-                                   name = "Miller")
-```
-
-As you can see, `dataset_sfaira_multiple` allows to download multiple datasets of the same organism, tissue or assay; with `dataset_sfaira` you can access a single dataset directly. You can use the `sfaira_overview` function to find a table of all possible datasets as well as their IDs. 
+The input for your simulations is always the custom `dataset` object. You can create this object with different constructing functions, which will explained below. It is also possible to merge multiple `dataset` objects into one. \
+Sfaira is not covered in this vignette, but in ["Public Data Integration"](sfaira_vignette.Rmd).\
 
 ## Custom data
 
-When building `dataset` objects with your own data, you need to provide a count matrix with the genes in rows and cells in columns. Additionally, an annotation table is needed, with the cell-type annotations. It needs to consist at least out of 2 columns: `ID` and `cell_type`, where `ID` has to be identical to the column names of the count matrix. If not all cells appear in the annotation or count matrix, the intersection of both is used to build the `dataset`. \
-Additionally, the name of the dataset has to be given. \
-The straight forward approach can be executed like this:
+Using existing count matrices and annotations is already covered in the ["Getting started"](simulator_documentation.Rmd) vignette; this section will explain some minor details.\
 
-```{r, eval=FALSE}
-ds_basic <- SimBu::dataset(count_matrix = count_matrix,
-                           annotation = annotaton,
-                           name = "basic_dataset")
-```
+When generating a dataset with your own data, you need to provide at least one matrix via either the `count_matrix` or `tpm_matrix` parameter of `dataset()`; for both of them, genes are located in the rows, cells in the columns.\
+Additionally, an annotation table is needed, with the cell-type annotations. It needs to consist of at least out of 2 columns: `ID` and `cell_type`, where `ID` has to be identical to the column names of the provides matrix/matrices. If not all cells appear in the annotation or matrix, the intersection of both is used to generate the dataset. \
+
 
 ### Seurat
 
-It is possible to use a Seurat object to build a `dataset`; you need an additional dataframe for the annotation:
+It is possible to use a Seurat object to build a dataset; you need an additional dataframe for the annotation:
 
 ```{r, eval=FALSE}
-ds_seurat <- SimBu::dataset_seurat(seurat_obj = seurat_object,
+ds_seurat <- SimBu::dataset_seurat(seurat_obj_counts = seurat_object_counts,
+                                   seurat_obj_tpm = seurat_object_tpm,
                                    annotation = annotation,
                                    name = "seurat_dataset")
 ```
-
 
 ### h5ad files
 
@@ -76,7 +56,8 @@ It is possible to use an h5ad file directly, a file format which stores [AnnData
 
 ```{r, eval=FALSE}
 
-ds_h5ad <- SimBu::dataset_h5ad(h5ad_file = h5ad_file_path,
+ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = h5ad_file_counts,
+                               h5ad_file_tpm = h5ad_file_tpm,
                                annotation = annotation,
                                name = "h5ad_dataset")
 
@@ -84,18 +65,18 @@ ds_h5ad <- SimBu::dataset_h5ad(h5ad_file = h5ad_file_path,
 
 ## Merging datasets
 
-You are able to merge multiple datasets by using the `dataset_multiple` function:
+You are able to merge multiple datasets by using the `dataset_merge` function:
 
 ```{r, eval=FALSE}
 
-ds_multiple <- SimBu::dataset_multiple(dataset_list = list(ds_1, ds_2, ds_3),
-                                       name = "ds_multiple")
+ds_multiple <- SimBu::dataset_merge(dataset_list = list(ds_1, ds_2, ds_3),
+                                    name = "ds_multiple")
 
 ```
 
 
 # Simulations
-Once the `dataset` is generated, you can use `simulate_bulk` to generate pseudo-bulk samples, resulting in an artificial RNA-seq dataset. \
+Once a dataset is generated, you can use `simulate_bulk` to generate pseudo-bulk samples, resulting in an artificial RNA-seq dataset. \
 Similar to datasets, it is also possible to merge simulations:
 
 ```{r, eval=FALSE}
@@ -107,14 +88,17 @@ merged_simulations <- SimBu::merge_simulations(list(sim_1, sim_2, sim_3))
 # Output
 
 
-The output of this function is a named list with 5 entries:
+The `simulation` object contains three named entries: \
 
-* `pseudo_bulk`: a sparse matrix with genes in rows and the simulated samples in columns. By default TPM normalized.\
+* `bulk`: a SummarizedExperiment object with the pseudo-bulk dataset(s) stored in the `assays`. They can be accessed like this:
 
-* `pseudo_bulk_raw`: a sparse matrix, same dimensions as `pseudo_bulk`, but raw counts. Depending on the scaling factor method used, the distribution of these values can be shifted.\
+```{r, eval=FALSE}
+assays(simulation$bulk)[["bulk_counts"]]
+assays(simulation$bulk)[["bulk_tpm"]]
+```
+
+If only a single matrix was given to the dataset initially, only one assay is filled.
 
 * `cell_fractions`: a table where rows represent the simulated samples and columns represent the different simulated cell-types. The entries in the table store the specific cell-type fraction per sample.\
 
 * `scaling_vector`: a named list, with the used scaling value for each cell from the single cell dataset. \
-
-* `expression_set`: a Biobase [ExpressionSet](https://rdrr.io/bioc/Biobase/man/class.ExpressionSet.html), containing annotation data as well as the TPM normalized expression matrix. \

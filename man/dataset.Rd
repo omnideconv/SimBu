@@ -2,29 +2,30 @@
 % Please edit documentation in R/dataset.R
 \name{dataset}
 \alias{dataset}
-\title{basic constructor for a dataset}
+\title{Default function to generate a \link[SummarizedExperiment]{SummarizedExperiment}}
 \usage{
 dataset(
   annotation,
-  count_matrix,
-  name,
-  count_type = "raw",
+  count_matrix = NULL,
+  tpm_matrix = NULL,
+  name = "SimBu_dataset",
   spike_in_col = NULL,
   read_number_col = NULL,
   additional_cols = NULL,
   filter_genes = T,
   variance_cutoff = 0,
-  type_abundance_cutoff = 0
+  type_abundance_cutoff = 0,
+  scale_tpm = T
 )
 }
 \arguments{
 \item{annotation}{dataframe; needs columns 'ID' and 'cell_type'; 'ID' needs to be equal with cell_names in count_matrix}
 
-\item{count_matrix}{sparse matrix; genes in rows, cells in columns}
+\item{count_matrix}{sparse count matrix; raw count data is expected with genes in rows, cells in columns}
+
+\item{tpm_matrix}{sparse count matrix; TPM like count data is expected with genes in rows, cells in columns}
 
 \item{name}{name of the dataset; will be used for new unique IDs of cells}
-
-\item{count_type}{what type of counts are in the dataset; default is 'TPM'}
 
 \item{spike_in_col}{which column in annotation contains information on spike-in counts, which can be used to re-scale counts; mandatory for spike-in scaling factor in simulation}
 
@@ -37,10 +38,12 @@ dataset(
 \item{variance_cutoff}{numeric, is only applied if \code{filter_genes} is TRUE: removes all genes with variance below the chosen cutoff}
 
 \item{type_abundance_cutoff}{numeric, remove all cells, whose cell-type appears less then the given value. This removes low abundant cell-types}
+
+\item{scale_tpm}{boolean, if TRUE (default) the cells in tpm_matrix will be scaled to sum up to 1e6}
 }
 \value{
-dataset object
+Return a \link[SummarizedExperiment]{SummarizedExperiment} object
 }
 \description{
-basic constructor for a dataset
+Default function to generate a \link[SummarizedExperiment]{SummarizedExperiment}
 }

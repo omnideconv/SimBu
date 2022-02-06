@@ -18,3 +18,12 @@ reference:
     contents:
       - sfaira_overview
       - plot_simulation
+
+articles:
+  - title: Documentation
+    navbar: ~
+    contents:
+    - simulator_documentation
+    - simulator_input_output
+    - sfaira_vignette
+    - simulator_scaling_factors
