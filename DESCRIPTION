@@ -14,7 +14,6 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Imports: 
     parallel,
-    Matrix,
     anndata,
     tools,
     reticulate,
@@ -28,7 +27,8 @@ Imports:
     RColorBrewer,
     dplyr,
     methods,
-    data.table
+    data.table,
+    Matrix (>=1.3.3)
 Suggests:
     rmarkdown,
     knitr,
