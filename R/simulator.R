@@ -59,23 +59,24 @@ simulate_sample <- function(data,
   # apply scaling factor
   # + sum up counts/tpms of all cells per gene to get single bulk sample
   # + apply possible scaling of sample
-  if("counts" %in% names(SummarizedExperiment::assays(data))){
-    m <- Matrix::t(Matrix::t(SummarizedExperiment::assays(data_sampled)[["counts"]]) * scaling_vector)
-    simulated_count_vector <- Matrix::rowSums(m)
 
-    # if total_read_counts is used, rarefy/scale count data to get the desired sequencing depth
-    if(!is.null(total_read_counts)){
-      sum_counts <- sum(simulated_count_vector)
+  m <- Matrix::t(Matrix::t(SummarizedExperiment::assays(data_sampled)[["counts"]]) * scaling_vector)
+  simulated_count_vector <- Matrix::rowSums(m)
 
-      if(sum_counts > total_read_counts){
-        v <- phyloseq::otu_table(simulated_count_vector, taxa_are_rows = T)
-        simulated_count_vector <- data.frame(phyloseq::rarefy_even_depth(physeq=v, sample.size = 1e5, trimOTUs = F))[,1]
+  # if total_read_counts is used, rarefy/scale count data to get the desired sequencing depth
+  if(!is.null(total_read_counts)){
+    sum_counts <- sum(simulated_count_vector)
 
-      }else if(sum_counts < total_read_counts){
-        simulated_count_vector <- simulated_count_vector / sum(simulated_count_vector) * total_read_counts
-      }
+    if(sum_counts > total_read_counts){
+      v <- phyloseq::otu_table(simulated_count_vector, taxa_are_rows = T)
+      simulated_count_vector <- data.frame(phyloseq::rarefy_even_depth(physeq=v, sample.size = 1e5, trimOTUs = F))[,1]
+
+    }else if(sum_counts < total_read_counts){
+      simulated_count_vector <- simulated_count_vector / sum(simulated_count_vector) * total_read_counts
     }
   }
+
+  # only generate simulation based on TPM if tpm assay is present
   if("tpm" %in% names(SummarizedExperiment::assays(data))){
     m <- Matrix::t(Matrix::t(SummarizedExperiment::assays(data_sampled)[["tpm"]]) * scaling_vector)
     simulated_tpm_vector <- Matrix::rowSums(m)
@@ -96,7 +97,7 @@ simulate_sample <- function(data,
 #' \code{scaling_factor} on how the read counts will be transformed proir to the simulation.
 #'
 #' @param data \link[SummarizedExperiment]{SummarizedExperiment} object
-#' @param scenario select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{mirror_db},\code{unique},\code{spill-over}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
+#' @param scenario select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{mirror_db},\code{unique},\code{spike_in}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
 #' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number}, \code{custom} or \code{NONE} for no scaling factor
 #' @param spike_in_cell_type name of cell-type used for \code{spike-in} scenario
 #' @param spike_in_amount fraction of cell-type used for \code{spike-in} scenario; must be between \code{0} and \code{0.99}
@@ -371,26 +372,19 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, nco
     if(!"read_number" %in% colnames(data@annotation)){
       stop("No column with total read number information in annotation data. Check your dataset again!")
     }
-    if("tpm" %in% names(SummarizedExperiment::assays(data))){
-      m <- SummarizedExperiment::assays(data)[["counts"]]
-    }else{
-      warning("Scaling factor 'spike-in' requires counts data, which is not available in the given dataset. TPMs will be used instead.")
-      m <- SummarizedExperiment::assays(data)[["tpm"]]
-    }
+
     # get subset of spike-in counts from the sampled cells
-    tmp <- SummarizedExperiment::colData(data)[,c("cell_ID","spike_in","read_number")]
-    #tmp <- merge(tmp, simulated_annotation, by.x="cell_ID",by.y="values", all.y=T) # need to merge to also get lines for duplicate cell entries
-    scaling_vector <- (tmp$read_number - tmp$spike_in)/tmp$read_number
-    names(scaling_vector) <- tmp$cell_ID
+    anno_sub <- SummarizedExperiment::colData(data)[,c("cell_ID","spike_in","read_number")]
+    scaling_vector <- (anno_sub$read_number - anno_sub$spike_in)/anno_sub$read_number
+    names(scaling_vector) <- anno_sub$cell_ID
 
   }else if(scaling_factor == "read-number"){
     if(!"read_number" %in% colnames(data@annotation)){
       stop("The annotation in your dataset does not contain read-number information; you cannot apply the read-number scaling factor.")
     }
-    tmp <- SummarizedExperiment::colData(data)[,c("cell_ID","read_number")]
-    #tmp <- merge(tmp, simulated_annotation, by.x="cell_ID",by.y="values", all.y=T)
-    scaling_vector <- tmp$read_number
-    names(scaling_vector) <- tmp$cell_ID
+    anno_sub <- SummarizedExperiment::colData(data)[,c("cell_ID","read_number")]
+    scaling_vector <- anno_sub$read_number
+    names(scaling_vector) <- anno_sub$cell_ID
 
   }else if (scaling_factor == "custom"){
     # needs vector with values for existing cell-types
@@ -413,10 +407,10 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, nco
     if(!scaling_factor %in% colnames(SummarizedExperiment::colData(data))){stop(paste0("A column with the name ", scaling_factor," cannot be found in the annotation."))}
     if(!is.numeric(SummarizedExperiment::colData(data)[,c(scaling_factor)])){stop(paste0("The column with the name ", scaling_factor," is not numeric and cannot be used for scaling."))}
 
-    tmp <- SummarizedExperiment::colData(data)[,c("cell_ID",scaling_factor)]
-    colnames(tmp) <- c("a","b")
-    scaling_vector <- tmp$b
-    names(scaling_vector) <- tmp$a
+    anno_sub <- SummarizedExperiment::colData(data)[,c("cell_ID",scaling_factor)]
+    colnames(anno_sub) <- c("a","b")
+    scaling_vector <- anno_sub$b
+    names(scaling_vector) <- anno_sub$a
 
   }else{
     warning("No valid scaling factor method provided. Scaling all cells by 1.")

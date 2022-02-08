@@ -6,7 +6,7 @@
 \usage{
 dataset_seurat(
   annotation,
-  seurat_obj_counts = NULL,
+  seurat_obj_counts,
   seurat_obj_tpm = NULL,
   name = "SimBu_dataset",
   spike_in_col = NULL,

@@ -6,7 +6,7 @@
 \usage{
 dataset_h5ad(
   annotation,
-  h5ad_file_counts = NULL,
+  h5ad_file_counts,
   h5ad_file_tpm = NULL,
   name = "SimBu_dataset",
   spike_in_col = NULL,

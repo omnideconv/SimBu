@@ -83,7 +83,7 @@ annotation <- data.frame("ID"=paste0("cell_",rep(1:300)),
 
 SimBu uses the [SummarizedExperiment](https://bioconductor.org/packages/release/bioc/html/SummarizedExperiment.html) class as storage
 for count data as well as annotation data. Currently it is possible to store two matrices at the same time: raw counts and TPM-like data (this can also be some other scaled count matrix, such as RPKM, but we recommend to use TPMs). These two matrices have to have the same
-dimensions and have to contain the same genes and cells. You can also supply only a single matrix.\
+dimensions and have to contain the same genes and cells. Providing the raw count data is *mandatory*!\
 SimBu scales the matrix that is added via the `tpm_matrix` slot by default to 1e6 per cell, if you do not want this, you can switch it off by setting the `scale_tpm` parameter to `FALSE`.
 Additionally, the cell type annotation of the cells has to be given in a dataframe, which has to include the two columns `ID` and `cell_type`. If additional columns from this annotation should be transferred to the dataset, simply give the names of them in the `additional_cols` parameter.\
 
@@ -125,22 +125,24 @@ SimBu can add mRNA bias by using different scaling factors to the simulations us
 
 Currently there are 6 `scenarios` implemented in the package: \
  
-* *random*: for each cell in a sample, the cell-type is chosen randomly. This scenario is 
-depending on the background distribution of the cell-types in the created dataset. If for example
-your dataset contains 20% B-cells, 40% T-cells and 40% Macrophages, this scenario will create samples
-where this distribution is mirrored closely. \
-
 * *uniform*: this creates samples, where all existing cell-types in the dataset appear in 
 the same proportions. So using a dataset with 3 cell-types, this will simulate samples, where
-all cell-type fractions are 1/3. \
+all cell-type fractions are 1/3. In order to still have a slight variation between cell type fractions,
+you can increase the `balance_uniform_mirror_scenario` parameter (default to 0.01). Setting it to 0
+will generate simulations with exactly the same cell type fractions.\
+
+* *random*: this scenario will create random cell type fractions using all present types for each sample.
+The random sampling is based on the uniform distribution.\
+
+* *mirror_db*: this scenario will mirror the exact fractions of cell types which are present
+in the provided dataset. If it consists of 20% T cells, 30% B cells and 50% NK cells, all simulated
+samples will mirror these fractions. Similar to the uniform scenario, you can add a small variation
+to these fractions with the `balance_uniform_mirror_scenario` parameter.
 
 * *spike-in*: here you need to set two additional parameters for the `simulate_bulk()` function:
 `spike_in_cell_type` sets the cell-type you want to be over-representing and 
 `spike_in_amount` sets the fraction of this cell-type. You could for example use `B-cell` and `0.5`
 to create samples, where 50% are B-cells and the rest is filled randomly with other cell-types. \
-
-* *spill-over*: this simulates samples with only a single cell-type present. Like with *spike-in*
-you need to set this cell-type with the additional parameter `spillover_cell_type`. \
 
 * *unique*: this creates simulations of only one single cell-type. You have to provide the name
 of this cell-type with the `unique_cell_type` parameter. 

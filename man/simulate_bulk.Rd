@@ -26,7 +26,7 @@ simulate_bulk(
 \arguments{
 \item{data}{\link[SummarizedExperiment]{SummarizedExperiment} object}
 
-\item{scenario}{select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{mirror_db},\code{unique},\code{spill-over}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.}
+\item{scenario}{select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{mirror_db},\code{unique},\code{spike_in}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.}
 
 \item{scaling_factor}{name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number}, \code{custom} or \code{NONE} for no scaling factor}
 

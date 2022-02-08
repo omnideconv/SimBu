@@ -16,6 +16,10 @@
 #'
 generate_summarized_experiment <- function(annotation, count_matrix, tpm_matrix, name, spike_in_col, read_number_col, additional_cols, filter_genes, variance_cutoff, type_abundance_cutoff, scale_tpm){
 
+  if(is.null(count_matrix)){
+    stop("A count_matrix is required to generate a dataset.")
+  }
+
   if(is.null(count_matrix) && is.null(tpm_matrix)){
     stop("count_matrix and tpm_matrix are both empty. At least one is required.")
   }
@@ -88,16 +92,16 @@ generate_summarized_experiment <- function(annotation, count_matrix, tpm_matrix,
   count_matrix <- matrices$m1
   tpm_matrix <- matrices$m2
 
-  if(!is.null(count_matrix)){
-    count_matrix <- compare_matrix_with_annotation(count_matrix, annotation)
-    colnames(count_matrix) <- new_ids
-    # remove low abundant cells
-    count_matrix <- count_matrix[,which(!colnames(count_matrix) %in% low_abundant_cells)]
-    anno_df$total_counts_custom <- Matrix::colSums(count_matrix)
+  # handle count matrix
+  count_matrix <- compare_matrix_with_annotation(count_matrix, annotation)
+  colnames(count_matrix) <- new_ids
+  # remove low abundant cells
+  count_matrix <- count_matrix[,which(!colnames(count_matrix) %in% low_abundant_cells)]
+  anno_df$total_counts_custom <- Matrix::colSums(count_matrix)
 
-    assays <- append(assays, c(counts = count_matrix))
-  }
+  assays <- append(assays, c(counts = count_matrix))
 
+  # handle TPM matrix (if present)
   if(!is.null(tpm_matrix)){
     if(!check_if_tpm(tpm_matrix)){warning("Warning: Some cells in your TPM matrix are not scaled between 7e5 and 1e6, as it would be expected for TPM data.")}
     tpm_matrix <- compare_matrix_with_annotation(tpm_matrix, annotation)
@@ -200,9 +204,9 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
   anno_df <- data.frame(SummarizedExperiment::colData(merged_se))
 
   # check if there is a spike-in value for each sample; else cannot use it
-  #if(sum(is.na(anno_df[["spike_in"]])) > 0){
-  #  anno_df[["spike_in"]] <- NULL
-  #}
+  if(sum(is.na(anno_df[["spike_in"]])) > 0){
+   anno_df[["spike_in"]] <- NULL
+  }
 
   generate_summarized_experiment(annotation=anno_df,
                                  count_matrix=counts,
@@ -236,7 +240,7 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
 #' @return Return a \link[SummarizedExperiment]{SummarizedExperiment} object
 #' @export
 #'
-dataset_h5ad <- function(annotation, h5ad_file_counts = NULL, h5ad_file_tpm = NULL, name = "SimBu_dataset",spike_in_col=NULL, read_number_col=NULL, additional_cols=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=T){
+dataset_h5ad <- function(annotation, h5ad_file_counts, h5ad_file_tpm = NULL, name = "SimBu_dataset",spike_in_col=NULL, read_number_col=NULL, additional_cols=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=T){
 
   if(all(is.null(c(h5ad_file_counts, h5ad_file_tpm)))){
     stop("You need to provide at least one h5ad file.")
@@ -307,7 +311,7 @@ dataset_h5ad <- function(annotation, h5ad_file_counts = NULL, h5ad_file_tpm = NU
 #' @return Return a \link[SummarizedExperiment]{SummarizedExperiment} object
 #' @export
 #'
-dataset_seurat <- function(annotation, seurat_obj_counts=NULL, seurat_obj_tpm=NULL, name = "SimBu_dataset",spike_in_col=NULL, read_number_col=NULL, additional_cols=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=T){
+dataset_seurat <- function(annotation, seurat_obj_counts, seurat_obj_tpm=NULL, name = "SimBu_dataset",spike_in_col=NULL, read_number_col=NULL, additional_cols=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=T){
 
   if(all(is.null(c(seurat_obj_counts, seurat_obj_tpm)))){
     stop("You need to provide at least one Seurat object.")
@@ -530,29 +534,29 @@ compare_matrix_with_annotation <- function(m, annotation){
   return(m)
 }
 
-# ugliest function ever
-# TODO please redo this at some point...
-filter_matrix <- function(m1, m2, filter_genes, variance_cutoff){
 
-  if(!is.null(m1)){genes <- rownames(m1)}else{genes <- rownames(m2)}
+# filter one (or two) expression matrix by genes
+filter_matrix <- function(m1, m2=NULL, filter_genes=T, variance_cutoff=0){
+
+  genes <- rownames(m1)
 
   if(filter_genes){
     print("Filtering genes...")
     # filter by expression
-    if(!is.null(m1)){low_expressed_genes_1 <- rownames(m1[which(Matrix::rowSums(m1) == 0),])}else{low_expressed_genes_1=genes}
+    low_expressed_genes_1 <- rownames(m1[which(Matrix::rowSums(m1) == 0),])
     if(!is.null(m2)){low_expressed_genes_2 <- rownames(m2[which(Matrix::rowSums(m2) == 0),])}else{low_expressed_genes_2=genes}
     low_expressed_genes <- unlist(Reduce(intersect, list(low_expressed_genes_1, low_expressed_genes_2)))
 
     #filter by variance
-    if(!is.null(m1)){m1_m <- methods::as(m1, "dgCMatrix")}
+    m1_m <- methods::as(m1, "dgCMatrix")
     if(!is.null(m2)){m2_m <- methods::as(m2, "dgCMatrix")}
-    if(!is.null(m1)){low_variance_genes_1 <- rownames(m1_m[which(sparseMatrixStats::rowVars(m1_m) < variance_cutoff),])}else{low_variance_genes_1=genes}
+    low_variance_genes_1 <- rownames(m1_m[which(sparseMatrixStats::rowVars(m1_m) < variance_cutoff),])
     if(!is.null(m2)){low_variance_genes_2 <- rownames(m2_m[which(sparseMatrixStats::rowVars(m2_m) < variance_cutoff),])}else{low_variance_genes_2=genes}
     low_variance_genes <- unlist(Reduce(intersect, list(low_variance_genes_1, low_variance_genes_2)))
     genes_to_keep <- genes[which(!genes %in% unique(c(low_expressed_genes, low_variance_genes)))]
 
     # remove low expressed and low variance genes from count matrix
-    if(!is.null(m1)){m1 <- m1[which(genes %in% genes_to_keep),]}
+    m1 <- m1[which(genes %in% genes_to_keep),]
     if(!is.null(m2)){m2 <- m2[which(genes %in% genes_to_keep),]}
   }
 
