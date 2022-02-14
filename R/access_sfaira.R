@@ -15,7 +15,9 @@
 #'
 #' @examples
 #' \dontrun{
-#' sfaira_list <- setup_sfaira(python_path="/path/to/conda/envs/sfaira/bin/python3",env_name="sfaira", basedir="/home/sfaira_data")
+#' sfaira_list <- setup_sfaira(python_path="/path/to/conda/envs/sfaira/bin/python3",
+#'                             env_name="sfaira",
+#'                             basedir="/home/sfaira_data")
 #' }
 setup_sfaira <- function(python_path, env_name, basedir){
   tryCatch({
@@ -98,7 +100,7 @@ download_sfaira <- function(setup_list, id, force=F, synapse_user=NULL, synapse_
 #' @param assays list of assays
 #' @param force logical; TRUE if you want to force to download all datasets, otherwise only the ones with cell-type annotation will be returned. Default if FALSE
 #'
-#' @return
+#' @return annotated data object, contains count matrix and annotation
 #'
 download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, assays=NULL, force=F){
   sfaira <- setup_list[["sfaira"]]

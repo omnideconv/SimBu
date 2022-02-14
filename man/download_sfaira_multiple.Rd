@@ -24,7 +24,7 @@ download_sfaira_multiple(
 \item{force}{logical; TRUE if you want to force to download all datasets, otherwise only the ones with cell-type annotation will be returned. Default if FALSE}
 }
 \value{
-
+annotated data object, contains count matrix and annotation
 }
 \description{
 similar to the filters on the sfaira website (\url{https://theislab.github.io/sfaira-portal/Datasets})

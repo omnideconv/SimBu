@@ -21,6 +21,7 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(SimBu)
+library(Matrix)
 library(Seurat)
 ```
 
@@ -28,14 +29,14 @@ This chapter covers the different input and output options of the package in det
 
 # Input
 
-The input for your simulations is always the custom `dataset` object. You can create this object with different constructing functions, which will explained below. It is also possible to merge multiple `dataset` objects into one. \
+The input for your simulations is always a `SummarizedExperiment` object. You can create this object with different constructing functions, which will explained below. It is also possible to merge multiple datasets objects into one. \
 Sfaira is not covered in this vignette, but in ["Public Data Integration"](sfaira_vignette.Rmd).\
 
 ## Custom data
 
 Using existing count matrices and annotations is already covered in the ["Getting started"](simulator_documentation.Rmd) vignette; this section will explain some minor details.\
 
-When generating a dataset with your own data, you need to provide at least one matrix via either the `count_matrix` or `tpm_matrix` parameter of `dataset()`; for both of them, genes are located in the rows, cells in the columns.\
+When generating a dataset with your own data, you need to provide the `count_matrix` parameter of `dataset()`; additionally you can provide a TPM matrix with the `tpm_matrix`. This will then lead to two simulations, one based on counts and one based on TPMs. For either of them, genes are located in the rows, cells in the columns.\
 Additionally, an annotation table is needed, with the cell-type annotations. It needs to consist of at least out of 2 columns: `ID` and `cell_type`, where `ID` has to be identical to the column names of the provides matrix/matrices. If not all cells appear in the annotation or matrix, the intersection of both is used to generate the dataset. \
 
 
@@ -97,7 +98,7 @@ assays(simulation$bulk)[["bulk_counts"]]
 assays(simulation$bulk)[["bulk_tpm"]]
 ```
 
-If only a single matrix was given to the dataset initially, only one assay is filled.
+If only the count matrix was given to the dataset initially, only the `bulk_counts` assay is filled.
 
 * `cell_fractions`: a table where rows represent the simulated samples and columns represent the different simulated cell-types. The entries in the table store the specific cell-type fraction per sample.\
 

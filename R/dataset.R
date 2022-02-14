@@ -296,9 +296,11 @@ dataset_h5ad <- function(annotation, h5ad_file_counts, h5ad_file_tpm = NULL, nam
 
 #' Function to generate a \link[SummarizedExperiment]{SummarizedExperiment} using a \link[Seurat]{Seurat} object
 #'
-#' @param annotation dataframe; needs columns 'ID' and 'cell_type'; 'ID' needs to be equal with cell_names in count_matrix
-#' @param seurat_obj_counts \link[Seurat]{Seurat} object with raw counts
-#' @param seurat_obj_tpm \link[Seurat]{Seurat} object with TPM counts
+#' @param seurat_obj \link[Seurat]{Seurat} object with TPM counts
+#' @param count_assay name of assay in Seurat object which contains count data
+#' @param cell_id_col name of column in Seurat meta.data with unique cell ids
+#' @param cell_type_col name of column in Seurat meta.data with cell type name
+#' @param tpm_assay name of assay in Seurat object which contains TPM data
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts; mandatory for spike-in scaling factor in simulation
 #' @param read_number_col which column in annotation contains information on total read numbers in a cell; mandatory for "spike-in" scaling factor and "read-number" in simulation
@@ -311,24 +313,47 @@ dataset_h5ad <- function(annotation, h5ad_file_counts, h5ad_file_tpm = NULL, nam
 #' @return Return a \link[SummarizedExperiment]{SummarizedExperiment} object
 #' @export
 #'
-dataset_seurat <- function(annotation, seurat_obj_counts, seurat_obj_tpm=NULL, name = "SimBu_dataset",spike_in_col=NULL, read_number_col=NULL, additional_cols=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=T){
+dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, tpm_assay=NULL, name = "SimBu_dataset", spike_in_col=NULL, read_number_col=NULL, additional_cols=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=T){
 
-  if(all(is.null(c(seurat_obj_counts, seurat_obj_tpm)))){
-    stop("You need to provide at least one Seurat object.")
+  if(is.null(count_assay)){
+    stop("You have to provide the name of the assay in the Seurat object which contains count data.")
   }
 
-  if(!is.null(seurat_obj_counts)){
-    tryCatch({
-      count_matrix <- seurat_obj_counts@assays$RNA@counts
-    }, error=function(e){
-      stop(paste("Could not access count matrix from Seurat object (counts): ", e))
-      return(NULL)
-    })
+  if(!count_assay %in% names(seurat_obj@assays)){
+    stop("The provided count_assay name was not found in the Seurat object.")
   }
 
-  if(!is.null(seurat_obj_tpm)){
+  if(!is.null(tpm_assay)){
+    if(!count_assay %in% names(seurat_obj@assays)){
+      stop("The provided count_assay name was not found in the Seurat object.")
+    }
+  }
+
+  annotation <- seurat_obj@meta.data
+  if(is.null(annotation)){
+    stop("No annotation found in the Seurat object.")
+  }
+
+  if(!cell_id_col %in% colnames(annotation)){
+    stop("Did not find cell_id_col in Seurat metadata.")
+  }
+
+  if(!cell_type_col %in% colnames(annotation)){
+    stop("Did not find cell_type_col in Seurat metadata.")
+  }
+
+
+  tryCatch({
+    count_matrix <- seurat_obj@assays[["count_assay"]]@counts
+  }, error=function(e){
+    stop(paste("Could not access count matrix from Seurat object (counts): ", e))
+    return(NULL)
+  })
+
+
+  if(!is.null(tpm_assay)){
     tryCatch({
-      tpm_matrix <- seurat_obj_tpm@assays$RNA@counts
+      tpm_matrix <- seurat_obj@assays[["tpm_assay"]]@counts
     }, error=function(e){
       stop(paste("Could not access count matrix from Seurat object (tpm): ", e))
       return(NULL)

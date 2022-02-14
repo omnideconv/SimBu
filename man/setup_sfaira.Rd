@@ -24,6 +24,8 @@ path to a directory where the sfaira datasets will be downloaded into.
 }
 \examples{
 \dontrun{
-sfaira_list <- setup_sfaira(python_path="/path/to/conda/envs/sfaira/bin/python3",env_name="sfaira", basedir="/home/sfaira_data")
+sfaira_list <- setup_sfaira(python_path="/path/to/conda/envs/sfaira/bin/python3",
+                            env_name="sfaira",
+                            basedir="/home/sfaira_data")
 }
 }

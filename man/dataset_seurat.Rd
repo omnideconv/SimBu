@@ -5,9 +5,11 @@
 \title{Function to generate a \link[SummarizedExperiment]{SummarizedExperiment} using a \link[Seurat]{Seurat} object}
 \usage{
 dataset_seurat(
-  annotation,
-  seurat_obj_counts,
-  seurat_obj_tpm = NULL,
+  seurat_obj,
+  count_assay,
+  cell_id_col,
+  cell_type_col,
+  tpm_assay = NULL,
   name = "SimBu_dataset",
   spike_in_col = NULL,
   read_number_col = NULL,
@@ -19,11 +21,15 @@ dataset_seurat(
 )
 }
 \arguments{
-\item{annotation}{dataframe; needs columns 'ID' and 'cell_type'; 'ID' needs to be equal with cell_names in count_matrix}
+\item{seurat_obj}{\link[Seurat]{Seurat} object with TPM counts}
 
-\item{seurat_obj_counts}{\link[Seurat]{Seurat} object with raw counts}
+\item{count_assay}{name of assay in Seurat object which contains count data}
 
-\item{seurat_obj_tpm}{\link[Seurat]{Seurat} object with TPM counts}
+\item{cell_id_col}{name of column in Seurat meta.data with unique cell ids}
+
+\item{cell_type_col}{name of column in Seurat meta.data with cell type name}
+
+\item{tpm_assay}{name of assay in Seurat object which contains TPM data}
 
 \item{name}{name of the dataset; will be used for new unique IDs of cells}
 

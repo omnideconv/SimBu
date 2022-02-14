@@ -118,23 +118,68 @@ simulate_sample <- function(data,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # this creates a basic dataset with uniform cell-type distribution and no additional transformation of the data with 10 samples and 2000 cells each
-#' simulate_bulk(dataset, scenario="uniform", scaling_factor="NONE", nsamples=10, ncells=2000)
+#' #generate sample single-cell data to work with:
 #'
-#' # use the spike-in scenario to have 50% B cells per sample
-#' simulate_bulk(dataset, scenario="spike_in", scaling_factor="NONE", nsamples=10, ncells=2000, spike_in_cell_type="Bcell", spike_in_amount=0.5)
+#' counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- tpm / sum(tpm) *1e6
 #'
-#' # use the unique scenario to only have B cells
-#' simulate_bulk(dataset, scenario="unique", scaling_factor="NONE", nsamples=10, ncells=2000, unique_cell_type="Bcell")
+#' colnames(counts) <- paste0("cell_",rep(1:300))
+#' colnames(tpm) <- paste0("cell_",rep(1:300))
+#' rownames(counts) <- paste0("gene_",rep(1:1000))
+#' rownames(tpm) <- paste0("gene_",rep(1:1000))
 #'
-#' # simulate a dataset with custom cell-type fraction for each of the 3 samples
-#' fractions <- data.frame("Bcell"=c(0.2,0.4,0.2),"Tcell"=c(0.4,0.2,0.1),"Macrophage"=c(0.4,0.4,0.7))
-#' simulate_bulk(dataset, scenario="custom", scaling_factor="NONE", nsamples=3, ncells=2000, custom_scenario_data=fractions)
+#' annotation <- data.frame("ID"=paste0("cell_",rep(1:300)),
+#'                          "cell_type"=c(rep("T cells CD4",50),
+#'                                        rep("T cells CD8",50),
+#'                                        rep("Macrophages",100),
+#'                                        rep("NK cells",10),
+#'                                        rep("B cells",70),
+#'                                        rep("Monocytes",20)))
+#'
+#' dataset <- SimBu::dataset(annotation = annotation,
+#'                           count_matrix = counts,
+#'                           tpm_matrix = tpm,
+#'                           name = "test_dataset")
+#'
+#' # this creates a basic pseudo-bulk dataset with uniform cell-type distribution
+#' # and no additional transformation of the data with 10 samples and 2000 cells each
+#'
+#' s<-simulate_bulk(dataset,
+#'               scenario="uniform",
+#'               scaling_factor="NONE",
+#'               nsamples=10,
+#'               ncells=100)
 #'
 #' # use a blacklist to exclude certain cell-types for the simulation
-#' simulate_bulk(dataset, scenario="custom", scaling_factor="NONE", nsamples=3, ncells=2000, custom_scenario_data=fractions)
-#' }
+#' s<-simulate_bulk(dataset,
+#'               scenario="uniform",
+#'               scaling_factor="NONE",
+#'               nsamples=10,
+#'               ncells=2000,
+#'               blacklist=c("Monocytes","Macrophages"))
+#'
+#'
+#' # use the unique scenario to only have B cells
+#' s<-simulate_bulk(dataset,
+#'               scenario="unique",
+#'               scaling_factor="NONE",
+#'               nsamples=10,
+#'               ncells=100,
+#'               unique_cell_type="B cells")
+#'
+#' # simulate a dataset with custom cell-type fraction for each of the 3 samples
+#' fractions <- data.frame("B cells"=c(0.2,0.4,0.2),
+#'                         "T cells CD4"=c(0.4,0.2,0.1),
+#'                         "Macrophages"=c(0.4,0.4,0.7), check.names = FALSE)
+#' s<-simulate_bulk(dataset,
+#'               scenario="custom",
+#'               scaling_factor="NONE",
+#'               nsamples=3,
+#'               ncells=2000,
+#'               custom_scenario_data=fractions)
+#'
+#'
 simulate_bulk <- function(data,
                           scenario=c("uniform","random","mirror_db","spike_in","unique", "custom"),
                           scaling_factor=c("NONE","census","spike-in", "custom", "read-number", "annotation_column"),
@@ -276,7 +321,7 @@ simulate_bulk <- function(data,
     if(nrow(custom_scenario_data) != nsamples){
       stop("The scenario data has a differnt amount of samples than you want to simulate.")
     }
-    if(!all(colnames(custom_scenario_data) %in% unique(data@annotation[["cell_type"]]))){
+    if(!all(colnames(custom_scenario_data) %in% unique(SummarizedExperiment::colData(data)[["cell_type"]]))){
       stop("Could not find all cell-types from scenario data in annotation.")
     }
     simulation_vector_list <- as.list(as.data.frame(t(custom_scenario_data)))
@@ -454,7 +499,7 @@ plot_simulation <- function(simulation){
   fractions$sample <- factor(rownames(fractions), levels = rownames(fractions))
   frac_long <- tidyr::gather(fractions, cell_type, fraction, 1:length(fractions)-1)
 
-  ggplot2::ggplot(frac_long, aes(x=fraction, y=sample, fill=cell_type))+
+  ggplot2::ggplot(data = frac_long, aes(x=fraction, y=sample, fill=cell_type))+
     ggplot2::geom_col()+
     ggplot2::ggtitle(paste0("Cell-type fractions for \n",nrow(fractions)," pseudo-bulk RNAseq samples"))+
     ggplot2::scale_fill_manual(values = grDevices::colorRampPalette(RColorBrewer::brewer.pal(9, "Paired"))(length(unique(frac_long$cell_type))))+
