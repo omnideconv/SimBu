@@ -118,6 +118,7 @@ simulate_sample <- function(data,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' #generate sample single-cell data to work with:
 #'
 #' counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
@@ -178,7 +179,7 @@ simulate_sample <- function(data,
 #'               nsamples=3,
 #'               ncells=2000,
 #'               custom_scenario_data=fractions)
-#'
+#'}
 #'
 simulate_bulk <- function(data,
                           scenario=c("uniform","random","mirror_db","spike_in","unique", "custom"),
