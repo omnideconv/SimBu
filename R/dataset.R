@@ -36,9 +36,23 @@ generate_summarized_experiment <- function(annotation, count_matrix, tpm_matrix,
     }
   }
 
+  # convert matrices to sparse matrix
+  tryCatch({
+    count_matrix <- methods::as(count_matrix, "dgCMatrix")
+  }, error=function(e){
+    stop(paste0('Cannot convert count matrix in sparse matrix (dgCMatrix):',e$message))
+  })
+  if(!is.null(tpm_matrix)){
+    tryCatch({
+      tpm_matrix <- methods::as(tpm_matrix, "dgCMatrix")
+    }, error=function(e){
+      stop(paste0('Cannot convert tpm matrix in sparse matrix (dgCMatrix):',e$message))
+    })
+  }
+
   # generate new IDs for the cells
-  n_cells <- if(!is.null(count_matrix)){dim(count_matrix)[2]}else{dim(tpm_matrix)[2]}
-  cells_old <- if(!is.null(count_matrix)){colnames(count_matrix)}else{colnames(tpm_matrix)}
+  n_cells <- dim(count_matrix)[2]
+  cells_old <- colnames(count_matrix)
   new_ids <- paste0(name,"_", rep(1:n_cells))
 
   #### build annotation table ####
@@ -90,7 +104,6 @@ generate_summarized_experiment <- function(annotation, count_matrix, tpm_matrix,
   colnames(count_matrix) <- new_ids
   # remove low abundant cells
   count_matrix <- count_matrix[,which(!colnames(count_matrix) %in% low_abundant_cells)]
-  anno_df$total_counts_custom <- Matrix::colSums(count_matrix)
 
   assays <- append(assays, c(counts = count_matrix))
 
@@ -110,7 +123,7 @@ generate_summarized_experiment <- function(annotation, count_matrix, tpm_matrix,
 
   # add additional columns to annotation based on count matrix [nReads, nGenes]
   # add number of reads per cell
-  anno_df <- cbind(anno_df, nReads_SimBu = colSums(count_matrix))
+  anno_df <- cbind(anno_df, nReads_SimBu = Matrix::colSums(count_matrix))
   # add number of expressed genes per cell (number of counts > 0)
   anno_df <- cbind(anno_df, nGenes_SimBu = apply(count_matrix, 2, function(x){length(which(x>0))}))
 
