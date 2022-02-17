@@ -10,7 +10,6 @@ dataset_h5ad(
   h5ad_file_tpm = NULL,
   name = "SimBu_dataset",
   spike_in_col = NULL,
-  read_number_col = NULL,
   additional_cols = NULL,
   filter_genes = T,
   variance_cutoff = 0,
@@ -28,8 +27,6 @@ dataset_h5ad(
 \item{name}{name of the dataset; will be used for new unique IDs of cells#' @param spike_in_col which column in annotation contains information on spike-in counts, which can be used to re-scale counts; mandatory for spike-in scaling factor in simulation}
 
 \item{spike_in_col}{which column in annotation contains information on spike-in counts, which can be used to re-scale counts; mandatory for spike-in scaling factor in simulation}
-
-\item{read_number_col}{which column in annotation contains information on total read numbers in a cell; mandatory for "spike-in" scaling factor and "read-number" in simulation}
 
 \item{additional_cols}{list of column names in annotation, that should be stored as well in dataset object}
 

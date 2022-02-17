@@ -124,8 +124,8 @@ generate_summarized_experiment <- function(annotation, count_matrix, tpm_matrix,
   # add additional columns to annotation based on count matrix [nReads, nGenes]
   # add number of reads per cell
   anno_df <- cbind(anno_df, nReads_SimBu = Matrix::colSums(count_matrix))
-  # add number of expressed genes per cell (number of counts > 0)
-  anno_df <- cbind(anno_df, nGenes_SimBu = apply(count_matrix, 2, function(x){length(which(x>0))}))
+  # add number of expressed genes per cell (number of genes - number of genes with 0 expression)
+  anno_df <- cbind(anno_df, nGenes_SimBu = (nrow(counts) - proxyC::colZeros(counts)))
 
   # create the actual SummarizedExperiment
   se <- SummarizedExperiment::SummarizedExperiment(assays = assays,

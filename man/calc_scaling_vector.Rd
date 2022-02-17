@@ -4,7 +4,13 @@
 \alias{calc_scaling_vector}
 \title{Calculate scaling factor for a dataset}
 \usage{
-calc_scaling_vector(data, scaling_factor, custom_scaling_vector, ncores)
+calc_scaling_vector(
+  data,
+  scaling_factor,
+  custom_scaling_vector,
+  scaling_factor_level,
+  ncores
+)
 }
 \arguments{
 \item{data}{dataset object}

@@ -8,13 +8,16 @@ simulate_bulk(
   data,
   scenario = c("uniform", "random", "mirror_db", "spike_in", "unique", "custom"),
   scaling_factor = c("NONE", "census", "spike-in", "custom", "read-number",
-    "annotation_column"),
+    "expressed_genes", "annotation_column"),
   spike_in_cell_type = NULL,
   spike_in_amount = NULL,
   unique_cell_type = NULL,
   custom_scenario_data = NULL,
   custom_scaling_vector = NULL,
   balance_uniform_mirror_scenario = 0.01,
+  remove_bias_in_counts = TRUE,
+  remove_bias_in_counts_method = "read-number",
+  norm_counts = TRUE,
   nsamples = 100,
   ncells = 1000,
   total_read_counts = NULL,
@@ -28,7 +31,7 @@ simulate_bulk(
 
 \item{scenario}{select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{mirror_db},\code{unique},\code{spike_in}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.}
 
-\item{scaling_factor}{name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number}, \code{custom} or \code{NONE} for no scaling factor}
+\item{scaling_factor}{name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number}, \code{expressed_genes}, \code{custom} or \code{NONE} for no scaling factor}
 
 \item{spike_in_cell_type}{name of cell-type used for \code{spike-in} scenario}
 
@@ -42,6 +45,12 @@ simulate_bulk(
 
 \item{balance_uniform_mirror_scenario}{balancing value for the \code{uniform} and \code{mirror_db} scenarios: increasing it will result in more diverse simulated fractions. To get the same fractions in each sample, set to 0. Default is 0.01.}
 
+\item{remove_bias_in_counts}{boolean; if TRUE (default) the internal mRNA bias that is present in count data will be \emph{removed} using the number of reads mapped to each cell}
+
+\item{remove_bias_in_counts_method}{'read-number' or 'gene-number'; method with which the mRNA bias in counts will be removed}
+
+\item{norm_counts}{boolean; if TRUE (default) the samples simulated with counts will be normalized to CPMs}
+
 \item{nsamples}{numeric; number of samples in pseudo-bulk RNAseq dataset}
 
 \item{ncells}{numeric; number of cells in each dataset}
@@ -53,6 +62,8 @@ simulate_bulk(
 \item{blacklist}{list; give a list of cell-types you want to remove for the simulation; if NULL, all are used; is applied after whitelist}
 
 \item{ncores}{numeric; number of cores to use}
+
+\item{scaling_factor_level}{'single-cell' or 'cell'type': decide if a scaling value for each single cell is calculated or the median of all scaling values for each cell type is calculated}
 }
 \value{
 named list; \code{bulk} a \link[SummarizedExperiment]{SummarizedExperiment} object, where the assays store the simulated bulk RNAseq datasets. Can hold either one or two assays, depending on how many matrices were present in the dataset
@@ -65,6 +76,7 @@ will be sampled for the simulation. Also a \code{scenario} has to be selected, w
 \code{scaling_factor} on how the read counts will be transformed proir to the simulation.
 }
 \examples{
+\dontrun{
 #generate sample single-cell data to work with:
 
 counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
@@ -125,6 +137,6 @@ s<-simulate_bulk(dataset,
               nsamples=3,
               ncells=2000,
               custom_scenario_data=fractions)
-
+}
 
 }

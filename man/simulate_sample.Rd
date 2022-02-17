@@ -10,6 +10,9 @@ simulate_sample(
   simulation_vector,
   total_cells,
   total_read_counts,
+  remove_bias_in_counts,
+  remove_bias_in_counts_method,
+  norm_counts,
   ncores
 )
 }
@@ -23,6 +26,12 @@ simulate_sample(
 \item{total_cells}{numeric; number of total cells for this simulation}
 
 \item{total_read_counts}{numeric; sets the total read count value for each sample}
+
+\item{remove_bias_in_counts}{boolean; if TRUE (default) the internal mRNA bias that is present in count data will be \emph{removed} using the number of reads mapped to each cell}
+
+\item{remove_bias_in_counts_method}{'read-number' or 'gene-number'; method with which the mRNA bias in counts will be removed}
+
+\item{norm_counts}{boolean; if TRUE (default) the samples simulated with counts will be normalized to CPMs}
 
 \item{ncores}{numeric; number of cores used to create simulation}
 }

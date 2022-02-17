@@ -9,7 +9,6 @@ dataset_sfaira(
   sfaira_setup,
   name,
   spike_in_col = NULL,
-  read_number_col = NULL,
   additional_cols = NULL,
   force = F,
   filter_genes = T,
@@ -26,8 +25,6 @@ dataset_sfaira(
 \item{name}{name of the dataset; will be used for new unique IDs of cells}
 
 \item{spike_in_col}{which column in annotation contains information on spike-in counts, which can be used to re-scale counts}
-
-\item{read_number_col}{which column in annotation contains information on total read numbers in a cell; mandatory for "spike-in" scaling factor and "read-number" in simulation}
 
 \item{additional_cols}{list of column names in annotation, that should be stored as well in dataset object}
 

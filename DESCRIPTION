@@ -28,7 +28,8 @@ Imports:
     dplyr,
     methods,
     data.table,
-    Matrix (>= 1.3.3)
+    Matrix (>= 1.3.3),
+    proxyC
 Suggests:
     rmarkdown,
     knitr,
