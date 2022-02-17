@@ -125,7 +125,7 @@ generate_summarized_experiment <- function(annotation, count_matrix, tpm_matrix,
   # add number of reads per cell
   anno_df <- cbind(anno_df, nReads_SimBu = Matrix::colSums(count_matrix))
   # add number of expressed genes per cell (number of genes - number of genes with 0 expression)
-  anno_df <- cbind(anno_df, nGenes_SimBu = (nrow(counts) - proxyC::colZeros(counts)))
+  anno_df <- cbind(anno_df, nGenes_SimBu = (nrow(count_matrix) - proxyC::colZeros(count_matrix)))
 
   # create the actual SummarizedExperiment
   se <- SummarizedExperiment::SummarizedExperiment(assays = assays,
@@ -532,7 +532,7 @@ check_annotation <- function(annotation, cell_column="cell_type", id_column=1){
 #'
 #' @return boolean
 check_if_tpm <- function(tpm_matrix, lower_limit=7e5){
-  checks <- lapply(Matrix::colSums(tpm_matrix), function(x){
+  checks <- lapply(as.integer(Matrix::colSums(tpm_matrix)), function(x){
     return(x <= 1e6 && x > lower_limit)
   })
   return(all(unlist(checks)))

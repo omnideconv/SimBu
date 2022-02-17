@@ -29,9 +29,12 @@ Imports:
     methods,
     data.table,
     Matrix (>= 1.3.3),
-    proxyC
+    proxyC,
+    testit
 Suggests:
     rmarkdown,
     knitr,
-    Seurat
+    Seurat,
+    testthat (>= 3.0.0)
 VignetteBuilder: knitr
+Config/testthat/edition: 3

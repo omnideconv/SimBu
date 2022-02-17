@@ -63,7 +63,7 @@ immune cell types.
 ```{r}
 counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = T)
 tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = T)
-tpm <- tpm / sum(tpm) *1e6 
+tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
 
 colnames(counts) <- paste0("cell_",rep(1:300))
 colnames(tpm) <- paste0("cell_",rep(1:300))

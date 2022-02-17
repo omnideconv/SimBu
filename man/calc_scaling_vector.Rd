@@ -8,7 +8,7 @@ calc_scaling_vector(
   data,
   scaling_factor,
   custom_scaling_vector,
-  scaling_factor_level,
+  scaling_factor_single_cell,
   ncores
 )
 }

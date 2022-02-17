@@ -11,7 +11,7 @@
 #' @param total_cells numeric; number of total cells for this simulation
 #' @param total_read_counts numeric; sets the total read count value for each sample
 #' @param remove_bias_in_counts boolean; if TRUE (default) the internal mRNA bias that is present in count data will be *removed* using the number of reads mapped to each cell
-#' @param remove_bias_in_counts_method 'read-number' or 'gene-number'; method with which the mRNA bias in counts will be removed
+#' @param remove_bias_in_counts_method 'read-number' (default) or 'gene-number'; method with which the mRNA bias in counts will be removed
 #' @param norm_counts boolean; if TRUE (default) the samples simulated with counts will be normalized to CPMs
 #' @param ncores numeric; number of cores used to create simulation
 #'
@@ -40,9 +40,14 @@ simulate_sample <- function(data,
     # get all cells with the current type
     cells_of_type_x <- data.frame(SummarizedExperiment::colData(data)[SummarizedExperiment::colData(data)[["cell_type"]] == names(simulation_vector[x]),])
 
-    # how many cells of this type do we need?
-    cells <- dplyr::slice_sample(cells_of_type_x, n=total_cells*simulation_vector[x], replace=T)
-    cells <- cells[["cell_ID"]]
+    if(simulation_vector[x] == 0){
+      cells <- c()
+    }else{
+      # how many cells of this type do we need?
+      cells <- dplyr::slice_sample(cells_of_type_x, n=total_cells*simulation_vector[x], replace=T)
+      cells <- cells[["cell_ID"]]
+    }
+
 
     return(cells)
   })
@@ -118,7 +123,7 @@ simulate_sample <- function(data,
 #' @param data \link[SummarizedExperiment]{SummarizedExperiment} object
 #' @param scenario select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{mirror_db},\code{unique},\code{spike_in}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
 #' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number}, \code{expressed_genes}, \code{custom} or \code{NONE} for no scaling factor
-#' @param scaling_factor_level 'single-cell' or 'cell'type': decide if a scaling value for each single cell is calculated or the median of all scaling values for each cell type is calculated
+#' @param scaling_factor_single_cell boolean: decide if a scaling value for each single cell is calculated (default) or the median of all scaling values for each cell type is calculated
 #' @param spike_in_cell_type name of cell-type used for \code{spike-in} scenario
 #' @param spike_in_amount fraction of cell-type used for \code{spike-in} scenario; must be between \code{0} and \code{0.99}
 #' @param unique_cell_type name of cell-type for \code{unique} scenario
@@ -126,7 +131,7 @@ simulate_sample <- function(data,
 #' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1; mandatory for \code{custom} scaling factor
 #' @param balance_uniform_mirror_scenario balancing value for the \code{uniform} and \code{mirror_db} scenarios: increasing it will result in more diverse simulated fractions. To get the same fractions in each sample, set to 0. Default is 0.01.
 #' @param remove_bias_in_counts boolean; if TRUE (default) the internal mRNA bias that is present in count data will be *removed* using the number of reads mapped to each cell
-#' @param remove_bias_in_counts_method 'read-number' or 'gene-number'; method with which the mRNA bias in counts will be removed
+#' @param remove_bias_in_counts_method 'read-number' (default) or 'gene-number'; method with which the mRNA bias in counts will be removed
 #' @param norm_counts boolean; if TRUE (default) the samples simulated with counts will be normalized to CPMs
 #' @param nsamples numeric; number of samples in pseudo-bulk RNAseq dataset
 #' @param ncells numeric; number of cells in each dataset
@@ -146,7 +151,7 @@ simulate_sample <- function(data,
 #'
 #' counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
 #' tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
-#' tpm <- tpm / sum(tpm) *1e6
+#' tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
 #'
 #' colnames(counts) <- paste0("cell_",rep(1:300))
 #' colnames(tpm) <- paste0("cell_",rep(1:300))
@@ -207,6 +212,7 @@ simulate_sample <- function(data,
 simulate_bulk <- function(data,
                           scenario=c("uniform","random","mirror_db","spike_in","unique", "custom"),
                           scaling_factor=c("NONE","census","spike-in", "custom", "read-number", "expressed_genes", "annotation_column"),
+                          scaling_factor_single_cell = TRUE,
                           spike_in_cell_type = NULL,
                           spike_in_amount = NULL,
                           unique_cell_type = NULL,
@@ -362,7 +368,7 @@ simulate_bulk <- function(data,
   scaling_vector <- calc_scaling_vector(data = data,
                                         scaling_factor = scaling_factor,
                                         custom_scaling_vector = custom_scaling_vector,
-                                        scaling_factor_level = scaling_factor_level,
+                                        scaling_factor_single_cell = scaling_factor_single_cell,
                                         ncores = ncores)
 
   ##### generate the samples #####
@@ -424,7 +430,7 @@ simulate_bulk <- function(data,
 #'
 #' @return a named vector with a scaling value for each cell in the dataset
 #'
-calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, scaling_factor_level, ncores){
+calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, scaling_factor_single_cell, ncores){
 
   if(scaling_factor == "census"){
     if("tpm" %in% names(SummarizedExperiment::assays(data))){
@@ -438,7 +444,7 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, sca
   }else if(scaling_factor == "spike-in"){
     # if you want to transform your counts by spike-in data, an additional column in the annotation table is needed
     # with name "spike-in"; the matrix counts will then be transformed accordingly
-    if(!"spike_in" %in% colnames(data@annotation)){
+    if(!"spike_in" %in% colnames(SummarizedExperiment::colData(data))){
       stop("No column with spike-in information in annotation data. Check your dataset again!")
     }
 
@@ -452,7 +458,7 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, sca
     scaling_vector <- anno_sub[['nReads_SimBu']]
     names(scaling_vector) <- anno_sub[['cell_ID']]
 
-  }else if(scaling_factor == "expressed_genes"){
+  }else if(scaling_factor == "expressed-genes"){
     anno_sub <- SummarizedExperiment::colData(data)[,c("cell_ID","nGenes_SimBu")]
     scaling_vector <- anno_sub[['nGenes_SimBu']]
     names(scaling_vector) <- anno_sub[['cell_ID']]
@@ -490,7 +496,7 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, sca
   }
 
   # calculate the median scaling value per cell-type
-  if(scaling_factor_level == 'cell-type'){
+  if(!scaling_factor_single_cell){
     dt <- data.table::data.table(value = scaling_vector,
                                  type = SummarizedExperiment::colData(data)[["cell_type"]],
                                  id = names(scaling_vector))

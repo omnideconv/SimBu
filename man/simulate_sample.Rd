@@ -29,7 +29,7 @@ simulate_sample(
 
 \item{remove_bias_in_counts}{boolean; if TRUE (default) the internal mRNA bias that is present in count data will be \emph{removed} using the number of reads mapped to each cell}
 
-\item{remove_bias_in_counts_method}{'read-number' or 'gene-number'; method with which the mRNA bias in counts will be removed}
+\item{remove_bias_in_counts_method}{'read-number' (default) or 'gene-number'; method with which the mRNA bias in counts will be removed}
 
 \item{norm_counts}{boolean; if TRUE (default) the samples simulated with counts will be normalized to CPMs}
 
