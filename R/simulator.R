@@ -117,7 +117,8 @@ simulate_sample <- function(data,
 #'
 #' @param data \link[SummarizedExperiment]{SummarizedExperiment} object
 #' @param scenario select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{mirror_db},\code{unique},\code{spike_in}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
-#' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number}, \code{custom} or \code{NONE} for no scaling factor
+#' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number}, \code{expressed_genes}, \code{custom} or \code{NONE} for no scaling factor
+#' @param scaling_factor_level 'single-cell' or 'cell'type': decide if a scaling value for each single cell is calculated or the median of all scaling values for each cell type is calculated
 #' @param spike_in_cell_type name of cell-type used for \code{spike-in} scenario
 #' @param spike_in_amount fraction of cell-type used for \code{spike-in} scenario; must be between \code{0} and \code{0.99}
 #' @param unique_cell_type name of cell-type for \code{unique} scenario
@@ -205,7 +206,7 @@ simulate_sample <- function(data,
 #'
 simulate_bulk <- function(data,
                           scenario=c("uniform","random","mirror_db","spike_in","unique", "custom"),
-                          scaling_factor=c("NONE","census","spike-in", "custom", "read-number", "annotation_column"),
+                          scaling_factor=c("NONE","census","spike-in", "custom", "read-number", "expressed_genes", "annotation_column"),
                           spike_in_cell_type = NULL,
                           spike_in_amount = NULL,
                           unique_cell_type = NULL,
@@ -360,6 +361,7 @@ simulate_bulk <- function(data,
   scaling_vector <- calc_scaling_vector(data = data,
                                         scaling_factor = scaling_factor,
                                         custom_scaling_vector = custom_scaling_vector,
+                                        scaling_factor_level = scaling_factor_level,
                                         ncores = ncores)
 
   ##### generate the samples #####
@@ -421,7 +423,7 @@ simulate_bulk <- function(data,
 #'
 #' @return a named vector with a scaling value for each cell in the dataset
 #'
-calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, ncores){
+calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, scaling_factor_level, ncores){
 
   if(scaling_factor == "census"){
     if("tpm" %in% names(SummarizedExperiment::assays(data))){
@@ -438,22 +440,21 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, nco
     if(!"spike_in" %in% colnames(data@annotation)){
       stop("No column with spike-in information in annotation data. Check your dataset again!")
     }
-    if(!"read_number" %in% colnames(data@annotation)){
-      stop("No column with total read number information in annotation data. Check your dataset again!")
-    }
 
     # get subset of spike-in counts from the sampled cells
-    anno_sub <- SummarizedExperiment::colData(data)[,c("cell_ID","spike_in","read_number")]
-    scaling_vector <- (anno_sub$read_number - anno_sub$spike_in)/anno_sub$read_number
-    names(scaling_vector) <- anno_sub$cell_ID
+    anno_sub <- SummarizedExperiment::colData(data)[,c("cell_ID","spike_in","nReads_SimBu")]
+    scaling_vector <- (anno_sub[['nReads_SimBu']] - anno_sub[['spike_in']])/anno_sub[['nReads_SimBu']]
+    names(scaling_vector) <- anno_sub[['cell_ID']]
 
   }else if(scaling_factor == "read-number"){
-    if(!"read_number" %in% colnames(data@annotation)){
-      stop("The annotation in your dataset does not contain read-number information; you cannot apply the read-number scaling factor.")
-    }
-    anno_sub <- SummarizedExperiment::colData(data)[,c("cell_ID","read_number")]
-    scaling_vector <- anno_sub$read_number
-    names(scaling_vector) <- anno_sub$cell_ID
+    anno_sub <- SummarizedExperiment::colData(data)[,c("cell_ID","nReads_SimBu")]
+    scaling_vector <- anno_sub[['nReads_SimBu']]
+    names(scaling_vector) <- anno_sub[['cell_ID']]
+
+  }else if(scaling_factor == "expressed_genes"){
+    anno_sub <- SummarizedExperiment::colData(data)[,c("cell_ID","nGenes_SimBu")]
+    scaling_vector <- anno_sub[['nGenes_SimBu']]
+    names(scaling_vector) <- anno_sub[['cell_ID']]
 
   }else if (scaling_factor == "custom"){
     # needs vector with values for existing cell-types
@@ -485,6 +486,16 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, nco
     warning("No valid scaling factor method provided. Scaling all cells by 1.")
     scaling_vector <- rep(1, ncol(data))
     names(scaling_vector) <- SummarizedExperiment::colData(data)[["cell_ID"]]
+  }
+
+  # calculate the median scaling value per cell-type
+  if(scaling_factor_level == 'cell-type'){
+    dt <- data.table::data.table(value = scaling_vector,
+                                 type = SummarizedExperiment::colData(data)[["cell_type"]],
+                                 id = names(scaling_vector))
+    dt[,median_value := median(value), by='type']
+    scaling_vector <- dt[['median_value']]
+    names(scaling_vector) <- dt[['id']]
   }
 
   return(scaling_vector)
