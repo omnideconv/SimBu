@@ -10,6 +10,9 @@
 #' @param simulation_vector named vector with wanted cell-types and their fractions
 #' @param total_cells numeric; number of total cells for this simulation
 #' @param total_read_counts numeric; sets the total read count value for each sample
+#' @param remove_bias_in_counts boolean; if TRUE (default) the internal mRNA bias that is present in count data will be *removed* using the number of reads mapped to each cell
+#' @param remove_bias_in_counts_method 'read-number' or 'gene-number'; method with which the mRNA bias in counts will be removed
+#' @param norm_counts boolean; if TRUE (default) the samples simulated with counts will be normalized to CPMs
 #' @param ncores numeric; number of cores used to create simulation
 #'
 #' @return returns two vectors (one based on counts, one based on tpm; depends on which matrices are present in data) with expression values for all genes in the provided dataset
@@ -18,6 +21,9 @@ simulate_sample <- function(data,
                             simulation_vector,
                             total_cells,
                             total_read_counts,
+                            remove_bias_in_counts,
+                            remove_bias_in_counts_method,
+                            norm_counts,
                             ncores){
 
   if(!all(names(simulation_vector) %in% unique(SummarizedExperiment::colData(data)[["cell_type"]]))){
@@ -30,7 +36,6 @@ simulate_sample <- function(data,
   }
 
   # loop over all wanted cell-types and sample to have the final amount
-  error_reads_total <- 0
   sampled_cells <- lapply(seq_along(simulation_vector), function(x){
     # get all cells with the current type
     cells_of_type_x <- data.frame(SummarizedExperiment::colData(data)[SummarizedExperiment::colData(data)[["cell_type"]] == names(simulation_vector[x]),])
@@ -43,25 +48,36 @@ simulate_sample <- function(data,
   })
 
   # annotation
-  names(sampled_cells) <- names(simulation_vector)
-  simulated_annotation <- utils::stack(sampled_cells)
+  # names(sampled_cells) <- names(simulation_vector)
+  # simulated_annotation <- utils::stack(sampled_cells)
 
   # get the corresponding columns from the data
   data_sampled <- data[, unlist(sampled_cells)]
 
+  # remove mRNA bias from count data by dividing count matrix by nReads or nGenes per cell
+  if(remove_bias_in_counts){
+
+    if(remove_bias_in_counts_method == 'read-number'){
+      remove_scaling_vector <- data_sampled[['nReads_SimBu']] # access meta data in SummarizedExperiment directly like this
+    }else if(remove_bias_in_counts_method == 'gene-number'){
+      remove_scaling_vector <- data_sampled[['nGenes_SimBu']]
+    }else{stop('If you want to remove the internal mRNA bias from counts, please specify the method you want to use with remove_bias_in_counts_method. Possible are "read-number" or "gene-number".')}
+    # replace count matrix in SummarizedExperiment
+    count_matrix_removed_bias <- Matrix::t(Matrix::t(SummarizedExperiment::assays(data_sampled)[["counts"]]) / remove_scaling_vector)
+    SummarizedExperiment::assays(data_sampled)[["counts"]] <- count_matrix_removed_bias
+  }
+
   # apply scaling vector on the sampled cells in the matrices
   scaling_vector <- scaling_vector[unlist(sampled_cells)]
-  matrices <- lapply(names(SummarizedExperiment::assays(data_sampled)), function(x){})
 
   simulated_count_vector <- NULL
   simulated_tpm_vector <- NULL
 
   # apply scaling factor
-  # + sum up counts/tpms of all cells per gene to get single bulk sample
-  # + apply possible scaling of sample
+  # & sum up counts/tpms of all cells per gene to get single bulk sample
+  # & apply possible normalization of sample
 
-  m <- Matrix::t(Matrix::t(SummarizedExperiment::assays(data_sampled)[["counts"]]) * scaling_vector)
-  simulated_count_vector <- Matrix::rowSums(m)
+  simulated_count_vector <- Matrix::rowSums(Matrix::t(Matrix::t(SummarizedExperiment::assays(data_sampled)[["counts"]]) * scaling_vector))
 
   # if total_read_counts is used, rarefy/scale count data to get the desired sequencing depth
   if(!is.null(total_read_counts)){
@@ -70,17 +86,20 @@ simulate_sample <- function(data,
     if(sum_counts > total_read_counts){
       v <- phyloseq::otu_table(simulated_count_vector, taxa_are_rows = T)
       simulated_count_vector <- data.frame(phyloseq::rarefy_even_depth(physeq=v, sample.size = 1e5, trimOTUs = F))[,1]
-
     }else if(sum_counts < total_read_counts){
       simulated_count_vector <- simulated_count_vector / sum(simulated_count_vector) * total_read_counts
     }
   }
 
+  # normalize sample based on counts to CPMs
+  if(norm_counts){
+    simulated_count_vector <- (simulated_count_vector / sum(simulated_count_vector)) * 1e6
+  }
+
   # only generate simulation based on TPM if tpm assay is present
   if("tpm" %in% names(SummarizedExperiment::assays(data))){
-    m <- Matrix::t(Matrix::t(SummarizedExperiment::assays(data_sampled)[["tpm"]]) * scaling_vector)
-    simulated_tpm_vector <- Matrix::rowSums(m)
-    # scale tpm based sample to 1e6
+    simulated_tpm_vector <- Matrix::rowSums(Matrix::t(Matrix::t(SummarizedExperiment::assays(data_sampled)[["tpm"]]) * scaling_vector))
+    # normalize tpm based sample to 1e6
     simulated_tpm_vector <- (simulated_tpm_vector / sum(simulated_tpm_vector)) * 1e6
   }
 
@@ -105,6 +124,9 @@ simulate_sample <- function(data,
 #' @param custom_scenario_data dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.
 #' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1; mandatory for \code{custom} scaling factor
 #' @param balance_uniform_mirror_scenario balancing value for the \code{uniform} and \code{mirror_db} scenarios: increasing it will result in more diverse simulated fractions. To get the same fractions in each sample, set to 0. Default is 0.01.
+#' @param remove_bias_in_counts boolean; if TRUE (default) the internal mRNA bias that is present in count data will be *removed* using the number of reads mapped to each cell
+#' @param remove_bias_in_counts_method 'read-number' or 'gene-number'; method with which the mRNA bias in counts will be removed
+#' @param norm_counts boolean; if TRUE (default) the samples simulated with counts will be normalized to CPMs
 #' @param nsamples numeric; number of samples in pseudo-bulk RNAseq dataset
 #' @param ncells numeric; number of cells in each dataset
 #' @param total_read_counts numeric; sets the total read count value for each sample
@@ -190,6 +212,8 @@ simulate_bulk <- function(data,
                           custom_scenario_data = NULL,
                           custom_scaling_vector = NULL,
                           balance_uniform_mirror_scenario=0.01,
+                          remove_bias_in_counts = TRUE,
+                          norm_counts = TRUE,
                           nsamples=100,
                           ncells=1000,
                           total_read_counts = NULL,
@@ -347,23 +371,22 @@ simulate_bulk <- function(data,
                              simulation_vector = x,
                              total_cells = ncells,
                              total_read_counts = total_read_counts,
+                             remove_bias_in_counts = remove_bias_in_counts,
+                             remove_bias_in_counts_method = remove_bias_in_counts_method,
+                             norm_counts = norm_counts,
                              ncores=ncores)
 
     return(samples)
   }, mc.cores = ncores)
 
-
-  if(length(names(SummarizedExperiment::assays(data))) == 2){
-    bulk_counts <- Matrix::Matrix(sapply(all_samples, "[[", 1), sparse=T) # 1st index in each sample is based on counts
-    bulk_tpm <- Matrix::Matrix(sapply(all_samples, "[[", 2), sparse=T) # 2nd index in each sample is based on TPM
+  bulk_counts <- Matrix::Matrix(sapply(all_samples, "[[", 1), sparse=T)
+  if('tpm' %in% names(SummarizedExperiment::assays(data))){
+    bulk_tpm <- Matrix::Matrix(sapply(all_samples, "[[", 2), sparse=T)
     assays <- list(bulk_counts = bulk_counts, bulk_tpm = bulk_tpm)
-  }else if("tpm" %in% names(SummarizedExperiment::assays(data))){
-    bulk_tpm <- Matrix::Matrix(sapply(all_samples, "[[", 1), sparse=T)
-    assays <- list(bulk_tpm = bulk_tpm)
-  }else if("counts" %in% names(SummarizedExperiment::assays(data))){
-    bulk_counts <- Matrix::Matrix(sapply(all_samples, "[[", 1), sparse=T)
+  }else{
     assays <- list(bulk_counts = bulk_counts)
   }
+
 
   # new SummarizedExperiment with bulk datasets based on counts or TPM or both
   se_bulk <- SummarizedExperiment::SummarizedExperiment(assays = assays)
@@ -471,7 +494,9 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, nco
 # normalize samples to one million -> TPM
 cpm_normalize <- function(matrix){
   m <- Matrix::t(1e6*Matrix::t(matrix)/Matrix::colSums(matrix))
-  m <- tidyr::replace_na(m, 0)
+  if(sum(is.na(m))>0){
+    warning("There are NA entries in the normalized matrix.")
+  }
 
   return(m)
 }
