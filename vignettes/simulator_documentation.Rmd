@@ -125,7 +125,7 @@ SimBu can add mRNA bias by using different scaling factors to the simulations us
 
 Currently there are 6 `scenarios` implemented in the package: \
  
-* *uniform*: this creates samples, where all existing cell-types in the dataset appear in 
+* *even*: this creates samples, where all existing cell-types in the dataset appear in 
 the same proportions. So using a dataset with 3 cell-types, this will simulate samples, where
 all cell-type fractions are 1/3. In order to still have a slight variation between cell type fractions,
 you can increase the `balance_uniform_mirror_scenario` parameter (default to 0.01). Setting it to 0
@@ -139,7 +139,7 @@ in the provided dataset. If it consists of 20% T cells, 30% B cells and 50% NK c
 samples will mirror these fractions. Similar to the uniform scenario, you can add a small variation
 to these fractions with the `balance_uniform_mirror_scenario` parameter.
 
-* *spike-in*: here you need to set two additional parameters for the `simulate_bulk()` function:
+* *controlled*: here you need to set two additional parameters for the `simulate_bulk()` function:
 `spike_in_cell_type` sets the cell-type you want to be over-representing and 
 `spike_in_amount` sets the fraction of this cell-type. You could for example use `B-cell` and `0.5`
 to create samples, where 50% are B-cells and the rest is filled randomly with other cell-types. \

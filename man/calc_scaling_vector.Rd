@@ -15,7 +15,7 @@ calc_scaling_vector(
 \arguments{
 \item{data}{dataset object}
 
-\item{scaling_factor}{name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read-number}, \code{custom} or \code{NONE} for no scaling factor}
+\item{scaling_factor}{name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read_number}, \code{custom} or \code{NONE} for no scaling factor}
 
 \item{custom_scaling_vector}{named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1}
 

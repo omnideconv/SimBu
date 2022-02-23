@@ -22,13 +22,13 @@ dataset_seurat(
 \arguments{
 \item{seurat_obj}{(mandatory) \link[Seurat]{Seurat} object with TPM counts}
 
-\item{count_assay}{(mandatory) name of assay in Seurat object which contains count data}
+\item{count_assay}{(mandatory) name of assay in Seurat object which contains count data in 'counts' slot}
 
 \item{cell_id_col}{(mandatory) name of column in Seurat meta.data with unique cell ids}
 
 \item{cell_type_col}{(mandatory) name of column in Seurat meta.data with cell type name}
 
-\item{tpm_assay}{name of assay in Seurat object which contains TPM data}
+\item{tpm_assay}{name of assay in Seurat object which contains TPM data in 'counts' slot}
 
 \item{name}{name of the dataset; will be used for new unique IDs of cells}
 

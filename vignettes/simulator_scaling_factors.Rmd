@@ -131,14 +131,12 @@ You can also choose to calculate scaling factors, which are depending on your pr
 
 ### Reads and genes
 
-Two straight forward approaches would be the number of reads or number of expressed genes/features. For this, we need to generate our initial dataset a little bit differently and add more information to the internal annotation table:
-
+Two straight forward approaches would be the number of reads or number of expressed genes/features. As these values are easily obtainable from the provided count data, SimBu already calculates them during dataset generation.
 ```{r, eval=FALSE}
-  ds <- dataset(annotation = annotation,
-                count_matrix = count_matrix,
-                name = "reads_and_genes",
-                read_number_col = "total_reads",      # add read number column
-                additional_cols = c("gene_number"))   # add gene number column
+ds <- SimBu::dataset(annotation = annotation,
+                     count_matrix = counts,
+                     tpm_matrix = tpm,
+                     name = "test_dataset")
 
 ```
 
@@ -148,14 +146,14 @@ Here our `annotation` dataframe contains additional columns such as `total_reads
 
 sim_reads <- simulate_bulk(data=ds, 
                            scenario = "random", 
-                           scaling_factor="read-number",  # use number of reads as scaling factor
+                           scaling_factor="read_number",  # use number of reads as scaling factor
                            nsamples = 100, 
                            ncells=1000, 
                            ncores=4)
 
 sim_genes <- simulate_bulk(data = ds,
                            scenario = "random",
-                           scaling_factor = "gene_number", # use gene_number column as scaling factor
+                           scaling_factor = "expressed_genes", # use number of expressed genes column as scaling factor
                            nsamples = 100,
                            ncells = 1000,
                            ncores = 4)
@@ -175,8 +173,7 @@ One other numerical measurement can be spike-ins. Usually the number of reads ma
   ds <- dataset(annotation = annotation,
                 count_matrix = count_matrix,
                 name = "spike-ins",
-                spike_in_col = "ercc_sum",   # add spike-in column
-                read_number_col = "total_reads")
+                spike_in_col = "ercc_sum")   # add spike-in column
 
 ```
 
@@ -185,7 +182,7 @@ The scaling factor with spike-ins is calculated as the "% of reads NOT mapped to
 ```{r, eval=FALSE}
 sim_spike <- simulate_bulk(data = ds,
                            scenario = "random",
-                           scaling_factor = "spike-in", # use spike-in scaling factor
+                           scaling_factor = "spike_in", # use spike-in scaling factor
                            nsamples = 100,
                            ncells = 1000,
                            ncores = 4)
@@ -204,7 +201,7 @@ You can switch this feature on, by setting the `scaling_factor` parameter to `ce
 
 ```{r, eval=FALSE}
 sim_census <-  simulate_bulk(data = dataset_file,
-                             scenario = "spike-in", 
+                             scenario = "random", 
                              scaling_factor = "census",   # use census scaling factor
                              nsamples = 100, 
                              ncells=1000, 

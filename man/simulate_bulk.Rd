@@ -7,7 +7,7 @@
 simulate_bulk(
   data,
   scenario = c("even", "random", "mirror_db", "controlled", "unique", "custom"),
-  scaling_factor = c("NONE", "census", "spike_in", "custom", "read-number",
+  scaling_factor = c("NONE", "census", "spike_in", "custom", "read_number",
     "expressed_genes", "annotation_column"),
   scaling_factor_single_cell = TRUE,
   controlled_cell_type = NULL,
@@ -32,7 +32,7 @@ simulate_bulk(
 
 \item{scenario}{(mandatory) select on of the pre-defined cell-type fraction scenarios; possible are: \code{even},\code{random},\code{mirror_db},\code{unique},\code{controlled}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.}
 
-\item{scaling_factor}{(mandatory) name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read-number}, \code{expressed_genes}, \code{custom} or \code{NONE} for no scaling factor}
+\item{scaling_factor}{(mandatory) name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read_number}, \code{expressed_genes}, \code{custom} or \code{NONE} for no scaling factor}
 
 \item{scaling_factor_single_cell}{boolean: decide if a scaling value for each single cell is calculated (default) or the median of all scaling values for each cell type is calculated}
 

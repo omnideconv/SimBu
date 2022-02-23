@@ -122,7 +122,7 @@ simulate_sample <- function(data,
 #'
 #' @param data (mandatory) \link[SummarizedExperiment]{SummarizedExperiment} object
 #' @param scenario (mandatory) select on of the pre-defined cell-type fraction scenarios; possible are: \code{even},\code{random},\code{mirror_db},\code{unique},\code{controlled}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
-#' @param scaling_factor (mandatory) name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read-number}, \code{expressed_genes}, \code{custom} or \code{NONE} for no scaling factor
+#' @param scaling_factor (mandatory) name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read_number}, \code{expressed_genes}, \code{custom} or \code{NONE} for no scaling factor
 #' @param scaling_factor_single_cell boolean: decide if a scaling value for each single cell is calculated (default) or the median of all scaling values for each cell type is calculated
 #' @param controlled_cell_type name of cell-type used for \code{controlled} scenario
 #' @param controlled_amount fraction of cell-type used for \code{controlled} scenario; must be between \code{0} and \code{0.99}
@@ -211,7 +211,7 @@ simulate_sample <- function(data,
 #'
 simulate_bulk <- function(data,
                           scenario=c("even","random","mirror_db","controlled","unique", "custom"),
-                          scaling_factor=c("NONE","census","spike_in", "custom", "read-number", "expressed_genes", "annotation_column"),
+                          scaling_factor=c("NONE","census","spike_in", "custom", "read_number", "expressed_genes", "annotation_column"),
                           scaling_factor_single_cell = TRUE,
                           controlled_cell_type = NULL,
                           controlled_amount = NULL,
@@ -424,7 +424,7 @@ simulate_bulk <- function(data,
 #' Each scaling factor has a default matrix it will try to use (counts or TPM). If the required matrix is not available, the other one is used and a warning is given.
 #'
 #' @param data dataset object
-#' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read-number}, \code{custom} or \code{NONE} for no scaling factor
+#' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read_number}, \code{custom} or \code{NONE} for no scaling factor
 #' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1
 #' @param ncores number of cores
 #'
@@ -453,7 +453,7 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, sca
     scaling_vector <- (anno_sub[['nReads_SimBu']] - anno_sub[['spike_in']])/anno_sub[['nReads_SimBu']]
     names(scaling_vector) <- anno_sub[['cell_ID']]
 
-  }else if(scaling_factor == "read-number"){
+  }else if(scaling_factor == "read_number"){
     anno_sub <- SummarizedExperiment::colData(data)[,c("cell_ID","nReads_SimBu")]
     scaling_vector <- anno_sub[['nReads_SimBu']]
     names(scaling_vector) <- anno_sub[['cell_ID']]

@@ -42,12 +42,14 @@ Additionally, an annotation table is needed, with the cell-type annotations. It 
 
 ### Seurat
 
-It is possible to use a Seurat object to build a dataset; you need an additional dataframe for the annotation:
+It is possible to use a Seurat object to build a dataset; give the name of the assay containing count data in the `counts` slot, the name of the column in the meta table with the unique cell IDs and the name of the column in the meta table with the cell type identifier. Additionally you may give the name of the assay containing TPM data in the `counts` slot.
 
 ```{r, eval=FALSE}
-ds_seurat <- SimBu::dataset_seurat(seurat_obj_counts = seurat_object_counts,
-                                   seurat_obj_tpm = seurat_object_tpm,
-                                   annotation = annotation,
+ds_seurat <- SimBu::dataset_seurat(seurat_obj = seurat_obj, 
+                                   count_assay = "RNA", 
+                                   cell_id_col = 'orig.ident', 
+                                   cell_type_col = 'ct', 
+                                   tpm_assay = 'TPM',
                                    name = "seurat_dataset")
 ```
 

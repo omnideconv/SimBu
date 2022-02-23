@@ -303,10 +303,10 @@ dataset_h5ad <- function(annotation, h5ad_file_counts, h5ad_file_tpm = NULL, nam
 #' Function to generate a \link[SummarizedExperiment]{SummarizedExperiment} using a \link[Seurat]{Seurat} object
 #'
 #' @param seurat_obj (mandatory) \link[Seurat]{Seurat} object with TPM counts
-#' @param count_assay (mandatory) name of assay in Seurat object which contains count data
+#' @param count_assay (mandatory) name of assay in Seurat object which contains count data in 'counts' slot
 #' @param cell_id_col (mandatory) name of column in Seurat meta.data with unique cell ids
 #' @param cell_type_col (mandatory) name of column in Seurat meta.data with cell type name
-#' @param tpm_assay name of assay in Seurat object which contains TPM data
+#' @param tpm_assay name of assay in Seurat object which contains TPM data in 'counts' slot
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param spike_in_col which column in annotation contains information on spike_in counts, which can be used to re-scale counts; mandatory for spike_in scaling factor in simulation
 #' @param additional_cols list of column names in annotation, that should be stored as well in dataset object
