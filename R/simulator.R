@@ -120,12 +120,12 @@ simulate_sample <- function(data,
 #' will be sampled for the simulation. Also a \code{scenario} has to be selected, where you can choose how the cells will be sampled and a
 #' \code{scaling_factor} on how the read counts will be transformed proir to the simulation.
 #'
-#' @param data \link[SummarizedExperiment]{SummarizedExperiment} object
-#' @param scenario select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{mirror_db},\code{unique},\code{spike_in}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
-#' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number}, \code{expressed_genes}, \code{custom} or \code{NONE} for no scaling factor
+#' @param data (mandatory) \link[SummarizedExperiment]{SummarizedExperiment} object
+#' @param scenario (mandatory) select on of the pre-defined cell-type fraction scenarios; possible are: \code{even},\code{random},\code{mirror_db},\code{unique},\code{controlled}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
+#' @param scaling_factor (mandatory) name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read-number}, \code{expressed_genes}, \code{custom} or \code{NONE} for no scaling factor
 #' @param scaling_factor_single_cell boolean: decide if a scaling value for each single cell is calculated (default) or the median of all scaling values for each cell type is calculated
-#' @param spike_in_cell_type name of cell-type used for \code{spike-in} scenario
-#' @param spike_in_amount fraction of cell-type used for \code{spike-in} scenario; must be between \code{0} and \code{0.99}
+#' @param controlled_cell_type name of cell-type used for \code{controlled} scenario
+#' @param controlled_amount fraction of cell-type used for \code{controlled} scenario; must be between \code{0} and \code{0.99}
 #' @param unique_cell_type name of cell-type for \code{unique} scenario
 #' @param custom_scenario_data dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.
 #' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1; mandatory for \code{custom} scaling factor
@@ -133,12 +133,12 @@ simulate_sample <- function(data,
 #' @param remove_bias_in_counts boolean; if TRUE (default) the internal mRNA bias that is present in count data will be *removed* using the number of reads mapped to each cell
 #' @param remove_bias_in_counts_method 'read-number' (default) or 'gene-number'; method with which the mRNA bias in counts will be removed
 #' @param norm_counts boolean; if TRUE (default) the samples simulated with counts will be normalized to CPMs
-#' @param nsamples numeric; number of samples in pseudo-bulk RNAseq dataset
-#' @param ncells numeric; number of cells in each dataset
+#' @param nsamples numeric; number of samples in pseudo-bulk RNAseq dataset (default = 100)
+#' @param ncells numeric; number of cells in each dataset (default = 1000)
 #' @param total_read_counts numeric; sets the total read count value for each sample
 #' @param whitelist list; give a list of cell-types you want to keep for the simulation; if NULL, all are used
 #' @param blacklist list; give a list of cell-types you want to remove for the simulation; if NULL, all are used; is applied after whitelist
-#' @param ncores numeric; number of cores to use
+#' @param ncores numeric; number of cores to use (default = 1)
 #'
 #' @return named list; \code{bulk} a \link[SummarizedExperiment]{SummarizedExperiment} object, where the assays store the simulated bulk RNAseq datasets. Can hold either one or two assays, depending on how many matrices were present in the dataset
 #' \code{cell-fractions} is a dataframe with the simulated cell-fractions per sample;
@@ -175,14 +175,14 @@ simulate_sample <- function(data,
 #' # and no additional transformation of the data with 10 samples and 2000 cells each
 #'
 #' s<-simulate_bulk(dataset,
-#'               scenario="uniform",
+#'               scenario="even",
 #'               scaling_factor="NONE",
 #'               nsamples=10,
 #'               ncells=100)
 #'
 #' # use a blacklist to exclude certain cell-types for the simulation
 #' s<-simulate_bulk(dataset,
-#'               scenario="uniform",
+#'               scenario="even",
 #'               scaling_factor="NONE",
 #'               nsamples=10,
 #'               ncells=2000,
@@ -210,11 +210,11 @@ simulate_sample <- function(data,
 #'}
 #'
 simulate_bulk <- function(data,
-                          scenario=c("uniform","random","mirror_db","spike_in","unique", "custom"),
-                          scaling_factor=c("NONE","census","spike-in", "custom", "read-number", "expressed_genes", "annotation_column"),
+                          scenario=c("even","random","mirror_db","controlled","unique", "custom"),
+                          scaling_factor=c("NONE","census","spike_in", "custom", "read-number", "expressed_genes", "annotation_column"),
                           scaling_factor_single_cell = TRUE,
-                          spike_in_cell_type = NULL,
-                          spike_in_amount = NULL,
+                          controlled_cell_type = NULL,
+                          controlled_amount = NULL,
                           unique_cell_type = NULL,
                           custom_scenario_data = NULL,
                           custom_scaling_vector = NULL,
@@ -254,7 +254,7 @@ simulate_bulk <- function(data,
   ##### different cell-type scenarios #####
 
   # each existing cell-type will be appearing in equal amounts
-  if(scenario == "uniform"){
+  if(scenario == "even"){
     all_types <- unique(SummarizedExperiment::colData(data)[["cell_type"]])
     n_cell_types <- length(all_types)
     uniform_value <- 1/length(all_types)
@@ -266,7 +266,7 @@ simulate_bulk <- function(data,
       return(simulation_vector)
     })
     # give each sample a name
-    sample_names <- paste0("uniform_sample",rep(1:nsamples))
+    sample_names <- paste0("even_sample",rep(1:nsamples))
     names(simulation_vector_list) <- sample_names
   }
   # generate random cell-type fractions (depending on appearance in database)
@@ -304,32 +304,32 @@ simulate_bulk <- function(data,
     names(simulation_vector_list) <- sample_names
   }
   # one cell-type will be highly over represented, the others are random
-  if(scenario == "spike_in"){
+  if(scenario == "controlled"){
 
-    if(is.null(spike_in_cell_type) || is.null(spike_in_amount)){
-      stop("The spike-in scenario requires you to select one cell-type which will be over represented")
+    if(is.null(controlled_cell_type) || is.null(controlled_amount)){
+      stop("The controlled scenario requires you to select one cell-type which will be over represented")
     }
-    if(spike_in_amount > 0.99 || spike_in_amount < 0){
-      stop("The spike-in cell-type fraction needs to be between 0 and 0.99.")
+    if(controlled_amount > 0.99 || controlled_amount < 0){
+      stop("The controlled cell-type fraction needs to be between 0 and 0.99.")
     }
-    if(!spike_in_cell_type %in% unique(SummarizedExperiment::colData(data)[["cell_type"]])){
-      stop("The spike-in cell-type could not be found in your dataset/database.")
+    if(!controlled_cell_type %in% unique(SummarizedExperiment::colData(data)[["cell_type"]])){
+      stop("The controlled cell-type could not be found in your dataset.")
     }
 
-    random_cell_types <- setdiff(unique(SummarizedExperiment::colData(data)[["cell_type"]]), spike_in_cell_type)
-    all_cell_types <- c(random_cell_types, spike_in_cell_type)
+    random_cell_types <- setdiff(unique(SummarizedExperiment::colData(data)[["cell_type"]]), controlled_cell_type)
+    all_cell_types <- c(random_cell_types, controlled_cell_type)
 
     simulation_vector_list <- lapply(rep(1:nsamples), function(x){
       n_cell_types <- length(unique(SummarizedExperiment::colData(data)[["cell_type"]]))-1
       # generate n_cell_type amount of random fractions from the uniform distribution, which will sum up to 1
       m <- matrix(stats::runif(n_cell_types, 0, 1), ncol=n_cell_types)
       simulation_vector <- as.vector(m[1,])
-      simulation_vector <- (1 - spike_in_amount) * simulation_vector/sum(simulation_vector)
-      simulation_vector <- append(simulation_vector, spike_in_amount)
+      simulation_vector <- (1 - controlled_amount) * simulation_vector/sum(simulation_vector)
+      simulation_vector <- append(simulation_vector, controlled_amount)
       names(simulation_vector) <- all_cell_types
       return(simulation_vector)
     })
-    sample_names <- paste0("spike_in_sample", rep(1:nsamples))
+    sample_names <- paste0("controlled_sample", rep(1:nsamples))
     names(simulation_vector_list) <- sample_names
   }
   # unique: only simulate a single cell-type
@@ -424,7 +424,7 @@ simulate_bulk <- function(data,
 #' Each scaling factor has a default matrix it will try to use (counts or TPM). If the required matrix is not available, the other one is used and a warning is given.
 #'
 #' @param data dataset object
-#' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number}, \code{custom} or \code{NONE} for no scaling factor
+#' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read-number}, \code{custom} or \code{NONE} for no scaling factor
 #' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1
 #' @param ncores number of cores
 #'
@@ -441,14 +441,14 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, sca
     }
     scaling_vector <- census(m, ncores = ncores, method="monocle", expr_threshold = 0.1)
     scaling_vector <- scaling_vector/10e6
-  }else if(scaling_factor == "spike-in"){
-    # if you want to transform your counts by spike-in data, an additional column in the annotation table is needed
-    # with name "spike-in"; the matrix counts will then be transformed accordingly
+  }else if(scaling_factor == "spike_in"){
+    # if you want to transform your counts by spike_in data, an additional column in the annotation table is needed
+    # with name "spike_in"; the matrix counts will then be transformed accordingly
     if(!"spike_in" %in% colnames(SummarizedExperiment::colData(data))){
-      stop("No column with spike-in information in annotation data. Check your dataset again!")
+      stop("No column with spike_in information in annotation data. Check your dataset again!")
     }
 
-    # get subset of spike-in counts from the sampled cells
+    # get subset of spike_in counts from the sampled cells
     anno_sub <- SummarizedExperiment::colData(data)[,c("cell_ID","spike_in","nReads_SimBu")]
     scaling_vector <- (anno_sub[['nReads_SimBu']] - anno_sub[['spike_in']])/anno_sub[['nReads_SimBu']]
     names(scaling_vector) <- anno_sub[['cell_ID']]

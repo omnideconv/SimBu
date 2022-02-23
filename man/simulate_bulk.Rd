@@ -6,12 +6,12 @@
 \usage{
 simulate_bulk(
   data,
-  scenario = c("uniform", "random", "mirror_db", "spike_in", "unique", "custom"),
-  scaling_factor = c("NONE", "census", "spike-in", "custom", "read-number",
+  scenario = c("even", "random", "mirror_db", "controlled", "unique", "custom"),
+  scaling_factor = c("NONE", "census", "spike_in", "custom", "read-number",
     "expressed_genes", "annotation_column"),
   scaling_factor_single_cell = TRUE,
-  spike_in_cell_type = NULL,
-  spike_in_amount = NULL,
+  controlled_cell_type = NULL,
+  controlled_amount = NULL,
   unique_cell_type = NULL,
   custom_scenario_data = NULL,
   custom_scaling_vector = NULL,
@@ -28,17 +28,17 @@ simulate_bulk(
 )
 }
 \arguments{
-\item{data}{\link[SummarizedExperiment]{SummarizedExperiment} object}
+\item{data}{(mandatory) \link[SummarizedExperiment]{SummarizedExperiment} object}
 
-\item{scenario}{select on of the pre-defined cell-type fraction scenarios; possible are: \code{uniform},\code{random},\code{mirror_db},\code{unique},\code{spike_in}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.}
+\item{scenario}{(mandatory) select on of the pre-defined cell-type fraction scenarios; possible are: \code{even},\code{random},\code{mirror_db},\code{unique},\code{controlled}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.}
 
-\item{scaling_factor}{name of scaling factor; possible are: \code{census}, \code{spike-in}, \code{read-number}, \code{expressed_genes}, \code{custom} or \code{NONE} for no scaling factor}
+\item{scaling_factor}{(mandatory) name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read-number}, \code{expressed_genes}, \code{custom} or \code{NONE} for no scaling factor}
 
 \item{scaling_factor_single_cell}{boolean: decide if a scaling value for each single cell is calculated (default) or the median of all scaling values for each cell type is calculated}
 
-\item{spike_in_cell_type}{name of cell-type used for \code{spike-in} scenario}
+\item{controlled_cell_type}{name of cell-type used for \code{controlled} scenario}
 
-\item{spike_in_amount}{fraction of cell-type used for \code{spike-in} scenario; must be between \code{0} and \code{0.99}}
+\item{controlled_amount}{fraction of cell-type used for \code{controlled} scenario; must be between \code{0} and \code{0.99}}
 
 \item{unique_cell_type}{name of cell-type for \code{unique} scenario}
 
@@ -54,9 +54,9 @@ simulate_bulk(
 
 \item{norm_counts}{boolean; if TRUE (default) the samples simulated with counts will be normalized to CPMs}
 
-\item{nsamples}{numeric; number of samples in pseudo-bulk RNAseq dataset}
+\item{nsamples}{numeric; number of samples in pseudo-bulk RNAseq dataset (default = 100)}
 
-\item{ncells}{numeric; number of cells in each dataset}
+\item{ncells}{numeric; number of cells in each dataset (default = 1000)}
 
 \item{total_read_counts}{numeric; sets the total read count value for each sample}
 
@@ -64,7 +64,7 @@ simulate_bulk(
 
 \item{blacklist}{list; give a list of cell-types you want to remove for the simulation; if NULL, all are used; is applied after whitelist}
 
-\item{ncores}{numeric; number of cores to use}
+\item{ncores}{numeric; number of cores to use (default = 1)}
 }
 \value{
 named list; \code{bulk} a \link[SummarizedExperiment]{SummarizedExperiment} object, where the assays store the simulated bulk RNAseq datasets. Can hold either one or two assays, depending on how many matrices were present in the dataset
@@ -106,14 +106,14 @@ dataset <- SimBu::dataset(annotation = annotation,
 # and no additional transformation of the data with 10 samples and 2000 cells each
 
 s<-simulate_bulk(dataset,
-              scenario="uniform",
+              scenario="even",
               scaling_factor="NONE",
               nsamples=10,
               ncells=100)
 
 # use a blacklist to exclude certain cell-types for the simulation
 s<-simulate_bulk(dataset,
-              scenario="uniform",
+              scenario="even",
               scaling_factor="NONE",
               nsamples=10,
               ncells=2000,

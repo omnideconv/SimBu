@@ -20,19 +20,19 @@ dataset_seurat(
 )
 }
 \arguments{
-\item{seurat_obj}{\link[Seurat]{Seurat} object with TPM counts}
+\item{seurat_obj}{(mandatory) \link[Seurat]{Seurat} object with TPM counts}
 
-\item{count_assay}{name of assay in Seurat object which contains count data}
+\item{count_assay}{(mandatory) name of assay in Seurat object which contains count data}
 
-\item{cell_id_col}{name of column in Seurat meta.data with unique cell ids}
+\item{cell_id_col}{(mandatory) name of column in Seurat meta.data with unique cell ids}
 
-\item{cell_type_col}{name of column in Seurat meta.data with cell type name}
+\item{cell_type_col}{(mandatory) name of column in Seurat meta.data with cell type name}
 
 \item{tpm_assay}{name of assay in Seurat object which contains TPM data}
 
 \item{name}{name of the dataset; will be used for new unique IDs of cells}
 
-\item{spike_in_col}{which column in annotation contains information on spike-in counts, which can be used to re-scale counts; mandatory for spike-in scaling factor in simulation}
+\item{spike_in_col}{which column in annotation contains information on spike_in counts, which can be used to re-scale counts; mandatory for spike_in scaling factor in simulation}
 
 \item{additional_cols}{list of column names in annotation, that should be stored as well in dataset object}
 

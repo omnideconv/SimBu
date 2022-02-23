@@ -18,15 +18,15 @@ generate_summarized_experiment(
 )
 }
 \arguments{
-\item{annotation}{dataframe; needs columns 'ID' and 'cell_type'; 'ID' needs to be equal with cell_names in count_matrix}
+\item{annotation}{(mandatory) dataframe; needs columns 'ID' and 'cell_type'; 'ID' needs to be equal with cell_names in count_matrix}
 
-\item{count_matrix}{sparse count matrix; raw count data is expected with genes in rows, cells in columns}
+\item{count_matrix}{(mandatory) sparse count matrix; raw count data is expected with genes in rows, cells in columns}
 
 \item{tpm_matrix}{sparse count matrix; TPM like count data is expected with genes in rows, cells in columns}
 
 \item{name}{name of the dataset; will be used for new unique IDs of cells}
 
-\item{spike_in_col}{which column in annotation contains information on spike-in counts, which can be used to re-scale counts; mandatory for spike-in scaling factor in simulation}
+\item{spike_in_col}{which column in annotation contains information on spike_in counts, which can be used to re-scale counts; mandatory for spike_in scaling factor in simulation}
 
 \item{additional_cols}{list of column names in annotation, that should be stored as well in dataset object}
 

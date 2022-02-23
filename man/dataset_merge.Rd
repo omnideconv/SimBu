@@ -16,11 +16,11 @@ dataset_merge(
 )
 }
 \arguments{
-\item{dataset_list}{list of \link[SummarizedExperiment]{SummarizedExperiment} objects}
+\item{dataset_list}{(mandatory) list of \link[SummarizedExperiment]{SummarizedExperiment} objects}
 
 \item{name}{name of the new dataset}
 
-\item{spike_in_col}{which column in annotation contains information on spike-in counts, which can be used to re-scale counts; mandatory for spike-in scaling factor in simulation}
+\item{spike_in_col}{which column in annotation contains information on spike_in counts, which can be used to re-scale counts; mandatory for spike_in scaling factor in simulation}
 
 \item{additional_cols}{list of column names in annotation, that should be stored as well in dataset object}
 

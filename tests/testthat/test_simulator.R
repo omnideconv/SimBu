@@ -24,11 +24,11 @@ test_that('can generate different simulation scenarios', {
                             tpm_matrix = tpm,
                             name = "test_dataset")
 
-  expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'uniform', scaling_factor = 'NONE', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
+  expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'even', scaling_factor = 'NONE', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
   expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'NONE', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
   expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'mirror_db', scaling_factor = 'NONE', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
   expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'unique', unique_cell_type = 'T cells CD4', scaling_factor = 'NONE', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
-  expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'spike_in', spike_in_cell_type = 'T cells CD4', spike_in_amount = .5, scaling_factor = 'NONE', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
+  expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'controlled', controlled_cell_type = 'T cells CD4', controlled_amount = .5, scaling_factor = 'NONE', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
 })
 
 
@@ -58,7 +58,7 @@ test_that('test different scaling factor calculations + mRNA bias removal from c
                             spike_in_col = 'spikes')
 
   expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'census', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
-  expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'spike-in', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
+  expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'spike_in', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
   expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'read-number', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
   expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'expressed-genes', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
 
