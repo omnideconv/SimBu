@@ -458,7 +458,7 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, sca
     scaling_vector <- anno_sub[['nReads_SimBu']]
     names(scaling_vector) <- anno_sub[['cell_ID']]
 
-  }else if(scaling_factor == "expressed-genes"){
+  }else if(scaling_factor == "expressed_genes"){
     anno_sub <- SummarizedExperiment::colData(data)[,c("cell_ID","nGenes_SimBu")]
     scaling_vector <- anno_sub[['nGenes_SimBu']]
     names(scaling_vector) <- anno_sub[['cell_ID']]

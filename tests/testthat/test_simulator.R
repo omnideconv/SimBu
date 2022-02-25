@@ -59,8 +59,8 @@ test_that('test different scaling factor calculations + mRNA bias removal from c
 
   expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'census', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
   expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'spike_in', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
-  expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'read-number', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
-  expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'expressed-genes', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
+  expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'read_number', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
+  expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'expressed_genes', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
 
   expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'NONE',remove_bias_in_counts = F, nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
   expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'NONE',remove_bias_in_counts_method = 'gene-number', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
