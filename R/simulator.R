@@ -497,12 +497,12 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, sca
 
   # calculate the median scaling value per cell-type
   if(!scaling_factor_single_cell){
-    dt <- data.table::data.table(value = scaling_vector,
-                                 type = SummarizedExperiment::colData(data)[["cell_type"]],
-                                 id = names(scaling_vector))
-    dt[,median_value := median(value), by='type']
-    scaling_vector <- dt[['median_value']]
-    names(scaling_vector) <- dt[['id']]
+    df <- data.frame(value = scaling_vector,
+                     type = SummarizedExperiment::colData(data)[["cell_type"]],
+                     id = names(scaling_vector))
+    df$median_value <- stats::ave(df$value, df$type, FUN=median)
+    scaling_vector <- df[['median_value']]
+    names(scaling_vector) <- df[['id']]
   }
 
   return(scaling_vector)
