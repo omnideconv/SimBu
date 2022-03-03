@@ -19,6 +19,8 @@ calc_scaling_vector(
 
 \item{custom_scaling_vector}{named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1}
 
+\item{scaling_factor_single_cell}{boolean: decide if a scaling value for each single cell is calculated (default) or the median of all scaling values for each cell type is calculated}
+
 \item{ncores}{number of cores}
 }
 \value{

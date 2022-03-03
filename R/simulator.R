@@ -31,7 +31,7 @@ simulate_sample <- function(data,
   }
 
   if(!all.equal(sum(simulation_vector), 1)){
-    print(paste0("vector: ", unlist(simulation_vector),", sum: ", sum(simulation_vector)))
+    warning(paste0("vector: ", unlist(simulation_vector),", sum: ", sum(simulation_vector)))
     stop("The sum of the cell-type fractions can not be larger than 1.")
   }
 
@@ -89,8 +89,10 @@ simulate_sample <- function(data,
     sum_counts <- sum(simulated_count_vector)
 
     if(sum_counts > total_read_counts){
-      v <- phyloseq::otu_table(simulated_count_vector, taxa_are_rows = T)
-      simulated_count_vector <- data.frame(phyloseq::rarefy_even_depth(physeq=v, sample.size = 1e5, trimOTUs = F))[,1]
+      tmp_phylo <- phyloseq::otu_table(data.frame(simulated_count_vector), taxa_are_rows = T)
+      tmp_vec <- data.frame(phyloseq::rarefy_even_depth(physeq=tmp_phylo, sample.size = total_read_counts, trimOTUs = F, ))[,1]
+      names(tmp_vec) <- names(simulated_count_vector)
+      simulated_count_vector <- tmp_vec
     }else if(sum_counts < total_read_counts){
       simulated_count_vector <- simulated_count_vector / sum(simulated_count_vector) * total_read_counts
     }
@@ -410,7 +412,7 @@ simulate_bulk <- function(data,
   # cell_fractions for all simulated samples
   cell_fractions <- data.frame(t(data.frame(simulation_vector_list)), check.names = F)
 
-  print("Finished simulation.")
+  message("Finished simulation.")
 
   return(list(bulk = se_bulk,
               cell_fractions = cell_fractions,
@@ -426,6 +428,7 @@ simulate_bulk <- function(data,
 #' @param data dataset object
 #' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read_number}, \code{custom} or \code{NONE} for no scaling factor
 #' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1
+#' @param scaling_factor_single_cell boolean: decide if a scaling value for each single cell is calculated (default) or the median of all scaling values for each cell type is calculated
 #' @param ncores number of cores
 #'
 #' @return a named vector with a scaling value for each cell in the dataset
@@ -439,7 +442,7 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, sca
       warning("Scaling factor 'Census' requires TPM data, which is not available in the given dataset. Counts will be used instead.")
       m <- SummarizedExperiment::assays(data)[["counts"]]
     }
-    scaling_vector <- census(m, ncores = ncores, method="monocle", expr_threshold = 0.1)
+    scaling_vector <- census(m, ncores = ncores, method="monocle", expr_threshold = 0.1, exp_capture_rate = .25)
     scaling_vector <- scaling_vector/10e6
   }else if(scaling_factor == "spike_in"){
     # if you want to transform your counts by spike_in data, an additional column in the annotation table is needed
@@ -500,7 +503,7 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, sca
     df <- data.frame(value = scaling_vector,
                      type = SummarizedExperiment::colData(data)[["cell_type"]],
                      id = names(scaling_vector))
-    df$median_value <- stats::ave(df$value, df$type, FUN=median)
+    df$median_value <- stats::ave(df$value, df$type, FUN=stats::median)
     scaling_vector <- df[['median_value']]
     names(scaling_vector) <- df[['id']]
   }
@@ -543,8 +546,8 @@ plot_simulation <- function(simulation){
   fractions$sample <- factor(rownames(fractions), levels = rownames(fractions))
   frac_long <- tidyr::gather(fractions, cell_type, fraction, 1:length(fractions)-1)
 
-  ggplot2::ggplot(data = frac_long, aes(x=fraction, y=sample, fill=cell_type))+
-    ggplot2::geom_col()+
+  ggplot2::ggplot(data = frac_long)+
+    ggplot2::geom_col(ggplot2::aes_string(x="fraction", y="sample", fill="cell_type"))+
     ggplot2::ggtitle(paste0("Cell-type fractions for \n",nrow(fractions)," pseudo-bulk RNAseq samples"))+
     ggplot2::scale_fill_manual(values = grDevices::colorRampPalette(RColorBrewer::brewer.pal(9, "Paired"))(length(unique(frac_long$cell_type))))+
     ggplot2::theme_bw()

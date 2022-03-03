@@ -14,9 +14,9 @@ test_that('can create dataset with counts or counts+tpm', {
   annotation <- data.frame("ID" = paste0("cell_",rep(1:300)),
                            "cell_type" = c(rep("T cells CD4",300)))
 
-  expect_s4_class(SimBu::dataset(annotation = annotation, count_matrix = counts, tpm_matrix = tpm, name = "test_dataset"), 'SummarizedExperiment')
-  expect_s4_class(SimBu::dataset(annotation = annotation, count_matrix = counts, name = "test_dataset"), 'SummarizedExperiment')
-  expect_error(SimBu::dataset(annotation = annotation, tpm_matrix = tpm, name = "test_dataset"))
+  testthat::expect_s4_class(SimBu::dataset(annotation = annotation, count_matrix = counts, tpm_matrix = tpm, name = "test_dataset"), 'SummarizedExperiment')
+  testthat::expect_s4_class(SimBu::dataset(annotation = annotation, count_matrix = counts, name = "test_dataset"), 'SummarizedExperiment')
+  testthat::expect_error(SimBu::dataset(annotation = annotation, tpm_matrix = tpm, name = "test_dataset"))
 })
 
 
@@ -39,9 +39,9 @@ test_that('carry over additional columns from annotation + have nReads_SimBu and
 
   anno_ds <- data.frame(SummarizedExperiment::colData(ds))
 
-  expect_true(all(c('add_1','add_2') %in% colnames(anno_ds)))
-  expect_true('spike_in' %in% colnames(anno_ds))
-  expect_true('nReads_SimBu' %in% colnames(anno_ds))
-  expect_true('nGenes_SimBu' %in% colnames(anno_ds))
+  testthat::expect_true(all(c('add_1','add_2') %in% colnames(anno_ds)))
+  testthat::expect_true('spike_in' %in% colnames(anno_ds))
+  testthat::expect_true('nReads_SimBu' %in% colnames(anno_ds))
+  testthat::expect_true('nGenes_SimBu' %in% colnames(anno_ds))
 
 })

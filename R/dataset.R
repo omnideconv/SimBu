@@ -131,7 +131,7 @@ generate_summarized_experiment <- function(annotation, count_matrix, tpm_matrix,
   se <- SummarizedExperiment::SummarizedExperiment(assays = assays,
                                                    colData = anno_df)
 
-  print("Created dataset.")
+  message("Created dataset.")
 
   return(se)
 }
@@ -496,13 +496,13 @@ check_annotation <- function(annotation, cell_column="cell_type", id_column=1){
 
   # check the ID column
   if(id_column == 1){
-    print("Using rownames for cell-IDs.")
+    message("Using rownames for cell-IDs.")
     annotation$ID <- rownames(annotation)
   }else if(!"ID" %in% colnames(annotation)){
-    print("No \'ID\' column in the annotation file. Will use the supplied id_column name.")
+    message("No \'ID\' column in the annotation file. Will use the supplied id_column name.")
     if(!id_column %in% colnames(annotation)){
       warning("Supplied id_column name does not exist in annotation. Possible column names are:")
-      print(colnames(annotation))
+      message(colnames(annotation))
       return(NULL)
     }else{
       colnames(annotation)[which(colnames(annotation) == id_column)] <- "ID"
@@ -511,10 +511,10 @@ check_annotation <- function(annotation, cell_column="cell_type", id_column=1){
 
   # check the cell_type column
   if(!"cell_type" %in% colnames(annotation)){
-    print("No \'cell_type\' column in the annotation file. Will use the supplied cell_column name.")
+    message("No \'cell_type\' column in the annotation file. Will use the supplied cell_column name.")
     if(!cell_column %in% colnames(annotation)){
       warning("Supplied cell_column name does not exist in annotation. Possible column names are:")
-      print(colnames(annotation))
+      message(colnames(annotation))
       return(NULL)
     }else{
       colnames(annotation)[which(colnames(annotation) == cell_column)] <- "cell_type"
@@ -566,7 +566,7 @@ filter_matrix <- function(m1, m2=NULL, filter_genes=T, variance_cutoff=0){
   genes <- rownames(m1)
 
   if(filter_genes){
-    print("Filtering genes...")
+    message("Filtering genes...")
     # filter by expression
     low_expressed_genes_1 <- rownames(m1[which(Matrix::rowSums(m1) == 0),])
     if(!is.null(m2)){low_expressed_genes_2 <- rownames(m2[which(Matrix::rowSums(m2) == 0),])}else{low_expressed_genes_2=genes}
