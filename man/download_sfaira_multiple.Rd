@@ -9,7 +9,7 @@ download_sfaira_multiple(
   organisms = NULL,
   tissues = NULL,
   assays = NULL,
-  force = F
+  force = FALSE
 )
 }
 \arguments{

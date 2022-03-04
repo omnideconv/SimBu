@@ -1,5 +1,5 @@
 
-#' applies the census count transformation on a count matrix
+#' Applies the Census count transformation on a count matrix
 #'
 #' needs a sparse matrix with cells in columns and genes in rows. You can find the detailed explaination here:
 #' \url{http://cole-trapnell-lab.github.io/monocle-release/docs/#census}
@@ -8,12 +8,17 @@
 #' @param exp_capture_rate expected capture rate; default=0.25
 #' @param expr_threshold expression threshold; default=0
 #' @param ncores number of cores
-#' @param method implementation of census; possible are: \code{monocle} and \code{paper}
 #'
 #' @return a vector for each cell-type, with a scaling factor which can be used to transform the counts of the matrix
 #' @export
 #'
-census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1, method=c("monocle","paper","expr_genes")){
+#'@examples
+#'
+#' tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
+#' cen <- census(tpm)
+#'
+census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1){
   #order_cells <- colnames(matrix)
   ncuts <- dim(matrix)[2]/1000
 
@@ -23,15 +28,10 @@ census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1, me
 
   idx <- 1
   out <- unlist(parallel::mclapply(cuts, function(x){
-    x <- unlist(x, use.names = F)
+    x <- unlist(x, use.names = FALSE)
     chunk <- Matrix::Matrix(matrix[,x])
-    if(method == "monocle"){
-      cen <- census_monocle(chunk, exp_capture_rate=exp_capture_rate, expr_threshold=expr_threshold)
-    }else if (method == "paper"){
-      cen <- census_paper(chunk, exp_capture_rate=exp_capture_rate, expr_threshold=expr_threshold)
-    }else if (method == "expr_genes_test"){
-      cen <- calc_xi(chunk, expr_threshold=expr_threshold)
-    }
+
+    cen <- census_monocle(chunk, exp_capture_rate=exp_capture_rate, expr_threshold=expr_threshold)
 
     progress <- 100*(round(idx/ncuts, digits=3))
     print(paste(progress,"%"))
@@ -55,6 +55,14 @@ calc_xi <- function(expr_matrix, expr_threshold){
 }
 
 
+#' Census calculation as implemented in monocle
+#'
+#' @param expr_matrix TPM matrix
+#' @param exp_capture_rate expected capture rate; default=0.25
+#' @param expr_threshold expression threshold; default=0
+#'
+#' @return vector with estimated mRNA values per cell in expr_matrix
+#'
 census_monocle <- function(expr_matrix, exp_capture_rate, expr_threshold){
 
   cells <- dim(expr_matrix)[1]
@@ -86,47 +94,14 @@ census_monocle <- function(expr_matrix, exp_capture_rate, expr_threshold){
   return(total)
 }
 
-# this implementation can create negative values for x_star, which leads to NaN in the end-result
-# monocle implementation has fixed this by using 10^mean(x_star) [but I do not know why they do it like this]
-census_paper <- function(expr_matrix, exp_capture_rate, expr_threshold){
-  cells <- dim(expr_matrix)[2]
-  idx <- 1
-  # iterate over all cells
-  total <- unlist(apply(expr_matrix, 2, function(x){
-      tryCatch({
-        # Find the most commonly occuring (log-transformed) TPM value in each cell above a threshold
-        x_star <- dmode(log10(x[x>expr_threshold]))
-        # only consider genes with TPM > 0.1; below this, no mRNA is believed to be present
-        x <- x[x>expr_threshold]
-        # calculate cumulative distribution function of gene expression values in cell
-        P <- stats::ecdf(x)
-
-        F_x_star <- P(x_star)
-        F_x_epsilon <- P(expr_threshold)
-        # find all genes with single mRNA
-        num_single_copy_genes <- sum(x <= x_star)
-        # counter
-        idx <<- idx +1
-        #final value (this is M_i)
-        (1/exp_capture_rate) * (num_single_copy_genes / (F_x_star - F_x_epsilon))
-      }, error=function(e){
-        print(idx)
-        print(e)
-      })
-  }))
-  return(total)
-}
-
-
-#use gaussian kernel to calculate the mode of transcript counts
-#' @importFrom stats density
-dmode <- function(x, breaks="Sturges") {
+#' use gaussian kernel to calculate the mode of transcript counts
+#'
+#' @param x vector of numeric values
+#'
+#' @return most commonly occurring (log-transformed) TPM value
+dmode <- function(x) {
   if (length(x) < 2) return (0);
-  den <- density(x, kernel=c("gaussian"))
+  den <- stats::density(x, kernel=c("gaussian"))
   ( den$x[den$y==max(den$y)] )
 }
 
-
-
-#census(t(m), expr_threshold = 0.1,ncores=1, method="monocle")
-#maynard_census_1 <- census(t(mat), expr_threshold = 0.1,ncores=1, method="monocle")

@@ -211,4 +211,9 @@ sim_census <-  simulate_bulk(data = dataset_file,
 
 In our analysis we found, that Census is basically a complicated way of estimating the number of expressed genes per cell. It will remain to the user to decide if he/she wants to use census or simply the number of expressed genes (as shown above) as scaling factor.
 
+```{r}
+sessionInfo()
+```
+
+
 # References

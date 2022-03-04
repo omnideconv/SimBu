@@ -99,3 +99,7 @@ If only the count matrix was given to the dataset initially, only the `bulk_coun
 * `cell_fractions`: a table where rows represent the simulated samples and columns represent the different simulated cell-types. The entries in the table store the specific cell-type fraction per sample.\
 
 * `scaling_vector`: a named list, with the used scaling value for each cell from the single cell dataset. \
+
+```{r}
+sessionInfo()
+```

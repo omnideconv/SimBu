@@ -22,8 +22,8 @@
 setup_sfaira <- function(python_path, env_name, basedir){
   tryCatch({
     # check if sfaira is installed in environment
-    reticulate::use_python(python_path, required = T)
-    reticulate::use_condaenv(env_name, required = T)
+    reticulate::use_python(python_path, required = TRUE)
+    reticulate::use_condaenv(env_name, required = TRUE)
     sfaira <- reticulate::import("sfaira")
 
     # print version of currently used sfaira version
@@ -60,7 +60,7 @@ setup_sfaira <- function(python_path, env_name, basedir){
 #'
 #' @return a anndata object, stores counts, metadata and other information on the dataset
 #'
-download_sfaira <- function(setup_list, id, force=F, synapse_user=NULL, synapse_pw=NULL){
+download_sfaira <- function(setup_list, id, force=FALSE, synapse_user=NULL, synapse_pw=NULL){
   sfaira <- setup_list[["sfaira"]]
   ds <- sfaira$data$Universe(data_path = setup_list[["rawdir"]],
                              meta_path = setup_list[["metadir"]],
@@ -102,7 +102,7 @@ download_sfaira <- function(setup_list, id, force=F, synapse_user=NULL, synapse_
 #'
 #' @return annotated data object, contains count matrix and annotation
 #'
-download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, assays=NULL, force=F){
+download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, assays=NULL, force=FALSE){
   sfaira <- setup_list[["sfaira"]]
 
   tryCatch({
@@ -124,11 +124,11 @@ download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, a
     }
 
     # apply filters on sfaira database
-    if(all(is.null(c(organisms, tissues, assays)))) stop("You must specify at least one filter.", call.=F)
+    if(all(is.null(c(organisms, tissues, assays)))) stop("You must specify at least one filter.", call.=FALSE)
     if(!is.null(organisms)) {ds$subset(key="organism", values=organisms)}
     if(!is.null(assays)) {ds$subset(key="assay_sc", values=assays)}
     if(!is.null(tissues)) {ds$subset(key="organ", values=tissues)}
-    if(length(ds$datasets) == 0){stop("No datasets found with these filters; please check again", call.=F)}
+    if(length(ds$datasets) == 0){stop("No datasets found with these filters; please check again", call.=FALSE)}
 
     print("Downloading datasets...")
     ds$download()
@@ -174,6 +174,6 @@ sfaira_overview <- function(setup_list){
   })
 
   suppressWarnings(out <- data.table::rbindlist(info_list))
-  out$annotated[which(is.na(out$annotated))]<-F
+  out$annotated[which(is.na(out$annotated))]<-FALSE
   return(out)
 }

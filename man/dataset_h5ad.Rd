@@ -11,10 +11,10 @@ dataset_h5ad(
   name = "SimBu_dataset",
   spike_in_col = NULL,
   additional_cols = NULL,
-  filter_genes = T,
+  filter_genes = TRUE,
   variance_cutoff = 0,
   type_abundance_cutoff = 0,
-  scale_tpm = T
+  scale_tpm = TRUE
 )
 }
 \arguments{
@@ -43,4 +43,12 @@ Return a \link[SummarizedExperiment]{SummarizedExperiment} object
 }
 \description{
 Function to generate a \link[SummarizedExperiment]{SummarizedExperiment} using a h5ad file for the counts
+}
+\examples{
+\dontrun{
+ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = h5ad_file_counts,
+                         h5ad_file_tpm = h5ad_file_tpm,
+                         annotation = annotation,
+                         name = "h5ad_dataset")
+}
 }

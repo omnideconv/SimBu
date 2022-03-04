@@ -13,10 +13,10 @@ dataset_seurat(
   name = "SimBu_dataset",
   spike_in_col = NULL,
   additional_cols = NULL,
-  filter_genes = T,
+  filter_genes = TRUE,
   variance_cutoff = 0,
   type_abundance_cutoff = 0,
-  scale_tpm = T
+  scale_tpm = TRUE
 )
 }
 \arguments{
@@ -49,4 +49,14 @@ Return a \link[SummarizedExperiment]{SummarizedExperiment} object
 }
 \description{
 Function to generate a \link[SummarizedExperiment]{SummarizedExperiment} using a \link[Seurat]{Seurat} object
+}
+\examples{
+\dontrun{
+ds_seurat <- SimBu::dataset_seurat(seurat_obj = seurat_obj,
+                                   count_assay = "RNA",
+                                   cell_id_col = 'orig.ident',
+                                   cell_type_col = 'ct',
+                                   tpm_assay = 'TPM',
+                                   name = "seurat_dataset")
+}
 }

@@ -4,14 +4,17 @@
 \alias{save_simulation}
 \title{Save the expression matrix of a simulated pseudo-bulk dataset to a file}
 \usage{
-save_simulation(simulation, filename, assay)
+save_simulation(simulation, filename, assay = "bulk_counts")
 }
 \arguments{
 \item{simulation}{the result of simulate_bulk()}
 
 \item{filename}{the filename where to save the expression matrix to}
 
-\item{assay}{name of the assay in simulation to save}
+\item{assay}{name of the assay in simulation to save, default to bulk_counts}
+}
+\value{
+write a file
 }
 \description{
 Save the expression matrix of a simulated pseudo-bulk dataset to a file

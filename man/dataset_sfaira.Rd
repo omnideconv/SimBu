@@ -10,11 +10,11 @@ dataset_sfaira(
   name,
   spike_in_col = NULL,
   additional_cols = NULL,
-  force = F,
-  filter_genes = T,
+  force = FALSE,
+  filter_genes = TRUE,
   variance_cutoff = 0,
   type_abundance_cutoff = 0,
-  scale_tpm = T
+  scale_tpm = TRUE
 )
 }
 \arguments{
@@ -43,4 +43,11 @@ dataset object
 }
 \description{
 Build a dataset using a single sfaira entry ID
+}
+\examples{
+\dontrun{
+ds_miller <- dataset_sfaira(sfaira_id="human_lung_2020_10x3v2_miller_001_10.1016/j.devcel.2020.01.033",
+                            sfaira_setup = setup_list,name = "Miller")
+}
+
 }

@@ -6,11 +6,14 @@ Authors@R:
            family = "Dietrich",
            role = c("aut", "cre"),
            email = "alex.dietrich@tum.de")
-Description: This package can be used to simulate bulk RNA-seq datasets. You can either use your own single-cell study for the simulation or the sfaira database.
+Description: SimBu can be used to simulate bulk RNA-seq datasets with known cell type fractions. 
+    You can either use your own single-cell study for the simulation or the sfaira database. 
+    Different pre-defined simulation scenarios exist, as are options to run custom simulations.
+    Additionally, expression values can be adapted by adding an mRNA bias, which produces more
+    biologically relevant simulations.
 License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: true
-Roxygen: list(markdown = TRUE)
+Roxygen: list(markdown = TRUE) 
 RoxygenNote: 7.1.2
 Imports: 
     parallel,
@@ -29,8 +32,7 @@ Imports:
     methods,
     data.table,
     Matrix (>= 1.3.3),
-    proxyC,
-    testit
+    proxyC
 Suggests:
     rmarkdown,
     knitr,
@@ -38,3 +40,4 @@ Suggests:
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+biocViews: Software, RNASeq, SingleCell

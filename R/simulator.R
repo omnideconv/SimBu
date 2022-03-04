@@ -44,7 +44,7 @@ simulate_sample <- function(data,
       cells <- c()
     }else{
       # how many cells of this type do we need?
-      cells <- dplyr::slice_sample(cells_of_type_x, n=total_cells*simulation_vector[x], replace=T)
+      cells <- dplyr::slice_sample(cells_of_type_x, n=total_cells*simulation_vector[x], replace=TRUE)
       cells <- cells[["cell_ID"]]
     }
 
@@ -89,8 +89,8 @@ simulate_sample <- function(data,
     sum_counts <- sum(simulated_count_vector)
 
     if(sum_counts > total_read_counts){
-      tmp_phylo <- phyloseq::otu_table(data.frame(simulated_count_vector), taxa_are_rows = T)
-      tmp_vec <- data.frame(phyloseq::rarefy_even_depth(physeq=tmp_phylo, sample.size = total_read_counts, trimOTUs = F, ))[,1]
+      tmp_phylo <- phyloseq::otu_table(data.frame(simulated_count_vector), taxa_are_rows = TRUE)
+      tmp_vec <- data.frame(phyloseq::rarefy_even_depth(physeq=tmp_phylo, sample.size = total_read_counts, trimOTUs = FALSE, ))[,1]
       names(tmp_vec) <- names(simulated_count_vector)
       simulated_count_vector <- tmp_vec
     }else if(sum_counts < total_read_counts){
@@ -123,12 +123,12 @@ simulate_sample <- function(data,
 #' \code{scaling_factor} on how the read counts will be transformed proir to the simulation.
 #'
 #' @param data (mandatory) \link[SummarizedExperiment]{SummarizedExperiment} object
-#' @param scenario (mandatory) select on of the pre-defined cell-type fraction scenarios; possible are: \code{even},\code{random},\code{mirror_db},\code{unique},\code{controlled}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
+#' @param scenario (mandatory) select on of the pre-defined cell-type fraction scenarios; possible are: \code{even},\code{random},\code{mirror_db},\code{pure},\code{weighted}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
 #' @param scaling_factor (mandatory) name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read_number}, \code{expressed_genes}, \code{custom} or \code{NONE} for no scaling factor
 #' @param scaling_factor_single_cell boolean: decide if a scaling value for each single cell is calculated (default) or the median of all scaling values for each cell type is calculated
-#' @param controlled_cell_type name of cell-type used for \code{controlled} scenario
-#' @param controlled_amount fraction of cell-type used for \code{controlled} scenario; must be between \code{0} and \code{0.99}
-#' @param unique_cell_type name of cell-type for \code{unique} scenario
+#' @param weighted_cell_type name of cell-type used for \code{weighted} scenario
+#' @param weighted_amount fraction of cell-type used for \code{weighted} scenario; must be between \code{0} and \code{0.99}
+#' @param pure_cell_type name of cell-type for \code{pure} scenario
 #' @param custom_scenario_data dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.
 #' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1; mandatory for \code{custom} scaling factor
 #' @param balance_uniform_mirror_scenario balancing value for the \code{uniform} and \code{mirror_db} scenarios: increasing it will result in more diverse simulated fractions. To get the same fractions in each sample, set to 0. Default is 0.01.
@@ -148,7 +148,6 @@ simulate_sample <- function(data,
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' #generate sample single-cell data to work with:
 #'
 #' counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
@@ -176,14 +175,14 @@ simulate_sample <- function(data,
 #' # this creates a basic pseudo-bulk dataset with uniform cell-type distribution
 #' # and no additional transformation of the data with 10 samples and 2000 cells each
 #'
-#' s<-simulate_bulk(dataset,
+#' s<-SimBu::simulate_bulk(dataset,
 #'               scenario="even",
 #'               scaling_factor="NONE",
 #'               nsamples=10,
 #'               ncells=100)
 #'
 #' # use a blacklist to exclude certain cell-types for the simulation
-#' s<-simulate_bulk(dataset,
+#' s<-SimBu::simulate_bulk(dataset,
 #'               scenario="even",
 #'               scaling_factor="NONE",
 #'               nsamples=10,
@@ -191,33 +190,32 @@ simulate_sample <- function(data,
 #'               blacklist=c("Monocytes","Macrophages"))
 #'
 #'
-#' # use the unique scenario to only have B cells
-#' s<-simulate_bulk(dataset,
-#'               scenario="unique",
+#' # use the pure scenario to only have B cells
+#' s<-SimBu::simulate_bulk(dataset,
+#'               scenario="pure",
 #'               scaling_factor="NONE",
 #'               nsamples=10,
 #'               ncells=100,
-#'               unique_cell_type="B cells")
+#'               pure_cell_type="B cells")
 #'
 #' # simulate a dataset with custom cell-type fraction for each of the 3 samples
 #' fractions <- data.frame("B cells"=c(0.2,0.4,0.2),
 #'                         "T cells CD4"=c(0.4,0.2,0.1),
 #'                         "Macrophages"=c(0.4,0.4,0.7), check.names = FALSE)
-#' s<-simulate_bulk(dataset,
+#' s<-SimBu::simulate_bulk(dataset,
 #'               scenario="custom",
 #'               scaling_factor="NONE",
 #'               nsamples=3,
 #'               ncells=2000,
 #'               custom_scenario_data=fractions)
-#'}
 #'
 simulate_bulk <- function(data,
-                          scenario=c("even","random","mirror_db","controlled","unique", "custom"),
+                          scenario=c("even","random","mirror_db","weighted","pure", "custom"),
                           scaling_factor=c("NONE","census","spike_in", "custom", "read_number", "expressed_genes", "annotation_column"),
                           scaling_factor_single_cell = TRUE,
-                          controlled_cell_type = NULL,
-                          controlled_amount = NULL,
-                          unique_cell_type = NULL,
+                          weighted_cell_type = NULL,
+                          weighted_amount = NULL,
+                          pure_cell_type = NULL,
                           custom_scenario_data = NULL,
                           custom_scaling_vector = NULL,
                           balance_uniform_mirror_scenario=0.01,
@@ -260,7 +258,7 @@ simulate_bulk <- function(data,
     all_types <- unique(SummarizedExperiment::colData(data)[["cell_type"]])
     n_cell_types <- length(all_types)
     uniform_value <- 1/length(all_types)
-    simulation_vector_list <- lapply(rep(1:nsamples), function(x){
+    simulation_vector_list <- lapply(seq_len(nsamples), function(x){
       m <- round(matrix(abs(stats::rnorm(length(all_types), mean=1/length(all_types), sd=balance_uniform_mirror_scenario)), ncol=n_cell_types), 3)
       m <- sweep(m, 1, rowSums(m), FUN="/")
       simulation_vector <- as.vector(m[1,])
@@ -268,13 +266,13 @@ simulate_bulk <- function(data,
       return(simulation_vector)
     })
     # give each sample a name
-    sample_names <- paste0("even_sample",rep(1:nsamples))
+    sample_names <- paste0("even_sample",seq_len(nsamples))
     names(simulation_vector_list) <- sample_names
   }
   # generate random cell-type fractions (depending on appearance in database)
   if(scenario == "random"){
     # generate 'nsamples' random samples
-    simulation_vector_list <- lapply(rep(1:nsamples), function(x){
+    simulation_vector_list <- lapply(seq_len(nsamples), function(x){
       n_cell_types <- length(unique(SummarizedExperiment::colData(data)[["cell_type"]]))
       # generate n_cell_type amount of random fractions from the uniform distribution, which will sum up to 1
       m <- round(matrix(stats::runif(n_cell_types, 0, 1), ncol=n_cell_types),3)
@@ -283,14 +281,14 @@ simulate_bulk <- function(data,
       names(simulation_vector) <- unique(SummarizedExperiment::colData(data)[["cell_type"]])
       return(simulation_vector)
     })
-    sample_names <- paste0("random_sample", rep(1:nsamples))
+    sample_names <- paste0("random_sample", seq_len(nsamples))
     names(simulation_vector_list) <- sample_names
   }
   # generate cell-type fractions, which mirror the fraction of each cell-type in the used dataset
   if(scenario == "mirror_db"){
     n_cell_types <- length(unique(SummarizedExperiment::colData(data)[["cell_type"]]))
     # generate 'nsamples' random samples
-    simulation_vector_list <- lapply(rep(1:nsamples), function(x){
+    simulation_vector_list <- lapply(seq_len(nsamples), function(x){
       # each cell-type will be represented as many times as it occurs in the used dataset
       mirror_values <- table(SummarizedExperiment::colData(data)[["cell_type"]])/ncol(data)
       m <- unlist(lapply(mirror_values, function(y){
@@ -302,49 +300,49 @@ simulate_bulk <- function(data,
       names(simulation_vector) <- unique(SummarizedExperiment::colData(data)[["cell_type"]])
       return(simulation_vector)
     })
-    sample_names <- paste0("mirror_db_sample", rep(1:nsamples))
+    sample_names <- paste0("mirror_db_sample", seq_len(nsamples))
     names(simulation_vector_list) <- sample_names
   }
   # one cell-type will be highly over represented, the others are random
-  if(scenario == "controlled"){
+  if(scenario == "weighted"){
 
-    if(is.null(controlled_cell_type) || is.null(controlled_amount)){
-      stop("The controlled scenario requires you to select one cell-type which will be over represented")
+    if(is.null(weighted_cell_type) || is.null(weighted_amount)){
+      stop("The weighted scenario requires you to select one cell-type which will be over represented")
     }
-    if(controlled_amount > 0.99 || controlled_amount < 0){
-      stop("The controlled cell-type fraction needs to be between 0 and 0.99.")
+    if(weighted_amount > 0.99 || weighted_amount < 0){
+      stop("The weighted cell-type fraction needs to be between 0 and 0.99.")
     }
-    if(!controlled_cell_type %in% unique(SummarizedExperiment::colData(data)[["cell_type"]])){
-      stop("The controlled cell-type could not be found in your dataset.")
+    if(!weighted_cell_type %in% unique(SummarizedExperiment::colData(data)[["cell_type"]])){
+      stop("The weighted cell-type could not be found in your dataset.")
     }
 
-    random_cell_types <- setdiff(unique(SummarizedExperiment::colData(data)[["cell_type"]]), controlled_cell_type)
-    all_cell_types <- c(random_cell_types, controlled_cell_type)
+    random_cell_types <- setdiff(unique(SummarizedExperiment::colData(data)[["cell_type"]]), weighted_cell_type)
+    all_cell_types <- c(random_cell_types, weighted_cell_type)
 
-    simulation_vector_list <- lapply(rep(1:nsamples), function(x){
+    simulation_vector_list <- lapply(seq_len(nsamples), function(x){
       n_cell_types <- length(unique(SummarizedExperiment::colData(data)[["cell_type"]]))-1
       # generate n_cell_type amount of random fractions from the uniform distribution, which will sum up to 1
       m <- matrix(stats::runif(n_cell_types, 0, 1), ncol=n_cell_types)
       simulation_vector <- as.vector(m[1,])
-      simulation_vector <- (1 - controlled_amount) * simulation_vector/sum(simulation_vector)
-      simulation_vector <- append(simulation_vector, controlled_amount)
+      simulation_vector <- (1 - weighted_amount) * simulation_vector/sum(simulation_vector)
+      simulation_vector <- append(simulation_vector, weighted_amount)
       names(simulation_vector) <- all_cell_types
       return(simulation_vector)
     })
-    sample_names <- paste0("controlled_sample", rep(1:nsamples))
+    sample_names <- paste0("weighted_sample", seq_len(nsamples))
     names(simulation_vector_list) <- sample_names
   }
-  # unique: only simulate a single cell-type
-  if(scenario == "unique"){
-    if(is.null(unique_cell_type)){
-      stop("The unique scenario requires you to select a cell-type which will be simulated")
+  # pure: only simulate a single cell-type
+  if(scenario == "pure"){
+    if(is.null(pure_cell_type)){
+      stop("The pure scenario requires you to select a cell-type which will be simulated")
     }
-    simulation_vector_list <- lapply(rep(1:nsamples), function(x){
+    simulation_vector_list <- lapply(seq_len(nsamples), function(x){
       simulation_vector <- c(1)
-      names(simulation_vector) <- as.character(unique_cell_type)
+      names(simulation_vector) <- as.character(pure_cell_type)
       return(simulation_vector)
     })
-    sample_names <- paste0("unique_sample", rep(1:nsamples))
+    sample_names <- paste0("pure_sample", seq_len(nsamples))
     names(simulation_vector_list) <- sample_names
   }
   # custom fractions
@@ -361,7 +359,7 @@ simulate_bulk <- function(data,
     }
     simulation_vector_list <- as.list(as.data.frame(t(custom_scenario_data)))
     simulation_vector_list <- lapply(simulation_vector_list, function(x){names(x)<-colnames(custom_scenario_data);x<-x})
-    sample_names <- paste0("custom_sample", rep(1:nsamples))
+    sample_names <- paste0("custom_sample", seq_len(nsamples))
     names(simulation_vector_list) <- sample_names
   }
 
@@ -390,9 +388,9 @@ simulate_bulk <- function(data,
     return(samples)
   }, mc.cores = ncores)
 
-  bulk_counts <- Matrix::Matrix(sapply(all_samples, "[[", 1), sparse=T)
+  bulk_counts <- Matrix::Matrix(sapply(all_samples, "[[", 1), sparse=TRUE)
   if('tpm' %in% names(SummarizedExperiment::assays(data))){
-    bulk_tpm <- Matrix::Matrix(sapply(all_samples, "[[", 2), sparse=T)
+    bulk_tpm <- Matrix::Matrix(sapply(all_samples, "[[", 2), sparse=TRUE)
     assays <- list(bulk_counts = bulk_counts, bulk_tpm = bulk_tpm)
   }else{
     assays <- list(bulk_counts = bulk_counts)
@@ -410,7 +408,7 @@ simulate_bulk <- function(data,
   }
 
   # cell_fractions for all simulated samples
-  cell_fractions <- data.frame(t(data.frame(simulation_vector_list)), check.names = F)
+  cell_fractions <- data.frame(t(data.frame(simulation_vector_list)), check.names = FALSE)
 
   message("Finished simulation.")
 
@@ -442,7 +440,7 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, sca
       warning("Scaling factor 'Census' requires TPM data, which is not available in the given dataset. Counts will be used instead.")
       m <- SummarizedExperiment::assays(data)[["counts"]]
     }
-    scaling_vector <- census(m, ncores = ncores, method="monocle", expr_threshold = 0.1, exp_capture_rate = .25)
+    scaling_vector <- census(m, ncores = ncores, expr_threshold = 0.1, exp_capture_rate = .25)
     scaling_vector <- scaling_vector/10e6
   }else if(scaling_factor == "spike_in"){
     # if you want to transform your counts by spike_in data, an additional column in the annotation table is needed
@@ -474,8 +472,8 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, sca
     missing_cell_types <- as.vector(unique(SummarizedExperiment::colData(data)[["cell_type"]])[which(!unique(SummarizedExperiment::colData(data)[["cell_type"]]) %in% names(custom_scaling_vector))])
     complete_vector <- rep(1, length(missing_cell_types))
     names(complete_vector) <- missing_cell_types
-    complete_vector <- data.frame(value=append(complete_vector, custom_scaling_vector), check.names=F)
-    df <- merge(complete_vector, data.frame(SummarizedExperiment::colData(data)), by.x=0,by.y="cell_type", all.y=T)[,c("value","cell_ID")]
+    complete_vector <- data.frame(value=append(complete_vector, custom_scaling_vector), check.names=FALSE)
+    df <- merge(complete_vector, data.frame(SummarizedExperiment::colData(data)), by.x=0,by.y="cell_type", all.y=TRUE)[,c("value","cell_ID")]
     scaling_vector <- df$value
     names(scaling_vector) <- df$cell_ID
 
@@ -526,11 +524,14 @@ cpm_normalize <- function(matrix){
 #'
 #' @param simulation the result of simulate_bulk()
 #' @param filename the filename where to save the expression matrix to
-#' @param assay name of the assay in simulation to save
+#' @param assay name of the assay in simulation to save, default to bulk_counts
+#'
+#' @return write a file
+#' @export
 #'
 #'
-save_simulation <- function(simulation, filename, assay){
-  utils::write.table(SummarizedExperiment::assays(simulation$bulk)[[assay]], filename, quote = F, sep="\t")
+save_simulation <- function(simulation, filename, assay='bulk_counts'){
+  utils::write.table(SummarizedExperiment::assays(simulation$bulk)[[assay]], filename, quote = FALSE, sep="\t")
 }
 
 
@@ -541,10 +542,41 @@ save_simulation <- function(simulation, filename, assay){
 #' @return a gpplot2 barplot
 #' @export
 #'
+#' @examples
+#' counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
+#'
+#' colnames(counts) <- paste0("cell_",rep(1:300))
+#' colnames(tpm) <- paste0("cell_",rep(1:300))
+#' rownames(counts) <- paste0("gene_",rep(1:1000))
+#' rownames(tpm) <- paste0("gene_",rep(1:1000))
+#'
+#' annotation <- data.frame("ID"=paste0("cell_",rep(1:300)),
+#'                          "cell_type"=c(rep("T cells CD4",50),
+#'                                        rep("T cells CD8",50),
+#'                                        rep("Macrophages",100),
+#'                                        rep("NK cells",10),
+#'                                        rep("B cells",70),
+#'                                        rep("Monocytes",20)))
+#'
+#' dataset <- SimBu::dataset(annotation = annotation,
+#'                           count_matrix = counts,
+#'                           tpm_matrix = tpm,
+#'                           name = "test_dataset")
+#'
+#' s <- SimBu::simulate_bulk(dataset,
+#'                           scenario="even",
+#'                           scaling_factor="NONE",
+#'                           nsamples=10,
+#'                           ncells=100)
+#'
+#' SimBu::plot_simulation(s)
+#'
 plot_simulation <- function(simulation){
   fractions <- simulation$cell_fractions
   fractions$sample <- factor(rownames(fractions), levels = rownames(fractions))
-  frac_long <- tidyr::gather(fractions, cell_type, fraction, 1:length(fractions)-1)
+  frac_long <- tidyr::gather(fractions, 'cell_type', 'fraction', seq_len(length(fractions)-1))
 
   ggplot2::ggplot(data = frac_long)+
     ggplot2::geom_col(ggplot2::aes_string(x="fraction", y="sample", fill="cell_type"))+
@@ -565,6 +597,42 @@ plot_simulation <- function(simulation){
 #' \code{scaling_vector} scaling value for each cell in dataset
 #' @export
 #'
+#' @examples 
+#' counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
+#'
+#' colnames(counts) <- paste0("cell_",rep(1:300))
+#' colnames(tpm) <- paste0("cell_",rep(1:300))
+#' rownames(counts) <- paste0("gene_",rep(1:1000))
+#' rownames(tpm) <- paste0("gene_",rep(1:1000))
+#'
+#' annotation <- data.frame("ID"=paste0("cell_",rep(1:300)),
+#'                          "cell_type"=c(rep("T cells CD4",50),
+#'                                        rep("T cells CD8",50),
+#'                                        rep("Macrophages",100),
+#'                                        rep("NK cells",10),
+#'                                        rep("B cells",70),
+#'                                        rep("Monocytes",20)))
+#'
+#' dataset <- SimBu::dataset(annotation = annotation,
+#'                           count_matrix = counts,
+#'                           tpm_matrix = tpm,
+#'                           name = "test_dataset")
+#'
+#' s1 <- SimBu::simulate_bulk(dataset,
+#'                           scenario="even",
+#'                           scaling_factor="NONE",
+#'                           nsamples=10,
+#'                           ncells=100)
+#'
+#' s2 <- SimBu::simulate_bulk(dataset,
+#'                           scenario="even",
+#'                           scaling_factor="NONE",
+#'                           nsamples=10,
+#'                           ncells=100)
+#'
+#' s <- merge_simulations(list(s1,s2))
 merge_simulations <- function(simulation_list){
 
   # merge SummarizedExperiments
@@ -585,15 +653,15 @@ merge_simulations <- function(simulation_list){
 
   # merge cell fractions dataframe
   sample_names <- unlist(lapply(simulation_list, function(x){rownames(x[["cell_fractions"]])}))
-  sample_names <- paste0(sample_names,"_",rep(1:length(sample_names)))
-  cell_fractions <- data.frame(data.table::rbindlist(lapply(simulation_list, function(x){x[["cell_fractions"]]}), fill=T, use.names=T), check.names = F)
+  sample_names <- paste0(sample_names,"_",seq_len(length(sample_names)))
+  cell_fractions <- data.frame(data.table::rbindlist(lapply(simulation_list, function(x){x[["cell_fractions"]]}), fill=TRUE, use.names=TRUE), check.names = FALSE)
   rownames(cell_fractions) <- sample_names
   cell_fractions[is.na(cell_fractions)] <- 0
 
 
   # list of scaling vectors
-  scaling_vector <- sapply(simulation_list, "[[", "scaling_vector")
-  colnames(scaling_vector) <- paste0("simulation_",rep(1:length(simulation_list)))
+  scaling_vector <- sapply(simulation_list, "[[", "scaling_vector", numeric())
+  colnames(scaling_vector) <- paste0("simulation_",seq_len(length(simulation_list)))
 
 
   return(list(bulk = merged_se,
