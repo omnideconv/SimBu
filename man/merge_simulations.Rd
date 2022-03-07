@@ -52,5 +52,5 @@ s2 <- SimBu::simulate_bulk(dataset,
                           nsamples=10,
                           ncells=100)
 
-s <- merge_simulations(list(s1,s2))
+s <- SimBu::merge_simulations(list(s1,s2))
 }

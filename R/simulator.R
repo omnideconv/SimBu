@@ -632,7 +632,7 @@ plot_simulation <- function(simulation){
 #'                           nsamples=10,
 #'                           ncells=100)
 #'
-#' s <- merge_simulations(list(s1,s2))
+#' s <- SimBu::merge_simulations(list(s1,s2))
 merge_simulations <- function(simulation_list){
 
   # merge SummarizedExperiments
@@ -648,7 +648,7 @@ merge_simulations <- function(simulation_list){
     stop("The simulations you want to merge have different numbers of assays. Stopping.")
   }
 
-  merged_se <- do.call(cbind, sapply(simulation_list, "[[", "bulk"))
+  merged_se <- do.call(SummarizedExperiment::cbind, sapply(simulation_list, "[[", "bulk"))
 
 
   # merge cell fractions dataframe
@@ -660,7 +660,7 @@ merge_simulations <- function(simulation_list){
 
 
   # list of scaling vectors
-  scaling_vector <- sapply(simulation_list, "[[", "scaling_vector", numeric())
+  scaling_vector <- sapply(simulation_list, "[[", "scaling_vector")
   colnames(scaling_vector) <- paste0("simulation_",seq_len(length(simulation_list)))
 
 
