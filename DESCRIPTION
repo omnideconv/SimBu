@@ -23,8 +23,6 @@ Imports:
     tidyr,
     sparseMatrixStats,
     ggplot2,
-    scales,
-    matrixStats,
     SummarizedExperiment,
     phyloseq,
     RColorBrewer,
@@ -34,8 +32,8 @@ Imports:
     Matrix (>= 1.3.3),
     proxyC
 Suggests:
-    rmarkdown,
     knitr,
+    rmarkdown,
     Seurat,
     testthat (>= 3.0.0)
 VignetteBuilder: knitr

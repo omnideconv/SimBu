@@ -47,8 +47,8 @@ Function to generate a \link[SummarizedExperiment]{SummarizedExperiment} using a
 \examples{
 \dontrun{
 ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = h5ad_file_counts,
-                         h5ad_file_tpm = h5ad_file_tpm,
-                         annotation = annotation,
-                         name = "h5ad_dataset")
+                               h5ad_file_tpm = h5ad_file_tpm,
+                               annotation = annotation,
+                               name = "h5ad_dataset")
 }
 }

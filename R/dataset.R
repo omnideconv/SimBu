@@ -284,9 +284,9 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
 #' @examples
 #' \dontrun{
 #' ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = h5ad_file_counts,
-#'                          h5ad_file_tpm = h5ad_file_tpm,
-#'                          annotation = annotation,
-#'                          name = "h5ad_dataset")
+#'                                h5ad_file_tpm = h5ad_file_tpm,
+#'                                annotation = annotation,
+#'                                name = "h5ad_dataset")
 #' }
  
 dataset_h5ad <- function(annotation, h5ad_file_counts, h5ad_file_tpm = NULL, name = "SimBu_dataset",spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){

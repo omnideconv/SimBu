@@ -27,8 +27,7 @@ $error
 
 [4] "At least 80% of man pages documenting exported objects must have runnable examples. The following pages do not:"
 not too much to worry, but do put some more?
-                                      
--> easy
+
 
 $warning
 [1] "The following files are over 5MB in size: '.git/objects/pack/pack-1a2a06e11bc2fc33a35436a588f1f8eeefca8577.pack'"
@@ -37,10 +36,7 @@ $warning
 -> it is pretty much reco
 
 $note
- [1] "Consider clarifying how 3 object(s) are initialized. Maybe they are part of a data set loaded with data(), or perhaps part of an object referenced in with() or within()."      
- 
- -> solved w aes_string I guess
-                                     
+
  [5] " Avoid sapply(); use vapply()"    
  -> would be better, it is more robust
                                                                     
@@ -48,17 +44,36 @@ $note
  -> it is not really needed
                                           
  [9] "Avoid '<<-' if possible (found 3 times)"                                                                                          -> can you avoid this?                                                
-[10] "Avoid 'suppressWarnings'/'*Messages' if possible (found 1 times)"                                                                                                                 
-[11] "Recommended function length <= 50 lines."                                                                                                                                         
-[12] "Usage of dontrun{} / donttest{} found in man page examples."                                                                                                                      
-[13] "Use donttest{} instead of dontrun{}."                                                                                                                                             
-[14] "Consider adding a NEWS file, so your package news will be included in Bioconductor release announcements."                                  
--> that is a nice thing to have actually. NEWS.md renders also nicely
-[15] "Consider shorter lines; 506 lines (17%) are > 80 characters long."                                                                                                                
-[16] "Consider multiples of 4 spaces for line indents, 812 lines(28%) are not."   
--> not so deal-breaker, dont worry here
+
 [17] "Cannot determine whether maintainer is subscribed to the bioc-devel mailing list (requires\nadmin credentials).  Subscribe here: https://stat.ethz.ch/mailman/listinfo/bioc-devel"
 ```
 
 Running this in your REPL it would give also pointers on where these issues show up - just go ahead and see which spots need some fixes :wink:
 
+# Current issues from BiocCheck:
+ ```
+$error
+[1] "At least 80% of man pages documenting exported objects must have runnable examples. The following pages do not:"
+--> all remaining functions require special file/data input (for example h5ad files). I guess a runnable example is too much effort in this case..
+
+$warning
+[1] "The following files are over 5MB in size: '.git/objects/pack/pack-cbd871970bfe6032cfa700142fbd42c42e9cae78.pack'"
+
+[2] "Evaluate more vignette chunks."
+--> how 'bad' is this?
+
+$note
+[1] " Avoid sapply(); use vapply()"    
+--> kind of tricky in some cases to replace sapply unfortunantely..
+
+[2] " Avoid the use of 'paste' in condition signals"                                                                                                                                   
+[3] "Avoid '<<-' if possible (found in 1 files)"  
+--> cannot replace without breaking something
+
+[4] "Recommended function length <= 50 lines."                                                                                                                                         
+[5] "Usage of dontrun{} / donttest{} found in man page examples."                                                                                                                      
+[6] "Use donttest{} instead of dontrun{}."                                                                                                                                             
+[7] "Consider shorter lines; 508 lines (15%) are > 80 characters long."                                                                                                                
+[8] "Consider multiples of 4 spaces for line indents, 854 lines(26%) are not."                                                                                                         
+[9] "Cannot determine whether maintainer is subscribed to the bioc-devel mailing list (requires admin credentials).  Subscribe\nhere: https://stat.ethz.ch/mailman/listinfo/bioc-devel"
+```
