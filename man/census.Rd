@@ -13,7 +13,7 @@ census(matrix, exp_capture_rate = 0.25, expr_threshold = 0, ncores = 1)
 
 \item{expr_threshold}{expression threshold; default=0}
 
-\item{ncores}{number of cores}
+\item{ncores}{numeric; number of cores to use (default = 1); will be added to BiocParallel::MulticoreParam}
 }
 \value{
 a vector for each cell-type, with a scaling factor which can be used to transform the counts of the matrix
@@ -26,6 +26,6 @@ needs a sparse matrix with cells in columns and genes in rows. You can find the 
 
 tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
 tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
-cen <- census(tpm)
+cen <- SimBu::census(tpm)
 
 }

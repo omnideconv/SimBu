@@ -1,7 +1,7 @@
 library(SummarizedExperiment)
 library(Matrix)
 
-test_that('can generate different simulation scenarios', {
+test_that('can generate different simulation scenarios & check multi threads', {
   counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
   tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
   tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
@@ -29,6 +29,8 @@ test_that('can generate different simulation scenarios', {
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'mirror_db', scaling_factor = 'NONE', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'pure', pure_cell_type = 'T cells CD4', scaling_factor = 'NONE', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'weighted', weighted_cell_type = 'T cells CD4', weighted_amount = .5, scaling_factor = 'NONE', nsamples = 10, ncells = 100, ncores = 1)[['bulk']], 'SummarizedExperiment')
+  
+  testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'even', scaling_factor = 'NONE', nsamples = 10, ncells = 100, ncores = 2)[['bulk']], 'SummarizedExperiment')
 })
 
 
@@ -70,6 +72,15 @@ test_that('test different scaling factor calculations + mRNA bias removal from c
 
 })
 
+
+# test census
+test_that('test census', {
+  
+  tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+  tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
+  
+  cen <- expect_equal(length(SimBu::census(tpm, exp_capture_rate=0.25, expr_threshold=0.1, ncores = 1)), 300)
+})
 
 # test_that('test different simulation parameters', {
 #   counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)

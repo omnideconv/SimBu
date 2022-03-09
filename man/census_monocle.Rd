@@ -17,5 +17,5 @@ census_monocle(expr_matrix, exp_capture_rate, expr_threshold)
 vector with estimated mRNA values per cell in expr_matrix
 }
 \description{
-Census calculation as implemented in monocle
+Implementation taken from Monocle2: https://github.com/cole-trapnell-lab/monocle-release/blob/master/R/normalization.R#L140
 }

@@ -7,7 +7,7 @@
 #' @param matrix sparse count matrix; cells in columns, genes in rows
 #' @param exp_capture_rate expected capture rate; default=0.25
 #' @param expr_threshold expression threshold; default=0
-#' @param ncores number of cores
+#' @param ncores numeric; number of cores to use (default = 1); will be added to BiocParallel::MulticoreParam
 #'
 #' @return a vector for each cell-type, with a scaling factor which can be used to transform the counts of the matrix
 #' @export
@@ -16,9 +16,13 @@
 #'
 #' tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
 #' tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
-#' cen <- census(tpm)
+#' cen <- SimBu::census(tpm)
 #'
 census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1){
+  
+  # use the specified number of cores
+  param <- BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE)
+  
   #order_cells <- colnames(matrix)
   ncuts <- dim(matrix)[2]/1000
 
@@ -26,19 +30,13 @@ census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1){
   cuts<-split(seq_len(ncol(matrix)), cut(seq_len(ncol(matrix)), pretty(seq_len(ncol(matrix)), ncuts)))
   names(cuts) <- NULL
 
-  idx <- 1
-  out <- unlist(parallel::mclapply(cuts, function(x){
+  out <- unlist(BiocParallel::bplapply(cuts, function(x){
     x <- unlist(x, use.names = FALSE)
     chunk <- Matrix::Matrix(matrix[,x])
 
     cen <- census_monocle(chunk, exp_capture_rate=exp_capture_rate, expr_threshold=expr_threshold)
-
-    progress <- 100*(round(idx/ncuts, digits=3))
-    print(paste(progress,"%"))
-    idx <<- idx+1
-
     return(cen)
-  },mc.cores = ncores))
+  },BPPARAM = param))
 
 
   return(out)
@@ -56,6 +54,8 @@ calc_xi <- function(expr_matrix, expr_threshold){
 
 
 #' Census calculation as implemented in monocle
+#' 
+#' Implementation taken from Monocle2: https://github.com/cole-trapnell-lab/monocle-release/blob/master/R/normalization.R#L140
 #'
 #' @param expr_matrix TPM matrix
 #' @param exp_capture_rate expected capture rate; default=0.25

@@ -13,7 +13,6 @@
 #' @param remove_bias_in_counts boolean; if TRUE (default) the internal mRNA bias that is present in count data will be *removed* using the number of reads mapped to each cell
 #' @param remove_bias_in_counts_method 'read-number' (default) or 'gene-number'; method with which the mRNA bias in counts will be removed
 #' @param norm_counts boolean; if TRUE (default) the samples simulated with counts will be normalized to CPMs
-#' @param ncores numeric; number of cores used to create simulation
 #'
 #' @return returns two vectors (one based on counts, one based on tpm; depends on which matrices are present in data) with expression values for all genes in the provided dataset
 simulate_sample <- function(data,
@@ -23,8 +22,7 @@ simulate_sample <- function(data,
                             total_read_counts,
                             remove_bias_in_counts,
                             remove_bias_in_counts_method,
-                            norm_counts,
-                            ncores){
+                            norm_counts){
 
   if(!all(names(simulation_vector) %in% unique(SummarizedExperiment::colData(data)[["cell_type"]]))){
     stop("Some cell-types in the provided simulation vector are not in the annotation.")
@@ -140,7 +138,7 @@ simulate_sample <- function(data,
 #' @param total_read_counts numeric; sets the total read count value for each sample
 #' @param whitelist list; give a list of cell-types you want to keep for the simulation; if NULL, all are used
 #' @param blacklist list; give a list of cell-types you want to remove for the simulation; if NULL, all are used; is applied after whitelist
-#' @param ncores numeric; number of cores to use (default = 1)
+#' @param ncores numeric; number of cores to use (default = 1); will be added to BiocParallel::MulticoreParam 
 #'
 #' @return named list; \code{bulk} a \link[SummarizedExperiment]{SummarizedExperiment} object, where the assays store the simulated bulk RNAseq datasets. Can hold either one or two assays, depending on how many matrices were present in the dataset
 #' \code{cell-fractions} is a dataframe with the simulated cell-fractions per sample;
@@ -229,6 +227,9 @@ simulate_bulk <- function(data,
                           blacklist = NULL,
                           ncores = 1){
 
+  # use the specified number of cores
+  param <- BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE)
+  
   # keep only cell-types which are in whitelist in annotation & count matrix
   if(!is.null(whitelist)){
     if(!all(whitelist %in% SummarizedExperiment::colData(data)[["cell_type"]])){
@@ -374,19 +375,18 @@ simulate_bulk <- function(data,
   ##### generate the samples #####
 
   # sample cells and generate pseudo-bulk profiles
-  all_samples <- parallel::mclapply(simulation_vector_list, function(x){
+  all_samples <- BiocParallel::bplapply(simulation_vector_list, function(x){
     samples <- simulate_sample(data=data,
-                             scaling_vector = scaling_vector,
-                             simulation_vector = x,
-                             total_cells = ncells,
-                             total_read_counts = total_read_counts,
-                             remove_bias_in_counts = remove_bias_in_counts,
-                             remove_bias_in_counts_method = remove_bias_in_counts_method,
-                             norm_counts = norm_counts,
-                             ncores=ncores)
+                               scaling_vector = scaling_vector,
+                               simulation_vector = x,
+                               total_cells = ncells,
+                               total_read_counts = total_read_counts,
+                               remove_bias_in_counts = remove_bias_in_counts,
+                               remove_bias_in_counts_method = remove_bias_in_counts_method,
+                               norm_counts = norm_counts)
 
     return(samples)
-  }, mc.cores = ncores)
+  }, BPPARAM = param)
 
   bulk_counts <- Matrix::Matrix(sapply(all_samples, "[[", 1), sparse=TRUE)
   if('tpm' %in% names(SummarizedExperiment::assays(data))){
