@@ -56,19 +56,28 @@ $error
 [1] "At least 80% of man pages documenting exported objects must have runnable examples. The following pages do not:"
 --> all remaining functions require special file/data input (for example h5ad files). I guess a runnable example is too much effort in this case..
 
+> it is something you might need to justify. Not a killer thing, but it is good to have runnable examples in general. Maybe a small set, to be inserted as a data component?
+
 $warning
 [1] "The following files are over 5MB in size: '.git/objects/pack/pack-cbd871970bfe6032cfa700142fbd42c42e9cae78.pack'"
 
 [2] "Evaluate more vignette chunks."
 --> how 'bad' is this?
 
+> it depends. If you have one vignette, and 80% are un-eval'd, well, that's bad. If (as in your case) you have 4 vignettes, and some have uneval'd chunks, it is less problematic.
+Probably evaluated on a case by case basis, I'd say.
+
 $note
 [1] " Avoid sapply(); use vapply()"    
 --> kind of tricky in some cases to replace sapply unfortunantely..
 
+> I know- do try, you "just" need to pass the *expected value type...*
+
 [2] " Avoid the use of 'paste' in condition signals"                                                                                                                                   
 [3] "Avoid '<<-' if possible (found in 1 files)"  
 --> cannot replace without breaking something
+
+> Ok, got it. "It's a note", and it says "if possible". If it really cannot be avoided, well, it will stay :)
 
 [4] "Recommended function length <= 50 lines."                                                                                                                                         
 [5] "Usage of dontrun{} / donttest{} found in man page examples."                                                                                                                      
