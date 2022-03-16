@@ -98,3 +98,7 @@ If you wish to see all datasets which are included in sfaira you can use the fol
 all_datasets <- SimBu::sfaira_overview(setup_list = setup_list)
 head(all_datasets)
 ```
+
+```{r}
+sessionInfo()
+```

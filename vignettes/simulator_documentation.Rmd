@@ -8,7 +8,7 @@ colorlinks: yes
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Getting started with the pseudo-bulk simulator R package}
-  %\VignetteEngine{rmarkdown::render}
+  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
@@ -55,8 +55,8 @@ One represents raw count data, while the other matrix represents scaled TPM-like
 immune cell types.
 
 ```{r}
-counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = T)
-tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = T)
+counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
 tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
 
 colnames(counts) <- paste0("cell_",rep(1:300))
@@ -107,9 +107,10 @@ We are now ready to simulate the first pseudo bulk samples with the created data
 simulation <- SimBu::simulate_bulk(data = ds,
                                    scenario = "random", 
                                    scaling_factor = "NONE", 
-                                   ncells=1000, 
-                                   nsamples = 20, 
-                                   ncores = 4)
+                                   ncells=100, 
+                                   nsamples = 10, 
+                                   BPPARAM = BiocParallel::MulticoreParam(workers = 4),  #this will use 4 threads to run the simulation
+                                   run_parallel = TRUE)                                 #multi-threading to TRUE
 ```
 
 `ncells` sets the number of cells in each sample, while `nsamples` sets the total amount of simulated samples. \
@@ -133,13 +134,13 @@ in the provided dataset. If it consists of 20% T cells, 30% B cells and 50% NK c
 samples will mirror these fractions. Similar to the uniform scenario, you can add a small variation
 to these fractions with the `balance_uniform_mirror_scenario` parameter.
 
-* *controlled*: here you need to set two additional parameters for the `simulate_bulk()` function:
-`spike_in_cell_type` sets the cell-type you want to be over-representing and 
-`spike_in_amount` sets the fraction of this cell-type. You could for example use `B-cell` and `0.5`
+* *weighted*: here you need to set two additional parameters for the `simulate_bulk()` function:
+`weighted_cell_type` sets the cell-type you want to be over-representing and 
+`weighted_amount` sets the fraction of this cell-type. You could for example use `B-cell` and `0.5`
 to create samples, where 50% are B-cells and the rest is filled randomly with other cell-types. \
 
-* *unique*: this creates simulations of only one single cell-type. You have to provide the name
-of this cell-type with the `unique_cell_type` parameter. 
+* *pure*: this creates simulations of only one single cell-type. You have to provide the name
+of this cell-type with the `pure_cell_type` parameter. 
 
 * *custom*: here you are able to create your own set of cell-type fractions. When using this scenario,
 you additionally need to provide a dataframe in the `custom_scenario_data` parameter, where each row represents
@@ -148,13 +149,13 @@ one cell-type, which also occurs in the dataset and describes the fraction of th
 per sample need to sum up to 1. An example can be seen here:
 
 ```{r, format="markdown"}
-unique_scenario_dataframe <- data.frame(
+pure_scenario_dataframe <- data.frame(
   "B cells" = c(0.2, 0.1, 0.5, 0.3),
   "T cells" = c(0.3, 0.8, 0.2, 0.5),
   "NK cells" = c(0.5, 0.1, 0.3, 0.2),
   row.names = c("sample1","sample2","sample3","sample4")
 )
-unique_scenario_dataframe
+pure_scenario_dataframe
 ```
 
 
@@ -164,9 +165,9 @@ The `simulation` object contains three named entries: \
 
 * `bulk`: a SummarizedExperiment object with the pseudo-bulk dataset(s) stored in the `assays`. They can be accessed like this:
 
-```{r, eval=FALSE}
-SummarizedExperiment::assays(simulation$bulk)[["bulk_counts"]]
-SummarizedExperiment::assays(simulation$bulk)[["bulk_tpm"]]
+```{r}
+dim(SummarizedExperiment::assays(simulation$bulk)[["bulk_counts"]])
+dim(SummarizedExperiment::assays(simulation$bulk)[["bulk_tpm"]])
 ```
 
 If only a single matrix was given to the dataset initially, only one assay is filled.
@@ -175,10 +176,26 @@ If only a single matrix was given to the dataset initially, only one assay is fi
 
 * `scaling_vector`: a named list, with the used scaling value for each cell from the single cell dataset. \
 
+It is also possible to merge simulations:
+
+```{r}
+
+simulation2 <- SimBu::simulate_bulk(data = ds,
+                                   scenario = "even", 
+                                   scaling_factor = "NONE", 
+                                   ncells=1000, 
+                                   nsamples = 10, 
+                                   BPPARAM = BiocParallel::MulticoreParam(workers = 4),  
+                                   run_parallel = TRUE)
+
+merged_simulations <- SimBu::merge_simulations(list(simulation, simulation2))
+```
+
+
 Finally here is a barplot of the resulting simulation:
 
 ```{r, fig.width=8, fig.height=8}
-SimBu::plot_simulation(simulation = simulation)
+SimBu::plot_simulation(simulation = merged_simulations)
 ```
 
 
@@ -195,7 +212,8 @@ simulation <- SimBu::simulate_bulk(data = ds,
                                    scaling_factor = "NONE", 
                                    ncells=1000, 
                                    nsamples = 20, 
-                                   ncores = 4,
+                                   BPPARAM = BiocParallel::MulticoreParam(workers = 4),  
+                                   run_parallel = TRUE,
                                    whitelist = c("T cells CD4", "T cells CD8"))
 
 SimBu::plot_simulation(simulation = simulation)
@@ -204,5 +222,8 @@ SimBu::plot_simulation(simulation = simulation)
 In the same way, you can also provide a `blacklist` parameter, where you name the
 cell-types you **don't** want to be included in your simulation.
 
+```{r}
+sessionInfo()
+```
 
 # References

@@ -12,10 +12,10 @@ dataset_sfaira_multiple(
   name,
   spike_in_col = NULL,
   additional_cols = NULL,
-  filter_genes = T,
+  filter_genes = TRUE,
   variance_cutoff = 0,
   type_abundance_cutoff = 0,
-  scale_tpm = T
+  scale_tpm = TRUE
 )
 }
 \arguments{
@@ -48,4 +48,12 @@ dataset object
 You can apply different filters on the whole data-zoo of sfaria; the resulting single-cell datasets will
 be combined into a single dataset which you can use for simulation
 Note: only datasets in sfaira with annotation are considered!
+}
+\examples{
+\dontrun{
+ds_human_pancreas <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
+                                                    organisms = "Homo sapiens",
+                                                    tissues = "pancreas",
+                                                    name="human_pancreas")
+}
 }

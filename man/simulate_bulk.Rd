@@ -6,13 +6,13 @@
 \usage{
 simulate_bulk(
   data,
-  scenario = c("even", "random", "mirror_db", "controlled", "unique", "custom"),
+  scenario = c("even", "random", "mirror_db", "weighted", "pure", "custom"),
   scaling_factor = c("NONE", "census", "spike_in", "custom", "read_number",
     "expressed_genes", "annotation_column"),
   scaling_factor_single_cell = TRUE,
-  controlled_cell_type = NULL,
-  controlled_amount = NULL,
-  unique_cell_type = NULL,
+  weighted_cell_type = NULL,
+  weighted_amount = NULL,
+  pure_cell_type = NULL,
   custom_scenario_data = NULL,
   custom_scaling_vector = NULL,
   balance_uniform_mirror_scenario = 0.01,
@@ -24,23 +24,24 @@ simulate_bulk(
   total_read_counts = NULL,
   whitelist = NULL,
   blacklist = NULL,
-  ncores = 1
+  BPPARAM = BiocParallel::bpparam(),
+  run_parallel = FALSE
 )
 }
 \arguments{
 \item{data}{(mandatory) \link[SummarizedExperiment]{SummarizedExperiment} object}
 
-\item{scenario}{(mandatory) select on of the pre-defined cell-type fraction scenarios; possible are: \code{even},\code{random},\code{mirror_db},\code{unique},\code{controlled}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.}
+\item{scenario}{(mandatory) select on of the pre-defined cell-type fraction scenarios; possible are: \code{even},\code{random},\code{mirror_db},\code{pure},\code{weighted}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.}
 
 \item{scaling_factor}{(mandatory) name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read_number}, \code{expressed_genes}, \code{custom} or \code{NONE} for no scaling factor}
 
 \item{scaling_factor_single_cell}{boolean: decide if a scaling value for each single cell is calculated (default) or the median of all scaling values for each cell type is calculated}
 
-\item{controlled_cell_type}{name of cell-type used for \code{controlled} scenario}
+\item{weighted_cell_type}{name of cell-type used for \code{weighted} scenario}
 
-\item{controlled_amount}{fraction of cell-type used for \code{controlled} scenario; must be between \code{0} and \code{0.99}}
+\item{weighted_amount}{fraction of cell-type used for \code{weighted} scenario; must be between \code{0} and \code{0.99}}
 
-\item{unique_cell_type}{name of cell-type for \code{unique} scenario}
+\item{pure_cell_type}{name of cell-type for \code{pure} scenario}
 
 \item{custom_scenario_data}{dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.}
 
@@ -64,7 +65,9 @@ simulate_bulk(
 
 \item{blacklist}{list; give a list of cell-types you want to remove for the simulation; if NULL, all are used; is applied after whitelist}
 
-\item{ncores}{numeric; number of cores to use (default = 1)}
+\item{BPPARAM}{BiocParallel::bpparam() by default; if specific number of threads x want to be used, insert: BiocParallel::MulticoreParam(workers = x)}
+
+\item{run_parallel}{boolean, decide if multi-threaded calculation will be run. FALSE by default}
 }
 \value{
 named list; \code{bulk} a \link[SummarizedExperiment]{SummarizedExperiment} object, where the assays store the simulated bulk RNAseq datasets. Can hold either one or two assays, depending on how many matrices were present in the dataset
@@ -77,7 +80,6 @@ will be sampled for the simulation. Also a \code{scenario} has to be selected, w
 \code{scaling_factor} on how the read counts will be transformed proir to the simulation.
 }
 \examples{
-\dontrun{
 #generate sample single-cell data to work with:
 
 counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
@@ -105,14 +107,14 @@ dataset <- SimBu::dataset(annotation = annotation,
 # this creates a basic pseudo-bulk dataset with uniform cell-type distribution
 # and no additional transformation of the data with 10 samples and 2000 cells each
 
-s<-simulate_bulk(dataset,
+s<-SimBu::simulate_bulk(dataset,
               scenario="even",
               scaling_factor="NONE",
               nsamples=10,
               ncells=100)
 
 # use a blacklist to exclude certain cell-types for the simulation
-s<-simulate_bulk(dataset,
+s<-SimBu::simulate_bulk(dataset,
               scenario="even",
               scaling_factor="NONE",
               nsamples=10,
@@ -120,24 +122,23 @@ s<-simulate_bulk(dataset,
               blacklist=c("Monocytes","Macrophages"))
 
 
-# use the unique scenario to only have B cells
-s<-simulate_bulk(dataset,
-              scenario="unique",
+# use the pure scenario to only have B cells
+s<-SimBu::simulate_bulk(dataset,
+              scenario="pure",
               scaling_factor="NONE",
               nsamples=10,
               ncells=100,
-              unique_cell_type="B cells")
+              pure_cell_type="B cells")
 
 # simulate a dataset with custom cell-type fraction for each of the 3 samples
 fractions <- data.frame("B cells"=c(0.2,0.4,0.2),
                         "T cells CD4"=c(0.4,0.2,0.1),
                         "Macrophages"=c(0.4,0.4,0.7), check.names = FALSE)
-s<-simulate_bulk(dataset,
+s<-SimBu::simulate_bulk(dataset,
               scenario="custom",
               scaling_factor="NONE",
               nsamples=3,
               ncells=2000,
               custom_scenario_data=fractions)
-}
 
 }

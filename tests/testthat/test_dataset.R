@@ -1,15 +1,16 @@
 library(Matrix)
 library(SummarizedExperiment)
 
-test_that('can create dataset with counts or counts+tpm', {
-  counts <-  Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
-  tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
-  tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
+counts <-  Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
 
-  colnames(counts) <- paste0("cell_",rep(1:300))
-  colnames(tpm) <- paste0("cell_",rep(1:300))
-  rownames(counts) <- paste0("gene_",rep(1:1000))
-  rownames(tpm) <- paste0("gene_",rep(1:1000))
+colnames(counts) <- paste0("cell_",rep(1:300))
+colnames(tpm) <- paste0("cell_",rep(1:300))
+rownames(counts) <- paste0("gene-",rep(1:1000))
+rownames(tpm) <- paste0("gene-",rep(1:1000))
+
+test_that('can create dataset with counts or counts+tpm', {
 
   annotation <- data.frame("ID" = paste0("cell_",rep(1:300)),
                            "cell_type" = c(rep("T cells CD4",300)))
@@ -21,9 +22,6 @@ test_that('can create dataset with counts or counts+tpm', {
 
 
 test_that('carry over additional columns from annotation + have nReads_SimBu and nGenes_SimBu in anno', {
-  counts <-  Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
-  colnames(counts) <- paste0("cell_",rep(1:300))
-  rownames(counts) <- paste0("gene_",rep(1:1000))
 
   annotation <- data.frame("ID"=paste0("cell_",rep(1:300)),
                            "cell_type" = c(rep("T cells CD4",300)),
@@ -44,4 +42,22 @@ test_that('carry over additional columns from annotation + have nReads_SimBu and
   testthat::expect_true('nReads_SimBu' %in% colnames(anno_ds))
   testthat::expect_true('nGenes_SimBu' %in% colnames(anno_ds))
 
+})
+
+test_that('can create dataset from seurat object', {
+  
+  annotation <- data.frame("ID"=paste0("cell_",rep(1:300)),
+                           "cell_type"=c(rep("T cells CD4",50),
+                                         rep("T cells CD8",50),
+                                         rep("Macrophages",100),
+                                         rep("NK cells",10),
+                                         rep("B cells",70),
+                                         rep("Monocytes",20)),
+                           row.names = paste0("cell_",rep(1:300)))
+  
+  seurat_obj <- Seurat::CreateSeuratObject(counts = counts, assay = 'counts', meta.data = annotation)
+  tpm_assay <- Seurat::CreateAssayObject(counts = tpm)
+  seurat_obj[['tpm']] <- tpm_assay
+  
+  testthat::expect_s4_class(SimBu::dataset_seurat(seurat_obj = seurat_obj, count_assay = "counts",cell_id_col = 'ID', cell_type_col = 'cell_type', tpm_assay = 'tpm', name = "seurat_dataset"), 'SummarizedExperiment')
 })

@@ -53,7 +53,7 @@ generate_summarized_experiment <- function(annotation, count_matrix, tpm_matrix,
   # generate new IDs for the cells
   n_cells <- dim(count_matrix)[2]
   cells_old <- colnames(count_matrix)
-  new_ids <- paste0(name,"_", rep(1:n_cells))
+  new_ids <- paste0(name,"_", seq_len(n_cells))
 
   #### build annotation table ####
   anno_df <- data.frame(cell_ID = new_ids,
@@ -109,7 +109,7 @@ generate_summarized_experiment <- function(annotation, count_matrix, tpm_matrix,
 
   # handle TPM matrix (if present)
   if(!is.null(tpm_matrix)){
-    if(!check_if_tpm(tpm_matrix)){warning("Warning: Some cells in your TPM matrix are not scaled between 7e5 and 1e6, as it would be expected for TPM data.")}
+    if(!check_if_tpm(tpm_matrix)){message("Some cells in your TPM matrix are not scaled between 7e5 and 1e6, as it would be expected for TPM data. Moving on..")}
     tpm_matrix <- compare_matrix_with_annotation(tpm_matrix, annotation)
     colnames(tpm_matrix) <- new_ids
     # remove low abundant cells
@@ -155,7 +155,23 @@ generate_summarized_experiment <- function(annotation, count_matrix, tpm_matrix,
 #' @return Return a \link[SummarizedExperiment]{SummarizedExperiment} object
 #' @export
 #'
-dataset <- function(annotation, count_matrix = NULL, tpm_matrix = NULL, name = "SimBu_dataset",spike_in_col=NULL, additional_cols=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=T){
+#' @examples
+#'
+#' counts <-  Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
+#'
+#' colnames(counts) <- paste0("cell_",rep(1:300))
+#' colnames(tpm) <- paste0("cell_",rep(1:300))
+#' rownames(counts) <- paste0("gene_",rep(1:1000))
+#' rownames(tpm) <- paste0("gene_",rep(1:1000))
+#'
+#' annotation <- data.frame("ID" = paste0("cell_",rep(1:300)),
+#'                          "cell_type" = c(rep("T cells CD4",300)))
+#'
+#' ds <- SimBu::dataset(annotation = annotation, count_matrix = counts, tpm_matrix = tpm, name = "test_dataset")
+#'
+dataset <- function(annotation, count_matrix = NULL, tpm_matrix = NULL, name = "SimBu_dataset",spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
 
   generate_summarized_experiment(annotation=annotation,
                                  count_matrix=count_matrix,
@@ -186,7 +202,24 @@ dataset <- function(annotation, count_matrix = NULL, tpm_matrix = NULL, name = "
 #' @return \link[SummarizedExperiment]{SummarizedExperiment} object
 #' @export
 #'
-dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NULL,  additional_cols=NULL,filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=T){
+#' @examples
+#'
+#' counts <-  Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
+#'
+#' colnames(counts) <- paste0("cell_",rep(1:300))
+#' colnames(tpm) <- paste0("cell_",rep(1:300))
+#' rownames(counts) <- paste0("gene_",rep(1:1000))
+#' rownames(tpm) <- paste0("gene_",rep(1:1000))
+#'
+#' annotation <- data.frame("ID" = paste0("cell_",rep(1:300)),
+#'                          "cell_type" = c(rep("T cells CD4",300)))
+#'
+#' ds1 <- SimBu::dataset(annotation = annotation, count_matrix = counts, tpm_matrix = tpm, name = "test_dataset1")
+#' ds2 <- SimBu::dataset(annotation = annotation, count_matrix = counts, tpm_matrix = tpm, name = "test_dataset2")
+#' ds_merged <- SimBu::dataset_merge(list(ds1, ds2))
+dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NULL,  additional_cols=NULL,filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
   if(length(dataset_list) <= 1){
     stop("You need at least 2 datasets to merge them into one!")
   }
@@ -200,17 +233,18 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
   }
 
   # merge SEs
-  merged_se <- do.call(cbind, dataset_list)
+  merged_se <- do.call(SummarizedExperiment::cbind, dataset_list)
 
   if("counts" %in% names(SummarizedExperiment::assays(merged_se))){
-    counts <- Matrix::Matrix(SummarizedExperiment::assays(merged_se)[["counts"]], sparse = T)
+    counts <- Matrix::Matrix(SummarizedExperiment::assays(merged_se)[["counts"]], sparse = TRUE)
   }else{counts <- NULL}
   if("tpm" %in% names(SummarizedExperiment::assays(merged_se))){
-    tpm <- Matrix::Matrix(SummarizedExperiment::assays(merged_se)[["tpm"]], sparse = T)
+    tpm <- Matrix::Matrix(SummarizedExperiment::assays(merged_se)[["tpm"]], sparse = TRUE)
   }else{tpm <- NULL}
 
   # combine all annotation dataframes to a single dataframe
   anno_df <- data.frame(SummarizedExperiment::colData(merged_se))
+  anno_df$ID <- anno_df[['cell_ID']]
 
   # check if there is a spike_in value for each sample; else cannot use it
   if(sum(is.na(anno_df[["spike_in"]])) > 0){
@@ -233,9 +267,10 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
 
 #' Function to generate a \link[SummarizedExperiment]{SummarizedExperiment} using a h5ad file for the counts
 #'
-#' @param annotation (mandatory) dataframe; needs columns 'ID' and 'cell_type'; 'ID' needs to be equal with cell_names in count_matrix
 #' @param h5ad_file_counts (mandatory) h5ad file with raw count data
 #' @param h5ad_file_tpm h5ad file with TPM count data
+#' @param cell_id_col (mandatory) name of column in Seurat meta.data with unique cell ids
+#' @param cell_type_col (mandatory) name of column in Seurat meta.data with cell type name
 #' @param name name of the dataset; will be used for new unique IDs of cells#' @param spike_in_col which column in annotation contains information on spike_in counts, which can be used to re-scale counts; mandatory for spike_in scaling factor in simulation
 #' @param spike_in_col which column in annotation contains information on spike_in counts, which can be used to re-scale counts; mandatory for spike_in scaling factor in simulation
 #' @param additional_cols list of column names in annotation, that should be stored as well in dataset object
@@ -247,7 +282,38 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
 #' @return Return a \link[SummarizedExperiment]{SummarizedExperiment} object
 #' @export
 #'
-dataset_h5ad <- function(annotation, h5ad_file_counts, h5ad_file_tpm = NULL, name = "SimBu_dataset",spike_in_col=NULL, additional_cols=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=T){
+#' @examples
+#' counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
+#' 
+#' colnames(counts) <- paste0("cell-",rep(1:300))
+#' colnames(tpm) <- paste0("cell-",rep(1:300))
+#' rownames(counts) <- paste0("gene-",rep(1:1000))
+#' rownames(tpm) <- paste0("gene-",rep(1:1000))
+#' 
+#' annotation <- data.frame("ID"=paste0("cell-",rep(1:300)), 
+#'                          "cell_type"=c(rep("T cells CD4",50), 
+#'                                        rep("T cells CD8",50),
+#'                                        rep("Macrophages",100),
+#'                                        rep("NK cells",10),
+#'                                        rep("B cells",70),
+#'                                        rep("Monocytes",20)),
+#'                          row.names = paste0("cell-",rep(1:300)))
+#' 
+#' ad <- anndata::AnnData(X=counts, 
+#'                        obs = data.frame(genes=rownames(counts), row.names=rownames(counts)), 
+#'                        var = annotation)                                                     
+#' counts_file <- tempfile(pattern = 'test',fileext = '.h5ad')
+#' anndata::write_h5ad(anndata = ad, filename = counts_file)
+#' 
+#' 
+#' ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = counts_file,
+#'                                name = "h5ad_dataset",
+#'                                cell_id_col = 'ID', 
+#'                                cell_type_col = 'cell_type')
+ 
+dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = 'ID', cell_type_col = 'cell_type', name = "SimBu_dataset",spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
 
   if(all(is.null(c(h5ad_file_counts, h5ad_file_tpm)))){
     stop("You need to provide at least one h5ad file.")
@@ -261,13 +327,25 @@ dataset_h5ad <- function(annotation, h5ad_file_counts, h5ad_file_tpm = NULL, nam
     file_type <- tools::file_ext(h5ad_file_counts)
     if(file_type == "h5ad"){
       ad <- anndata::read_h5ad(h5ad_file_counts)
-      ad <- ad$transpose()
-      count_matrix <- Matrix::Matrix(as.matrix(ad$X), sparse = T)
+      #ad <- ad$transpose()
+      count_matrix <- Matrix::Matrix(as.matrix(ad$X), sparse = TRUE)
       rownames(count_matrix) <- ad$obs_names
       colnames(count_matrix) <- ad$var_names
+      anno_counts <- data.frame(ad$var)
+      if(!cell_id_col %in% colnames(anno_counts)){
+        stop('Cannot find cell_id_col in cell annotation of h5ad_file_counts.')
+      }
+      if(!cell_type_col %in% colnames(anno_counts)){
+        stop('Cannot find cell_type_col in cell annotation of h5ad_file_counts.')
+      }
+      colnames(anno_counts)[which(colnames(anno_counts) == cell_id_col)] <- 'ID'
+      colnames(anno_counts)[which(colnames(anno_counts) == cell_type_col)] <- 'cell_type'
     }else{
       stop("No valid file type; only h5ad is permitted")
     }
+  }else{
+    count_matrix <- NULL
+    anno_counts <- NULL
   }
 
   if(!is.null(h5ad_file_tpm) && !file.exists(h5ad_file_tpm)){
@@ -278,12 +356,35 @@ dataset_h5ad <- function(annotation, h5ad_file_counts, h5ad_file_tpm = NULL, nam
     file_type <- tools::file_ext(h5ad_file_tpm)
     if(file_type == "h5ad"){
       ad <- anndata::read_h5ad(h5ad_file_tpm)
-      ad <- ad$transpose()
-      tpm_matrix <- Matrix::Matrix(as.matrix(ad$X), sparse = T)
+      #ad <- ad$transpose()
+      tpm_matrix <- Matrix::Matrix(as.matrix(ad$X), sparse = TRUE)
       rownames(tpm_matrix) <- ad$obs_names
       colnames(tpm_matrix) <- ad$var_names
+      anno_tpm <- data.frame(ad$var)
+      if(!cell_id_col %in% colnames(anno_tpm)){
+        stop('Cannot find cell_id_col in cell annotation of h5ad_file_tpm.')
+      }
+      if(!cell_type_col %in% colnames(anno_tpm)){
+        stop('Cannot find cell_type_col in cell annotation of h5ad_file_tpm.')
+      }
+      colnames(anno_tpm)[which(colnames(anno_tpm) == cell_id_col)] <- 'ID'
+      colnames(anno_tpm)[which(colnames(anno_tpm) == cell_type_col)] <- 'cell_type'
     }else{
       stop("No valid file type; only h5ad is permitted")
+    }
+  }else{
+    tpm_matrix <- NULL
+    anno_tpm <- NULL
+  }
+  
+  # check if both annotations are equal
+  if(!is.null(anno_tpm)){
+    if(!all(anno_counts[['ID']] %in% anno_tpm[['ID']])){
+      warning('Not all cells are present in counts and tpm annotation. Intersection will be used.')
+      intersect_cells <- Reduce(intersect, list(anno_counts[['ID']], anno_tpm[['ID']]))
+      annotation <- anno_counts[anno_counts[['ID']] %in%intersect_cells,]
+    }else{
+      annotation <- anno_counts  
     }
   }
 
@@ -318,7 +419,36 @@ dataset_h5ad <- function(annotation, h5ad_file_counts, h5ad_file_tpm = NULL, nam
 #' @return Return a \link[SummarizedExperiment]{SummarizedExperiment} object
 #' @export
 #'
-dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, tpm_assay=NULL, name = "SimBu_dataset", spike_in_col=NULL, additional_cols=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=T){
+#' @examples
+#' counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
+#' 
+#' colnames(counts) <- paste0("cell-",rep(1:300))
+#' colnames(tpm) <- paste0("cell-",rep(1:300))
+#' rownames(counts) <- paste0("gene-",rep(1:1000))
+#' rownames(tpm) <- paste0("gene-",rep(1:1000))
+#' 
+#' annotation <- data.frame("ID"=paste0("cell-",rep(1:300)), 
+#'                          "cell_type"=c(rep("T cells CD4",50), 
+#'                                        rep("T cells CD8",50),
+#'                                        rep("Macrophages",100),
+#'                                        rep("NK cells",10),
+#'                                        rep("B cells",70),
+#'                                        rep("Monocytes",20)),
+#'                          row.names = paste0("cell-",rep(1:300)))
+#' 
+#' seurat_obj <- Seurat::CreateSeuratObject(counts = counts, assay = 'counts', meta.data = annotation)
+#' tpm_assay <- Seurat::CreateAssayObject(counts = tpm)
+#' seurat_obj[['tpm']] <- tpm_assay
+#' 
+#' ds_seurat <- SimBu::dataset_seurat(seurat_obj = seurat_obj, 
+#'                                    count_assay = "counts", 
+#'                                    cell_id_col = 'ID', 
+#'                                    cell_type_col = 'cell_type', 
+#'                                    tpm_assay = 'tpm',
+#'                                    name = "seurat_dataset")
+dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, tpm_assay=NULL, name = "SimBu_dataset", spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
 
   if(is.null(count_assay)){
     stop("You have to provide the name of the assay in the Seurat object which contains count data.")
@@ -349,7 +479,7 @@ dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, 
 
 
   tryCatch({
-    count_matrix <- seurat_obj@assays[["count_assay"]]@counts
+    count_matrix <- seurat_obj@assays[[count_assay]]@counts
   }, error=function(e){
     stop(paste("Could not access count matrix from Seurat object (counts): ", e))
     return(NULL)
@@ -358,7 +488,7 @@ dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, 
 
   if(!is.null(tpm_assay)){
     tryCatch({
-      tpm_matrix <- seurat_obj@assays[["tpm_assay"]]@counts
+      tpm_matrix <- seurat_obj@assays[[tpm_assay]]@counts
     }, error=function(e){
       stop(paste("Could not access count matrix from Seurat object (tpm): ", e))
       return(NULL)
@@ -394,8 +524,14 @@ dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, 
 #' @return dataset object
 #' @export
 #'
+#' @examples
+#' \dontrun{
+#' ds_miller <- dataset_sfaira(sfaira_id="human_lung_2020_10x3v2_miller_001_10.1016/j.devcel.2020.01.033",
+#'                             sfaira_setup = setup_list,name = "Miller")
+#' }
+#'
 dataset_sfaira <- function(sfaira_id, sfaira_setup, name,
-                           spike_in_col=NULL, additional_cols=NULL, force=F, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=T){
+                           spike_in_col=NULL, additional_cols=NULL, force=FALSE, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
 
   if(is.null(sfaira_setup)){
     warning("You need to setup sfaira first; please use setup_sfaira() to do so.")
@@ -451,8 +587,15 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name,
 #' @return dataset object
 #' @export
 #'
+#' @examples
+#' \dontrun{
+#' ds_human_pancreas <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
+#'                                                     organisms = "Homo sapiens",
+#'                                                     tissues = "pancreas",
+#'                                                     name="human_pancreas")
+#' }
 dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, sfaira_setup, name,
-                                    spike_in_col=NULL, additional_cols=NULL, filter_genes=T, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=T){
+                                    spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
   if(is.null(sfaira_setup)){
     warning("You need to setup sfaira first; please use setup_sfaira() to do so.")
     return(NULL)
@@ -484,7 +627,7 @@ dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, s
 }
 
 
-#' check for correct column names in annotation file and replace them if neccesary
+#' check for correct column names in annotation file and replace them if necessary
 #'
 #' @param annotation dataframe; annotation dataframe
 #' @param cell_column name of cell-type column; default is "cell_type"
@@ -539,6 +682,14 @@ check_if_tpm <- function(tpm_matrix, lower_limit=7e5){
 }
 
 
+#' Check if annotation and matrix have same cells
+#'
+#' Otherwise intersection of both is used
+#'
+#' @param m matrix, column names are cells
+#' @param annotation data.frame, rownames are genes, cell names are in ID column
+#'
+#' @return intersected matrix
 compare_matrix_with_annotation <- function(m, annotation){
   genes_m <- rownames(m)
   cells_m <- colnames(m)
@@ -560,8 +711,15 @@ compare_matrix_with_annotation <- function(m, annotation){
 }
 
 
-# filter one (or two) expression matrix by genes
-filter_matrix <- function(m1, m2=NULL, filter_genes=T, variance_cutoff=0){
+#' filter one (or two) expression matrix by genes
+#'
+#' @param m1 Matrix 1
+#' @param m2 Matrix 2 (optional)
+#' @param filter_genes boolean
+#' @param variance_cutoff numeric, genes below this variance value are removed
+#'
+#' @return filtered matrix
+filter_matrix <- function(m1, m2=NULL, filter_genes=TRUE, variance_cutoff=0){
 
   genes <- rownames(m1)
 

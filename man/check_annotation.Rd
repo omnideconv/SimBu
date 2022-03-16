@@ -2,7 +2,7 @@
 % Please edit documentation in R/dataset.R
 \name{check_annotation}
 \alias{check_annotation}
-\title{check for correct column names in annotation file and replace them if neccesary}
+\title{check for correct column names in annotation file and replace them if necessary}
 \usage{
 check_annotation(annotation, cell_column = "cell_type", id_column = 1)
 }
@@ -17,5 +17,5 @@ check_annotation(annotation, cell_column = "cell_type", id_column = 1)
 annotation dataframe with correct column names
 }
 \description{
-check for correct column names in annotation file and replace them if neccesary
+check for correct column names in annotation file and replace them if necessary
 }

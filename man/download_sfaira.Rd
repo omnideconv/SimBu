@@ -7,7 +7,7 @@
 download_sfaira(
   setup_list,
   id,
-  force = F,
+  force = FALSE,
   synapse_user = NULL,
   synapse_pw = NULL
 )
