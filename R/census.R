@@ -7,7 +7,8 @@
 #' @param matrix sparse count matrix; cells in columns, genes in rows
 #' @param exp_capture_rate expected capture rate; default=0.25
 #' @param expr_threshold expression threshold; default=0
-#' @param ncores numeric; number of cores to use (default = 1); will be added to BiocParallel::MulticoreParam
+#' @param BPPARAM BiocParallel::bpparam() by default; if specific number of threads x want to be used, insert: BiocParallel::MulticoreParam(workers = x)  
+#' @param run_parallel boolean, decide if multi-threaded calculation will be run. FALSE by default
 #'
 #' @return a vector for each cell-type, with a scaling factor which can be used to transform the counts of the matrix
 #' @export
@@ -18,10 +19,12 @@
 #' tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
 #' cen <- SimBu::census(tpm)
 #'
-census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1){
+census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, BPPARAM=BiocParallel::bpparam(), run_parallel=FALSE){
   
-  # use the specified number of cores
-  param <- BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE)
+  # switch multi-threading on/off 
+  if(!run_parallel){
+    BPPARAM <- BiocParallel::MulticoreParam(workers = 1)  
+  }
   
   #order_cells <- colnames(matrix)
   ncuts <- dim(matrix)[2]/1000
@@ -36,7 +39,7 @@ census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, ncores=1){
 
     cen <- census_monocle(chunk, exp_capture_rate=exp_capture_rate, expr_threshold=expr_threshold)
     return(cen)
-  },BPPARAM = param))
+  },BPPARAM = BPPARAM))
 
 
   return(out)

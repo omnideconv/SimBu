@@ -26,7 +26,7 @@ To install the package, run this:
 
 ```{r, eval=FALSE}
 install.packages("devtools")
-#devtools::install_github("omnideconv/SimBu") #add auth_token=XXX to download from private repository
+devtools::install_github("omnideconv/SimBu") #add auth_token=XXX to download from private repository
 ```
 
 
@@ -107,9 +107,10 @@ We are now ready to simulate the first pseudo bulk samples with the created data
 simulation <- SimBu::simulate_bulk(data = ds,
                                    scenario = "random", 
                                    scaling_factor = "NONE", 
-                                   ncells=1000, 
-                                   nsamples = 20, 
-                                   ncores = 4)
+                                   ncells=100, 
+                                   nsamples = 10, 
+                                   BPPARAM = BiocParallel::MulticoreParam(workers = 4),  #this will use 4 threads to run the simulation
+                                   run_parallel = TRUE)                                 #multi-threading to TRUE
 ```
 
 `ncells` sets the number of cells in each sample, while `nsamples` sets the total amount of simulated samples. \
@@ -164,9 +165,9 @@ The `simulation` object contains three named entries: \
 
 * `bulk`: a SummarizedExperiment object with the pseudo-bulk dataset(s) stored in the `assays`. They can be accessed like this:
 
-```{r, eval=FALSE}
-SummarizedExperiment::assays(simulation$bulk)[["bulk_counts"]]
-SummarizedExperiment::assays(simulation$bulk)[["bulk_tpm"]]
+```{r}
+dim(SummarizedExperiment::assays(simulation$bulk)[["bulk_counts"]])
+dim(SummarizedExperiment::assays(simulation$bulk)[["bulk_tpm"]])
 ```
 
 If only a single matrix was given to the dataset initially, only one assay is filled.
@@ -175,10 +176,26 @@ If only a single matrix was given to the dataset initially, only one assay is fi
 
 * `scaling_vector`: a named list, with the used scaling value for each cell from the single cell dataset. \
 
+It is also possible to merge simulations:
+
+```{r}
+
+simulation2 <- SimBu::simulate_bulk(data = ds,
+                                   scenario = "even", 
+                                   scaling_factor = "NONE", 
+                                   ncells=1000, 
+                                   nsamples = 10, 
+                                   BPPARAM = BiocParallel::MulticoreParam(workers = 4),  
+                                   run_parallel = TRUE)
+
+merged_simulations <- SimBu::merge_simulations(list(simulation, simulation2))
+```
+
+
 Finally here is a barplot of the resulting simulation:
 
 ```{r, fig.width=8, fig.height=8}
-SimBu::plot_simulation(simulation = simulation)
+SimBu::plot_simulation(simulation = merged_simulations)
 ```
 
 
@@ -195,7 +212,8 @@ simulation <- SimBu::simulate_bulk(data = ds,
                                    scaling_factor = "NONE", 
                                    ncells=1000, 
                                    nsamples = 20, 
-                                   ncores = 4,
+                                   BPPARAM = BiocParallel::MulticoreParam(workers = 4),  
+                                   run_parallel = TRUE,
                                    whitelist = c("T cells CD4", "T cells CD8"))
 
 SimBu::plot_simulation(simulation = simulation)

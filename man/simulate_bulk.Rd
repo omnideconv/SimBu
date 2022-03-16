@@ -24,7 +24,8 @@ simulate_bulk(
   total_read_counts = NULL,
   whitelist = NULL,
   blacklist = NULL,
-  ncores = 1
+  BPPARAM = BiocParallel::bpparam(),
+  run_parallel = FALSE
 )
 }
 \arguments{
@@ -64,7 +65,9 @@ simulate_bulk(
 
 \item{blacklist}{list; give a list of cell-types you want to remove for the simulation; if NULL, all are used; is applied after whitelist}
 
-\item{ncores}{numeric; number of cores to use (default = 1); will be added to BiocParallel::MulticoreParam}
+\item{BPPARAM}{BiocParallel::bpparam() by default; if specific number of threads x want to be used, insert: BiocParallel::MulticoreParam(workers = x)}
+
+\item{run_parallel}{boolean, decide if multi-threaded calculation will be run. FALSE by default}
 }
 \value{
 named list; \code{bulk} a \link[SummarizedExperiment]{SummarizedExperiment} object, where the assays store the simulated bulk RNAseq datasets. Can hold either one or two assays, depending on how many matrices were present in the dataset

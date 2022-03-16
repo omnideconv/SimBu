@@ -59,8 +59,6 @@ $error
 > it is something you might need to justify. Not a killer thing, but it is good to have runnable examples in general. Maybe a small set, to be inserted as a data component?
 
 $warning
-[1] "The following files are over 5MB in size: '.git/objects/pack/pack-cbd871970bfe6032cfa700142fbd42c42e9cae78.pack'"
-
 [2] "Evaluate more vignette chunks."
 --> how 'bad' is this?
 

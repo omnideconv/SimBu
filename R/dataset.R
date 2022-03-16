@@ -267,9 +267,10 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
 
 #' Function to generate a \link[SummarizedExperiment]{SummarizedExperiment} using a h5ad file for the counts
 #'
-#' @param annotation (mandatory) dataframe; needs columns 'ID' and 'cell_type'; 'ID' needs to be equal with cell_names in count_matrix
 #' @param h5ad_file_counts (mandatory) h5ad file with raw count data
 #' @param h5ad_file_tpm h5ad file with TPM count data
+#' @param cell_id_col (mandatory) name of column in Seurat meta.data with unique cell ids
+#' @param cell_type_col (mandatory) name of column in Seurat meta.data with cell type name
 #' @param name name of the dataset; will be used for new unique IDs of cells#' @param spike_in_col which column in annotation contains information on spike_in counts, which can be used to re-scale counts; mandatory for spike_in scaling factor in simulation
 #' @param spike_in_col which column in annotation contains information on spike_in counts, which can be used to re-scale counts; mandatory for spike_in scaling factor in simulation
 #' @param additional_cols list of column names in annotation, that should be stored as well in dataset object
@@ -282,14 +283,37 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = h5ad_file_counts,
-#'                                h5ad_file_tpm = h5ad_file_tpm,
-#'                                annotation = annotation,
-#'                                name = "h5ad_dataset")
-#' }
+#' counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
+#' 
+#' colnames(counts) <- paste0("cell-",rep(1:300))
+#' colnames(tpm) <- paste0("cell-",rep(1:300))
+#' rownames(counts) <- paste0("gene-",rep(1:1000))
+#' rownames(tpm) <- paste0("gene-",rep(1:1000))
+#' 
+#' annotation <- data.frame("ID"=paste0("cell-",rep(1:300)), 
+#'                          "cell_type"=c(rep("T cells CD4",50), 
+#'                                        rep("T cells CD8",50),
+#'                                        rep("Macrophages",100),
+#'                                        rep("NK cells",10),
+#'                                        rep("B cells",70),
+#'                                        rep("Monocytes",20)),
+#'                          row.names = paste0("cell-",rep(1:300)))
+#' 
+#' ad <- anndata::AnnData(X=counts, 
+#'                        obs = data.frame(genes=rownames(counts), row.names=rownames(counts)), 
+#'                        var = annotation)                                                     
+#' counts_file <- tempfile(pattern = 'test',fileext = '.h5ad')
+#' anndata::write_h5ad(anndata = ad, filename = counts_file)
+#' 
+#' 
+#' ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = counts_file,
+#'                                name = "h5ad_dataset",
+#'                                cell_id_col = 'ID', 
+#'                                cell_type_col = 'cell_type')
  
-dataset_h5ad <- function(annotation, h5ad_file_counts, h5ad_file_tpm = NULL, name = "SimBu_dataset",spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
+dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = 'ID', cell_type_col = 'cell_type', name = "SimBu_dataset",spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
 
   if(all(is.null(c(h5ad_file_counts, h5ad_file_tpm)))){
     stop("You need to provide at least one h5ad file.")
@@ -303,13 +327,25 @@ dataset_h5ad <- function(annotation, h5ad_file_counts, h5ad_file_tpm = NULL, nam
     file_type <- tools::file_ext(h5ad_file_counts)
     if(file_type == "h5ad"){
       ad <- anndata::read_h5ad(h5ad_file_counts)
-      ad <- ad$transpose()
+      #ad <- ad$transpose()
       count_matrix <- Matrix::Matrix(as.matrix(ad$X), sparse = TRUE)
       rownames(count_matrix) <- ad$obs_names
       colnames(count_matrix) <- ad$var_names
+      anno_counts <- data.frame(ad$var)
+      if(!cell_id_col %in% colnames(anno_counts)){
+        stop('Cannot find cell_id_col in cell annotation of h5ad_file_counts.')
+      }
+      if(!cell_type_col %in% colnames(anno_counts)){
+        stop('Cannot find cell_type_col in cell annotation of h5ad_file_counts.')
+      }
+      colnames(anno_counts)[which(colnames(anno_counts) == cell_id_col)] <- 'ID'
+      colnames(anno_counts)[which(colnames(anno_counts) == cell_type_col)] <- 'cell_type'
     }else{
       stop("No valid file type; only h5ad is permitted")
     }
+  }else{
+    count_matrix <- NULL
+    anno_counts <- NULL
   }
 
   if(!is.null(h5ad_file_tpm) && !file.exists(h5ad_file_tpm)){
@@ -320,12 +356,35 @@ dataset_h5ad <- function(annotation, h5ad_file_counts, h5ad_file_tpm = NULL, nam
     file_type <- tools::file_ext(h5ad_file_tpm)
     if(file_type == "h5ad"){
       ad <- anndata::read_h5ad(h5ad_file_tpm)
-      ad <- ad$transpose()
+      #ad <- ad$transpose()
       tpm_matrix <- Matrix::Matrix(as.matrix(ad$X), sparse = TRUE)
       rownames(tpm_matrix) <- ad$obs_names
       colnames(tpm_matrix) <- ad$var_names
+      anno_tpm <- data.frame(ad$var)
+      if(!cell_id_col %in% colnames(anno_tpm)){
+        stop('Cannot find cell_id_col in cell annotation of h5ad_file_tpm.')
+      }
+      if(!cell_type_col %in% colnames(anno_tpm)){
+        stop('Cannot find cell_type_col in cell annotation of h5ad_file_tpm.')
+      }
+      colnames(anno_tpm)[which(colnames(anno_tpm) == cell_id_col)] <- 'ID'
+      colnames(anno_tpm)[which(colnames(anno_tpm) == cell_type_col)] <- 'cell_type'
     }else{
       stop("No valid file type; only h5ad is permitted")
+    }
+  }else{
+    tpm_matrix <- NULL
+    anno_tpm <- NULL
+  }
+  
+  # check if both annotations are equal
+  if(!is.null(anno_tpm)){
+    if(!all(anno_counts[['ID']] %in% anno_tpm[['ID']])){
+      warning('Not all cells are present in counts and tpm annotation. Intersection will be used.')
+      intersect_cells <- Reduce(intersect, list(anno_counts[['ID']], anno_tpm[['ID']]))
+      annotation <- anno_counts[anno_counts[['ID']] %in%intersect_cells,]
+    }else{
+      annotation <- anno_counts  
     }
   }
 
@@ -361,14 +420,34 @@ dataset_h5ad <- function(annotation, h5ad_file_counts, h5ad_file_tpm = NULL, nam
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' ds_seurat <- SimBu::dataset_seurat(seurat_obj = seurat_obj,
-#'                                    count_assay = "RNA",
-#'                                    cell_id_col = 'orig.ident',
-#'                                    cell_type_col = 'ct',
-#'                                    tpm_assay = 'TPM',
+#' counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
+#' 
+#' colnames(counts) <- paste0("cell-",rep(1:300))
+#' colnames(tpm) <- paste0("cell-",rep(1:300))
+#' rownames(counts) <- paste0("gene-",rep(1:1000))
+#' rownames(tpm) <- paste0("gene-",rep(1:1000))
+#' 
+#' annotation <- data.frame("ID"=paste0("cell-",rep(1:300)), 
+#'                          "cell_type"=c(rep("T cells CD4",50), 
+#'                                        rep("T cells CD8",50),
+#'                                        rep("Macrophages",100),
+#'                                        rep("NK cells",10),
+#'                                        rep("B cells",70),
+#'                                        rep("Monocytes",20)),
+#'                          row.names = paste0("cell-",rep(1:300)))
+#' 
+#' seurat_obj <- Seurat::CreateSeuratObject(counts = counts, assay = 'counts', meta.data = annotation)
+#' tpm_assay <- Seurat::CreateAssayObject(counts = tpm)
+#' seurat_obj[['tpm']] <- tpm_assay
+#' 
+#' ds_seurat <- SimBu::dataset_seurat(seurat_obj = seurat_obj, 
+#'                                    count_assay = "counts", 
+#'                                    cell_id_col = 'ID', 
+#'                                    cell_type_col = 'cell_type', 
+#'                                    tpm_assay = 'tpm',
 #'                                    name = "seurat_dataset")
-#' }
 dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, tpm_assay=NULL, name = "SimBu_dataset", spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
 
   if(is.null(count_assay)){
@@ -400,7 +479,7 @@ dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, 
 
 
   tryCatch({
-    count_matrix <- seurat_obj@assays[["count_assay"]]@counts
+    count_matrix <- seurat_obj@assays[[count_assay]]@counts
   }, error=function(e){
     stop(paste("Could not access count matrix from Seurat object (counts): ", e))
     return(NULL)
@@ -409,7 +488,7 @@ dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, 
 
   if(!is.null(tpm_assay)){
     tryCatch({
-      tpm_matrix <- seurat_obj@assays[["tpm_assay"]]@counts
+      tpm_matrix <- seurat_obj@assays[[tpm_assay]]@counts
     }, error=function(e){
       stop(paste("Could not access count matrix from Seurat object (tpm): ", e))
       return(NULL)
@@ -548,7 +627,7 @@ dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, s
 }
 
 
-#' check for correct column names in annotation file and replace them if neccesary
+#' check for correct column names in annotation file and replace them if necessary
 #'
 #' @param annotation dataframe; annotation dataframe
 #' @param cell_column name of cell-type column; default is "cell_type"

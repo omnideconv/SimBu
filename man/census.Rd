@@ -4,7 +4,13 @@
 \alias{census}
 \title{Applies the Census count transformation on a count matrix}
 \usage{
-census(matrix, exp_capture_rate = 0.25, expr_threshold = 0, ncores = 1)
+census(
+  matrix,
+  exp_capture_rate = 0.25,
+  expr_threshold = 0,
+  BPPARAM = BiocParallel::bpparam(),
+  run_parallel = FALSE
+)
 }
 \arguments{
 \item{matrix}{sparse count matrix; cells in columns, genes in rows}
@@ -13,7 +19,9 @@ census(matrix, exp_capture_rate = 0.25, expr_threshold = 0, ncores = 1)
 
 \item{expr_threshold}{expression threshold; default=0}
 
-\item{ncores}{numeric; number of cores to use (default = 1); will be added to BiocParallel::MulticoreParam}
+\item{BPPARAM}{BiocParallel::bpparam() by default; if specific number of threads x want to be used, insert: BiocParallel::MulticoreParam(workers = x)}
+
+\item{run_parallel}{boolean, decide if multi-threaded calculation will be run. FALSE by default}
 }
 \value{
 a vector for each cell-type, with a scaling factor which can be used to transform the counts of the matrix

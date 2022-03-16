@@ -138,7 +138,9 @@ simulate_sample <- function(data,
 #' @param total_read_counts numeric; sets the total read count value for each sample
 #' @param whitelist list; give a list of cell-types you want to keep for the simulation; if NULL, all are used
 #' @param blacklist list; give a list of cell-types you want to remove for the simulation; if NULL, all are used; is applied after whitelist
-#' @param ncores numeric; number of cores to use (default = 1); will be added to BiocParallel::MulticoreParam 
+#' @param BPPARAM BiocParallel::bpparam() by default; if specific number of threads x want to be used, insert: BiocParallel::MulticoreParam(workers = x)  
+#' @param run_parallel boolean, decide if multi-threaded calculation will be run. FALSE by default
+#' 
 #'
 #' @return named list; \code{bulk} a \link[SummarizedExperiment]{SummarizedExperiment} object, where the assays store the simulated bulk RNAseq datasets. Can hold either one or two assays, depending on how many matrices were present in the dataset
 #' \code{cell-fractions} is a dataframe with the simulated cell-fractions per sample;
@@ -225,10 +227,13 @@ simulate_bulk <- function(data,
                           total_read_counts = NULL,
                           whitelist = NULL,
                           blacklist = NULL,
-                          ncores = 1){
+                          BPPARAM=BiocParallel::bpparam(), 
+                          run_parallel=FALSE){
 
-  # use the specified number of cores
-  param <- BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE)
+  # switch multi-threading on/off 
+  if(!run_parallel){
+    BPPARAM <- BiocParallel::MulticoreParam(workers = 1)  
+  }
   
   # keep only cell-types which are in whitelist in annotation & count matrix
   if(!is.null(whitelist)){
@@ -370,7 +375,8 @@ simulate_bulk <- function(data,
                                         scaling_factor = scaling_factor,
                                         custom_scaling_vector = custom_scaling_vector,
                                         scaling_factor_single_cell = scaling_factor_single_cell,
-                                        ncores = ncores)
+                                        BPPARAM = BPPARAM,
+                                        run_parallel = run_parallel)
 
   ##### generate the samples #####
 
@@ -386,11 +392,19 @@ simulate_bulk <- function(data,
                                norm_counts = norm_counts)
 
     return(samples)
-  }, BPPARAM = param)
+  }, BPPARAM = BPPARAM)
 
-  bulk_counts <- Matrix::Matrix(sapply(all_samples, "[[", 1), sparse=TRUE)
+  bulk_counts <- Matrix::Matrix(vapply(X = all_samples, 
+                                       FUN = "[[", 
+                                       ...=1, 
+                                       FUN.VALUE = double(dim(SummarizedExperiment::assays(data)[['counts']])[1])), 
+                                sparse=TRUE)
   if('tpm' %in% names(SummarizedExperiment::assays(data))){
-    bulk_tpm <- Matrix::Matrix(sapply(all_samples, "[[", 2), sparse=TRUE)
+    bulk_tpm <- Matrix::Matrix(vapply(X = all_samples, 
+                                      FUN = "[[", 
+                                      ...=2, 
+                                      FUN.VALUE = double(dim(SummarizedExperiment::assays(data)[['tpm']])[1])), 
+                               sparse=TRUE)
     assays <- list(bulk_counts = bulk_counts, bulk_tpm = bulk_tpm)
   }else{
     assays <- list(bulk_counts = bulk_counts)
@@ -427,11 +441,12 @@ simulate_bulk <- function(data,
 #' @param scaling_factor name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read_number}, \code{custom} or \code{NONE} for no scaling factor
 #' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1
 #' @param scaling_factor_single_cell boolean: decide if a scaling value for each single cell is calculated (default) or the median of all scaling values for each cell type is calculated
-#' @param ncores number of cores
+#' @param BPPARAM BiocParallel::bpparam() by default; if specific number of threads x want to be used, insert: BiocParallel::MulticoreParam(workers = x)  
+#' @param run_parallel boolean, decide if multi-threaded calculation will be run. FALSE by default
 #'
 #' @return a named vector with a scaling value for each cell in the dataset
 #'
-calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, scaling_factor_single_cell, ncores){
+calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, scaling_factor_single_cell, BPPARAM, run_parallel){
 
   if(scaling_factor == "census"){
     if("tpm" %in% names(SummarizedExperiment::assays(data))){
@@ -440,7 +455,7 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, sca
       warning("Scaling factor 'Census' requires TPM data, which is not available in the given dataset. Counts will be used instead.")
       m <- SummarizedExperiment::assays(data)[["counts"]]
     }
-    scaling_vector <- census(m, ncores = ncores, expr_threshold = 0.1, exp_capture_rate = .25)
+    scaling_vector <- census(m, expr_threshold = 0.1, exp_capture_rate = .25, BPPARAM = BPPARAM, run_parallel = run_parallel)
     scaling_vector <- scaling_vector/10e6
   }else if(scaling_factor == "spike_in"){
     # if you want to transform your counts by spike_in data, an additional column in the annotation table is needed
@@ -679,7 +694,6 @@ merge_simulations <- function(simulation_list){
 
   merged_se <- do.call(SummarizedExperiment::cbind, sapply(simulation_list, "[[", "bulk"))
 
-
   # merge cell fractions dataframe
   sample_names <- unlist(lapply(simulation_list, function(x){rownames(x[["cell_fractions"]])}))
   sample_names <- paste0(sample_names,"_",seq_len(length(sample_names)))
@@ -689,10 +703,11 @@ merge_simulations <- function(simulation_list){
 
 
   # list of scaling vectors
-  scaling_vector <- sapply(simulation_list, "[[", "scaling_vector")
-  colnames(scaling_vector) <- paste0("simulation_",seq_len(length(simulation_list)))
-
-
+  scaling_vector <- lapply(X = simulation_list, 
+                           FUN = "[[",
+                           ... = "scaling_vector")
+  names(scaling_vector) <- names(simulation_list)
+  
   return(list(bulk = merged_se,
               cell_fractions = cell_fractions,
               scaling_vector = scaling_vector))

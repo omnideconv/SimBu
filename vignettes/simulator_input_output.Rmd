@@ -33,30 +33,66 @@ Using existing count matrices and annotations is already covered in the ["Gettin
 When generating a dataset with your own data, you need to provide the `count_matrix` parameter of `dataset()`; additionally you can provide a TPM matrix with the `tpm_matrix`. This will then lead to two simulations, one based on counts and one based on TPMs. For either of them, genes are located in the rows, cells in the columns.\
 Additionally, an annotation table is needed, with the cell-type annotations. It needs to consist of at least out of 2 columns: `ID` and `cell_type`, where `ID` has to be identical to the column names of the provides matrix/matrices. If not all cells appear in the annotation or matrix, the intersection of both is used to generate the dataset. \
 
+Here is some example data:
+
+```{r}
+counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
+
+colnames(counts) <- paste0("cell-",rep(1:300))
+colnames(tpm) <- paste0("cell-",rep(1:300))
+rownames(counts) <- paste0("gene-",rep(1:1000))
+rownames(tpm) <- paste0("gene-",rep(1:1000))
+
+annotation <- data.frame("ID"=paste0("cell-",rep(1:300)), 
+                         "cell_type"=c(rep("T cells CD4",50), 
+                                       rep("T cells CD8",50),
+                                       rep("Macrophages",100),
+                                       rep("NK cells",10),
+                                       rep("B cells",70),
+                                       rep("Monocytes",20)),
+                         row.names = paste0("cell-",rep(1:300)))
+
+seurat_obj <- Seurat::CreateSeuratObject(counts = counts, assay = 'counts', meta.data = annotation)
+tpm_assay <- Seurat::CreateAssayObject(counts = tpm)
+seurat_obj[['tpm']] <- tpm_assay
+
+seurat_obj
+```
+
 
 ### Seurat
 
 It is possible to use a Seurat object to build a dataset; give the name of the assay containing count data in the `counts` slot, the name of the column in the meta table with the unique cell IDs and the name of the column in the meta table with the cell type identifier. Additionally you may give the name of the assay containing TPM data in the `counts` slot.
 
-```{r, eval=FALSE}
+```{r}
 ds_seurat <- SimBu::dataset_seurat(seurat_obj = seurat_obj, 
-                                   count_assay = "RNA", 
-                                   cell_id_col = 'orig.ident', 
-                                   cell_type_col = 'ct', 
-                                   tpm_assay = 'TPM',
+                                   count_assay = "counts", 
+                                   cell_id_col = 'ID', 
+                                   cell_type_col = 'cell_type', 
+                                   tpm_assay = 'tpm',
                                    name = "seurat_dataset")
 ```
 
 ### h5ad files
 
-It is possible to use an h5ad file directly, a file format which stores [AnnData](https://anndata.readthedocs.io/en/latest/) objects; again you need an additional dataframe for the annotation: 
+It is possible to use an h5ad file directly, a file format which stores [AnnData](https://anndata.readthedocs.io/en/latest/) objects. As h5ad files can store cell specific information in the `var` layer, no additional annotation input for SimBu is needed. \
+Note: if you want both counts and tpm data as input, you will have to provide two files; the annotation layer `var` has to match between these files, otherwise the intersection will be used. You can provide the column names in `var` which store cell id and cell type with the `cell_id_col` and `cell_type_col` parameters respectively. 
 
-```{r, eval=FALSE}
+```{r}
 
-ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = h5ad_file_counts,
-                               h5ad_file_tpm = h5ad_file_tpm,
-                               annotation = annotation,
-                               name = "h5ad_dataset")
+ad <- anndata::AnnData(X=counts, 
+                       obs = data.frame(genes=rownames(counts), row.names=rownames(counts)), # obs stores gene information
+                       var = annotation)                                                     # var stores cell information
+counts_file <- tempfile(pattern = 'test',fileext = '.h5ad')
+anndata::write_h5ad(anndata = ad, filename = counts_file)
+
+
+ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = counts_file,
+                               name = "h5ad_dataset",
+                               cell_id_col = 'ID', 
+                               cell_type_col = 'cell_type')
 
 ```
 
@@ -64,22 +100,17 @@ ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = h5ad_file_counts,
 
 You are able to merge multiple datasets by using the `dataset_merge` function:
 
-```{r, eval=FALSE}
+```{r}
 
-ds_multiple <- SimBu::dataset_merge(dataset_list = list(ds_1, ds_2, ds_3),
+ds <- SimBu::dataset(annotation = annotation,
+                     count_matrix = counts,
+                     tpm_matrix = tpm,
+                     name = "test_dataset")
+
+ds_multiple <- SimBu::dataset_merge(dataset_list = list(ds_seurat, ds),
                                     name = "ds_multiple")
 
 ```
-
-
-# Simulations
-Once a dataset is generated, you can use `simulate_bulk` to generate pseudo-bulk samples, resulting in an artificial RNA-seq dataset. \
-Similar to datasets, it is also possible to merge simulations:
-
-```{r, eval=FALSE}
-merged_simulations <- SimBu::merge_simulations(list(sim_1, sim_2, sim_3))
-```
-
 
 
 # Output
@@ -89,9 +120,14 @@ The `simulation` object contains three named entries: \
 
 * `bulk`: a SummarizedExperiment object with the pseudo-bulk dataset(s) stored in the `assays`. They can be accessed like this:
 
-```{r, eval=FALSE}
-assays(simulation$bulk)[["bulk_counts"]]
-assays(simulation$bulk)[["bulk_tpm"]]
+```{r}
+simulation <- SimBu::simulate_bulk(data = ds_multiple,
+                                   scenario = "random", 
+                                   scaling_factor = "NONE",
+                                   nsamples = 10, ncells = 100)
+
+dim(SummarizedExperiment::assays(simulation$bulk)[["bulk_counts"]])
+dim(SummarizedExperiment::assays(simulation$bulk)[["bulk_tpm"]])
 ```
 
 If only the count matrix was given to the dataset initially, only the `bulk_counts` assay is filled.

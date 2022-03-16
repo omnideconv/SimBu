@@ -9,7 +9,8 @@ calc_scaling_vector(
   scaling_factor,
   custom_scaling_vector,
   scaling_factor_single_cell,
-  ncores
+  BPPARAM,
+  run_parallel
 )
 }
 \arguments{
@@ -21,7 +22,9 @@ calc_scaling_vector(
 
 \item{scaling_factor_single_cell}{boolean: decide if a scaling value for each single cell is calculated (default) or the median of all scaling values for each cell type is calculated}
 
-\item{ncores}{number of cores}
+\item{BPPARAM}{BiocParallel::bpparam() by default; if specific number of threads x want to be used, insert: BiocParallel::MulticoreParam(workers = x)}
+
+\item{run_parallel}{boolean, decide if multi-threaded calculation will be run. FALSE by default}
 }
 \value{
 a named vector with a scaling value for each cell in the dataset
