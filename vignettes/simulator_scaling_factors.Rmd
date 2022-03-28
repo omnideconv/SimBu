@@ -37,7 +37,7 @@ rownames(counts) <- paste0("gene_",rep(1:1000))
 rownames(tpm) <- paste0("gene_",rep(1:1000))  
 
 annotation <- data.frame("ID"=paste0("cell_",rep(1:300)),
-                           "cell_type" = c(rep("T cells CD4",300)),
+                           "cell_type" = c(rep("T cells CD4",150), rep("T cells CD8",150)),
                            'spikes' = runif(300),
                            'add_1' = runif(300),
                            'add_2' = runif(300))
@@ -129,13 +129,13 @@ sim_epic <- SimBu::simulate_bulk(data=ds,
 ```
 
 
-We can also try out some custom scaling factors, for example increasing the expression levels for a single cell-type (B cells) by 10-fold compared to the rest. All cell-types which are not mentioned in the named list given to `custom_scaling_vector` will be transformed with a scaling factor of 1, meaning nothing changes for them.
+We can also try out some custom scaling factors, for example increasing the expression levels for a single cell-type (T cells CD8) by 10-fold compared to the rest. All cell-types which are not mentioned in the named list given to `custom_scaling_vector` will be transformed with a scaling factor of 1, meaning nothing changes for them.
 
 ```{r}
 sim_extreme_b <- SimBu::simulate_bulk(data = ds, 
                                       scenario = "random",
                                       scaling_factor = "custom",
-                                      custom_scaling_vector = c("B cells"=10), 
+                                      custom_scaling_vector = c("T cells CD8"=10), 
                                       nsamples = 10, 
                                       ncells = 100, 
                                       BPPARAM = BiocParallel::MulticoreParam(workers = 4),  
