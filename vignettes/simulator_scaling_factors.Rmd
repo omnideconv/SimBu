@@ -115,15 +115,12 @@ quantiseq
 ```
 
 
-When you want to apply one of these scaling factors into your simulation (therefore in-/decreasing the expression signals for the cell-types), use the `custom` value for the `scaling_factor` parameter. Note, that the input for `custom_scaling_vector` needs to be a named list, so we need to transform the dataframes from above slightly:
+When you want to apply one of these scaling factors into your simulation (therefore in-/decreasing the expression signals for the cell-types), we can use the `scaling_factor` parameter. Note, that these pre-defined scaling factors only offer values for a certain number of cell types, and your annotation in the provided dataset has to match these names 1:1. All cell types from your dataset which are not present in this scaling factor remain unscaled and a warning message will appear.
 
 ```{r}
-scaling_epic <- epic$mRNA
-names(scaling_epic) <- epic$type
 sim_epic <- SimBu::simulate_bulk(data=ds,
                                  scenario = "random",
-                                 scaling_factor="custom", 
-                                 custom_scaling_vector = scaling_epic, 
+                                 scaling_factor="epic",
                                  nsamples = 10, 
                                  ncells=100,
                                  BPPARAM = BiocParallel::MulticoreParam(workers = 4),  
@@ -132,7 +129,7 @@ sim_epic <- SimBu::simulate_bulk(data=ds,
 ```
 
 
-With this approach, we can also try out some custom scaling factors, for example increasing the expression levels for a single cell-type (B cells) by 10-fold compared to the rest. All cell-types which are not mentioned in the named list given to `custom_scaling_vector` will be transformed with a scaling factor of 1, meaning nothing changes for them.
+We can also try out some custom scaling factors, for example increasing the expression levels for a single cell-type (B cells) by 10-fold compared to the rest. All cell-types which are not mentioned in the named list given to `custom_scaling_vector` will be transformed with a scaling factor of 1, meaning nothing changes for them.
 
 ```{r}
 sim_extreme_b <- SimBu::simulate_bulk(data = ds, 

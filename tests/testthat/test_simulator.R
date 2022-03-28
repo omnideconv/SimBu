@@ -43,13 +43,18 @@ test_that('test different scaling factor calculations + mRNA bias removal from c
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'read_number', nsamples = 10, ncells = 100, run_parallel = FALSE)[['bulk']], 'SummarizedExperiment')
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'expressed_genes', nsamples = 10, ncells = 100, run_parallel = FALSE)[['bulk']], 'SummarizedExperiment')
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'expressed_genes', nsamples = 10, ncells = 100, run_parallel = FALSE, scaling_factor_single_cell = FALSE)[['bulk']], 'SummarizedExperiment')
-
+  
+  testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'epic', nsamples = 10, ncells = 100, run_parallel = FALSE)[['bulk']], 'SummarizedExperiment')
+  testthat::expect_warning(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'monaco', nsamples = 10, ncells = 100, run_parallel = FALSE)[['bulk']], 'For some cell type')
+  testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'quantiseq', nsamples = 10, ncells = 100, run_parallel = FALSE)[['bulk']], 'SummarizedExperiment')
 
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'NONE',remove_bias_in_counts = TRUE,remove_bias_in_counts_method = 'read-number', nsamples = 10, ncells = 100, run_parallel = FALSE)[['bulk']], 'SummarizedExperiment')
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'NONE',remove_bias_in_counts = FALSE, nsamples = 10, ncells = 100, run_parallel = FALSE)[['bulk']], 'SummarizedExperiment')
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'NONE',remove_bias_in_counts_method = 'gene-number', nsamples = 10, ncells = 100, run_parallel = FALSE)[['bulk']], 'SummarizedExperiment')
 
 })
+
+
 
 
 test_that('test census', {

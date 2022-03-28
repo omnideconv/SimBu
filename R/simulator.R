@@ -122,7 +122,7 @@ simulate_sample <- function(data,
 #'
 #' @param data (mandatory) \link[SummarizedExperiment]{SummarizedExperiment} object
 #' @param scenario (mandatory) select on of the pre-defined cell-type fraction scenarios; possible are: \code{even},\code{random},\code{mirror_db},\code{pure},\code{weighted}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
-#' @param scaling_factor (mandatory) name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read_number}, \code{expressed_genes}, \code{custom} or \code{NONE} for no scaling factor
+#' @param scaling_factor (mandatory) name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read_number}, \code{expressed_genes}, \code{custom}, \code{epic}, \code{monaco}, \code{quantiseq} or \code{NONE} for no scaling factor
 #' @param scaling_factor_single_cell boolean: decide if a scaling value for each single cell is calculated (default) or the median of all scaling values for each cell type is calculated
 #' @param weighted_cell_type name of cell-type used for \code{weighted} scenario
 #' @param weighted_amount fraction of cell-type used for \code{weighted} scenario; must be between \code{0} and \code{0.99}
@@ -211,7 +211,7 @@ simulate_sample <- function(data,
 #'
 simulate_bulk <- function(data,
                           scenario=c("even","random","mirror_db","weighted","pure", "custom"),
-                          scaling_factor=c("NONE","census","spike_in", "custom", "read_number", "expressed_genes", "annotation_column"),
+                          scaling_factor=c("NONE","census","spike_in", "custom", "read_number", "expressed_genes", "annotation_column","epic","monaco","quantiseq"),
                           scaling_factor_single_cell = TRUE,
                           weighted_cell_type = NULL,
                           weighted_amount = NULL,
@@ -487,18 +487,31 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, sca
     # needs vector with values for existing cell-types
     # cell-types that do not occur in this vector will have scaling-factor of 1
     if(is.null(custom_scaling_vector)){stop("For the custom scaling factor you need to provide a custom_scaling_vector!")}
-
-    missing_cell_types <- as.vector(unique(SummarizedExperiment::colData(data)[["cell_type"]])[which(!unique(SummarizedExperiment::colData(data)[["cell_type"]]) %in% names(custom_scaling_vector))])
-    complete_vector <- rep(1, length(missing_cell_types))
-    names(complete_vector) <- missing_cell_types
-    complete_vector <- data.frame(value=append(complete_vector, custom_scaling_vector), check.names=FALSE)
-    df <- merge(complete_vector, data.frame(SummarizedExperiment::colData(data)), by.x=0,by.y="cell_type", all.y=TRUE)[,c("value","cell_ID")]
-    scaling_vector <- df$value
-    names(scaling_vector) <- df$cell_ID
+    message('Using custom scaling factors.')
+    scaling_vector <- merge_scaling_factor(data = data, 
+                                           scaling_factor_values = custom_scaling_vector, 
+                                           scaling_factor_name = scaling_factor)
 
   }else if(scaling_factor == "NONE"){
     scaling_vector <- rep(1, ncol(data))
     names(scaling_vector) <- SummarizedExperiment::colData(data)[["cell_ID"]]
+    
+  }else if(scaling_factor == 'epic'){
+    message('Using EPIC scaling factors.')
+    scaling_vector <- merge_scaling_factor(data = data, 
+                                           scaling_factor_values = pkg.globals$epic_scaling, 
+                                           scaling_factor_name = scaling_factor)
+  }else if(scaling_factor == 'monaco'){
+    message('Using Monaco scaling factors.')
+    scaling_vector <- merge_scaling_factor(data = data, 
+                                           scaling_factor_values = pkg.globals$monaco_scaling, 
+                                           scaling_factor_name = scaling_factor)
+  }else if(scaling_factor == 'quantiseq'){
+    message('Using quanTIseq scaling factors.')
+    scaling_vector <- merge_scaling_factor(data = data, 
+                                           scaling_factor_values = pkg.globals$qtsq_scaling, 
+                                           scaling_factor_name = scaling_factor)
+    
   }else if(!is.null(scaling_factor)){
     message(paste0("Scaling by ", scaling_factor,"-column in annotation table; if no scaling is wished instead, use 'NONE'."))
     if(!scaling_factor %in% colnames(SummarizedExperiment::colData(data))){stop(paste0("A column with the name ", scaling_factor," cannot be found in the annotation."))}
@@ -508,7 +521,7 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, sca
     colnames(anno_sub) <- c("a","b")
     scaling_vector <- anno_sub$b
     names(scaling_vector) <- anno_sub$a
-
+    
   }else{
     warning("No valid scaling factor method provided. Scaling all cells by 1.")
     scaling_vector <- rep(1, ncol(data))
@@ -715,4 +728,36 @@ merge_simulations <- function(simulation_list){
   return(list(bulk = merged_se,
               cell_fractions = cell_fractions,
               scaling_vector = scaling_vector))
+}
+
+
+
+#' Create scaling vector from custom or pre-defined scaling factor
+#'
+#' @param data 
+#' @param scaling_factor_values 
+#' @param scaling_factor_name 
+#'
+#' @return scaling vector
+merge_scaling_factor <- function(data, scaling_factor_values, scaling_factor_name){
+  # these are the name of cell types in dataset
+  present_types <- unique(data[['cell_type']])
+  # names of cell types in dataset and scaling factor
+  type_intersection <- Reduce(intersect, list(present_types, names(scaling_factor_values)))
+  if(length(type_intersection) == 0){stop(paste0('Could not apply ',scaling_factor_name,' scaling factor, because none of its cell types are present in the provided dataset.'))}
+  # names of cell types which are in scaling factor, but not in dataset
+  missing_types <- present_types[which(!present_types %in% names(scaling_factor_values))]
+  if(length(missing_types) != 0){warning(paste0('For some cell type(s) in the dataset, no scaling factor is available when using ',scaling_factor_name, ': ',missing_types,'. This cell type will not be re-scaled.'))}
+  
+  # missing types are not scaled -> value of 1
+  complete_vector <- rep(1, length(missing_types))
+  names(complete_vector) <- missing_types
+  # combine with scaling values of factor, which correspond to cell types present in dataset
+  complete_vector <- data.frame(value=append(complete_vector, scaling_factor_values[type_intersection]), check.names=FALSE)
+  # give each cell the corresponding scaling value, depending on its type
+  df <- merge(complete_vector, data.frame(SummarizedExperiment::colData(data)), by.x=0,by.y="cell_type", all.y=TRUE)[,c("value","cell_ID")]
+  scaling_vector <- df$value
+  names(scaling_vector) <- df$cell_ID
+  
+  return(scaling_vector)
 }
