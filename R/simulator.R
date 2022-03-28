@@ -12,7 +12,7 @@
 #' @param total_read_counts numeric; sets the total read count value for each sample
 #' @param remove_bias_in_counts boolean; if TRUE (default) the internal mRNA bias that is present in count data will be *removed* using the number of reads mapped to each cell
 #' @param remove_bias_in_counts_method 'read-number' (default) or 'gene-number'; method with which the mRNA bias in counts will be removed
-#' @param norm_counts boolean; if TRUE (default) the samples simulated with counts will be normalized to CPMs
+#' @param norm_counts boolean; if TRUE the samples simulated with counts will be normalized to CPMs, default is FALSE
 #'
 #' @return returns two vectors (one based on counts, one based on tpm; depends on which matrices are present in data) with expression values for all genes in the provided dataset
 simulate_sample <- function(data,
@@ -129,10 +129,10 @@ simulate_sample <- function(data,
 #' @param pure_cell_type name of cell-type for \code{pure} scenario
 #' @param custom_scenario_data dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.
 #' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1; mandatory for \code{custom} scaling factor
-#' @param balance_uniform_mirror_scenario balancing value for the \code{uniform} and \code{mirror_db} scenarios: increasing it will result in more diverse simulated fractions. To get the same fractions in each sample, set to 0. Default is 0.01.
+#' @param balance_even_mirror_scenario balancing value for the \code{uniform} and \code{mirror_db} scenarios: increasing it will result in more diverse simulated fractions. To get the same fractions in each sample, set to 0. Default is 0.01.
 #' @param remove_bias_in_counts boolean; if TRUE (default) the internal mRNA bias that is present in count data will be *removed* using the number of reads mapped to each cell
 #' @param remove_bias_in_counts_method 'read-number' (default) or 'gene-number'; method with which the mRNA bias in counts will be removed
-#' @param norm_counts boolean; if TRUE (default) the samples simulated with counts will be normalized to CPMs
+#' @param norm_counts boolean; if TRUE the samples simulated with counts will be normalized to CPMs, default is FALSE
 #' @param nsamples numeric; number of samples in pseudo-bulk RNAseq dataset (default = 100)
 #' @param ncells numeric; number of cells in each dataset (default = 1000)
 #' @param total_read_counts numeric; sets the total read count value for each sample
@@ -218,10 +218,10 @@ simulate_bulk <- function(data,
                           pure_cell_type = NULL,
                           custom_scenario_data = NULL,
                           custom_scaling_vector = NULL,
-                          balance_uniform_mirror_scenario=0.01,
+                          balance_even_mirror_scenario=0.01,
                           remove_bias_in_counts = TRUE,
                           remove_bias_in_counts_method = 'read-number',
-                          norm_counts = TRUE,
+                          norm_counts = FALSE,
                           nsamples=100,
                           ncells=1000,
                           total_read_counts = NULL,
@@ -233,6 +233,8 @@ simulate_bulk <- function(data,
   # switch multi-threading on/off 
   if(!run_parallel){
     BPPARAM <- BiocParallel::MulticoreParam(workers = 1)  
+  }else{
+    message('Using parallel generation of simulations.')
   }
   
   # keep only cell-types which are in whitelist in annotation & count matrix
@@ -265,7 +267,7 @@ simulate_bulk <- function(data,
     n_cell_types <- length(all_types)
     uniform_value <- 1/length(all_types)
     simulation_vector_list <- lapply(seq_len(nsamples), function(x){
-      m <- round(matrix(abs(stats::rnorm(length(all_types), mean=1/length(all_types), sd=balance_uniform_mirror_scenario)), ncol=n_cell_types), 3)
+      m <- round(matrix(abs(stats::rnorm(length(all_types), mean=1/length(all_types), sd=balance_even_mirror_scenario)), ncol=n_cell_types), 3)
       m <- sweep(m, 1, rowSums(m), FUN="/")
       simulation_vector <- as.vector(m[1,])
       names(simulation_vector) <- all_types
@@ -298,7 +300,7 @@ simulate_bulk <- function(data,
       # each cell-type will be represented as many times as it occurs in the used dataset
       mirror_values <- table(SummarizedExperiment::colData(data)[["cell_type"]])/ncol(data)
       m <- unlist(lapply(mirror_values, function(y){
-        return(abs(round(stats::rnorm(1, mean=y, sd=balance_uniform_mirror_scenario),3)))
+        return(abs(round(stats::rnorm(1, mean=y, sd=balance_even_mirror_scenario),3)))
       }))
       m <- matrix(m, ncol=n_cell_types)
       m <- sweep(m, 1, rowSums(m), FUN="/")
@@ -456,7 +458,8 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, sca
       m <- SummarizedExperiment::assays(data)[["counts"]]
     }
     scaling_vector <- census(m, expr_threshold = 0.1, exp_capture_rate = .25, BPPARAM = BPPARAM, run_parallel = run_parallel)
-    scaling_vector <- scaling_vector/10e6
+    scaling_vector[which(is.na(scaling_vector))] <- 1
+    scaling_vector <- scaling_vector/1e6
   }else if(scaling_factor == "spike_in"){
     # if you want to transform your counts by spike_in data, an additional column in the annotation table is needed
     # with name "spike_in"; the matrix counts will then be transformed accordingly
@@ -466,7 +469,8 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, sca
 
     # get subset of spike_in counts from the sampled cells
     anno_sub <- SummarizedExperiment::colData(data)[,c("cell_ID","spike_in","nReads_SimBu")]
-    scaling_vector <- (anno_sub[['nReads_SimBu']] - anno_sub[['spike_in']])/anno_sub[['nReads_SimBu']]
+    tot_counts <- anno_sub[['nReads_SimBu']] + anno_sub[['spike_in']]  # these are all the reads mapped to transcripts *and* spike-ins 
+    scaling_vector <- anno_sub[['nReads_SimBu']] / tot_counts          # this is the fractions of reads mapped to 'true' transcripts
     names(scaling_vector) <- anno_sub[['cell_ID']]
 
   }else if(scaling_factor == "read_number"){

@@ -15,10 +15,10 @@ simulate_bulk(
   pure_cell_type = NULL,
   custom_scenario_data = NULL,
   custom_scaling_vector = NULL,
-  balance_uniform_mirror_scenario = 0.01,
+  balance_even_mirror_scenario = 0.01,
   remove_bias_in_counts = TRUE,
   remove_bias_in_counts_method = "read-number",
-  norm_counts = TRUE,
+  norm_counts = FALSE,
   nsamples = 100,
   ncells = 1000,
   total_read_counts = NULL,
@@ -47,13 +47,13 @@ simulate_bulk(
 
 \item{custom_scaling_vector}{named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1; mandatory for \code{custom} scaling factor}
 
-\item{balance_uniform_mirror_scenario}{balancing value for the \code{uniform} and \code{mirror_db} scenarios: increasing it will result in more diverse simulated fractions. To get the same fractions in each sample, set to 0. Default is 0.01.}
+\item{balance_even_mirror_scenario}{balancing value for the \code{uniform} and \code{mirror_db} scenarios: increasing it will result in more diverse simulated fractions. To get the same fractions in each sample, set to 0. Default is 0.01.}
 
 \item{remove_bias_in_counts}{boolean; if TRUE (default) the internal mRNA bias that is present in count data will be \emph{removed} using the number of reads mapped to each cell}
 
 \item{remove_bias_in_counts_method}{'read-number' (default) or 'gene-number'; method with which the mRNA bias in counts will be removed}
 
-\item{norm_counts}{boolean; if TRUE (default) the samples simulated with counts will be normalized to CPMs}
+\item{norm_counts}{boolean; if TRUE the samples simulated with counts will be normalized to CPMs, default is FALSE}
 
 \item{nsamples}{numeric; number of samples in pseudo-bulk RNAseq dataset (default = 100)}
 
