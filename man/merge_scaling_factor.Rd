@@ -7,11 +7,11 @@
 merge_scaling_factor(data, scaling_factor_values, scaling_factor_name)
 }
 \arguments{
-\item{data}{}
+\item{data}{dataset}
 
-\item{scaling_factor_values}{}
+\item{scaling_factor_values}{named list of scaling values}
 
-\item{scaling_factor_name}{}
+\item{scaling_factor_name}{name of scaling factor method}
 }
 \value{
 scaling vector

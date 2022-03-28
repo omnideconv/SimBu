@@ -734,9 +734,9 @@ merge_simulations <- function(simulation_list){
 
 #' Create scaling vector from custom or pre-defined scaling factor
 #'
-#' @param data 
-#' @param scaling_factor_values 
-#' @param scaling_factor_name 
+#' @param data dataset
+#' @param scaling_factor_values named list of scaling values
+#' @param scaling_factor_name name of scaling factor method
 #'
 #' @return scaling vector
 merge_scaling_factor <- function(data, scaling_factor_values, scaling_factor_name){
