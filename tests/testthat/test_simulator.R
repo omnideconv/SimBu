@@ -45,7 +45,7 @@ test_that('test different scaling factor calculations + mRNA bias removal from c
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'expressed_genes', nsamples = 10, ncells = 100, run_parallel = FALSE, scaling_factor_single_cell = FALSE)[['bulk']], 'SummarizedExperiment')
   
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'epic', nsamples = 10, ncells = 100, run_parallel = FALSE)[['bulk']], 'SummarizedExperiment')
-  testthat::expect_warning(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'monaco', nsamples = 10, ncells = 100, run_parallel = FALSE)[['bulk']], 'For some cell type')
+  testthat::expect_warning(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'abis', nsamples = 10, ncells = 100, run_parallel = FALSE)[['bulk']], 'For some cell type')
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'quantiseq', nsamples = 10, ncells = 100, run_parallel = FALSE)[['bulk']], 'SummarizedExperiment')
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = 'random', scaling_factor = 'custom',custom_scaling_vector = c("B cells"=10), nsamples = 10, ncells = 100, run_parallel = FALSE)[['bulk']], 'SummarizedExperiment')
 

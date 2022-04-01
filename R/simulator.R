@@ -122,7 +122,7 @@ simulate_sample <- function(data,
 #'
 #' @param data (mandatory) \link[SummarizedExperiment]{SummarizedExperiment} object
 #' @param scenario (mandatory) select on of the pre-defined cell-type fraction scenarios; possible are: \code{even},\code{random},\code{mirror_db},\code{pure},\code{weighted}; you can also use the \code{custom} scenario, where you need to set the \code{custom_scenario_data} parameter.
-#' @param scaling_factor (mandatory) name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read_number}, \code{expressed_genes}, \code{custom}, \code{epic}, \code{monaco}, \code{quantiseq} or \code{NONE} for no scaling factor
+#' @param scaling_factor (mandatory) name of scaling factor; possible are: \code{census}, \code{spike_in}, \code{read_number}, \code{expressed_genes}, \code{custom}, \code{epic}, \code{abis}, \code{quantiseq} or \code{NONE} for no scaling factor
 #' @param scaling_factor_single_cell boolean: decide if a scaling value for each single cell is calculated (default) or the median of all scaling values for each cell type is calculated
 #' @param weighted_cell_type name of cell-type used for \code{weighted} scenario
 #' @param weighted_amount fraction of cell-type used for \code{weighted} scenario; must be between \code{0} and \code{0.99}
@@ -211,7 +211,7 @@ simulate_sample <- function(data,
 #'
 simulate_bulk <- function(data,
                           scenario=c("even","random","mirror_db","weighted","pure", "custom"),
-                          scaling_factor=c("NONE","census","spike_in", "custom", "read_number", "expressed_genes", "annotation_column","epic","monaco","quantiseq"),
+                          scaling_factor=c("NONE","census","spike_in", "custom", "read_number", "expressed_genes", "annotation_column","epic","abis","quantiseq"),
                           scaling_factor_single_cell = TRUE,
                           weighted_cell_type = NULL,
                           weighted_amount = NULL,
@@ -501,10 +501,10 @@ calc_scaling_vector <- function(data, scaling_factor, custom_scaling_vector, sca
     scaling_vector <- merge_scaling_factor(data = data, 
                                            scaling_factor_values = pkg.globals$epic_scaling, 
                                            scaling_factor_name = scaling_factor)
-  }else if(scaling_factor == 'monaco'){
-    message('Using Monaco scaling factors.')
+  }else if(scaling_factor == 'abis'){
+    message('Using ABIS scaling factors.')
     scaling_vector <- merge_scaling_factor(data = data, 
-                                           scaling_factor_values = pkg.globals$monaco_scaling, 
+                                           scaling_factor_values = pkg.globals$abis_scaling, 
                                            scaling_factor_name = scaling_factor)
   }else if(scaling_factor == 'quantiseq'){
     message('Using quanTIseq scaling factors.')

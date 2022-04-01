@@ -30,7 +30,7 @@ names(pkg.globals$epic_scaling) <- c(
   "default"
 )
 
-pkg.globals$monaco_scaling <- c(
+pkg.globals$abis_scaling <- c(
   22824.322779,
   21456.905980,
   17827.199342,
@@ -49,7 +49,7 @@ pkg.globals$monaco_scaling <- c(
   28488.194770,
   325800.989149
 )
-names(pkg.globals$monaco_scaling) <- c(
+names(pkg.globals$abis_scaling) <- c(
   "Monocytes",
   "NK cells",
   "T cells CD8 central memory",
