@@ -386,6 +386,8 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = '
     }else{
       annotation <- anno_counts  
     }
+  }else{
+    annotation <- anno_counts
   }
 
   generate_summarized_experiment(annotation=annotation,
