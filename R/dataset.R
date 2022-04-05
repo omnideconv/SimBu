@@ -328,7 +328,7 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = '
     if(file_type == "h5ad"){
       ad <- anndata::read_h5ad(h5ad_file_counts)
       #ad <- ad$transpose()
-      count_matrix <- Matrix::Matrix(as.matrix(ad$X), sparse = TRUE)
+      count_matrix <- as(as(ad$X, 'CsparseMatrix'), 'dgCMatrix')
       rownames(count_matrix) <- ad$obs_names
       colnames(count_matrix) <- ad$var_names
       anno_counts <- data.frame(ad$var)
@@ -357,7 +357,7 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = '
     if(file_type == "h5ad"){
       ad <- anndata::read_h5ad(h5ad_file_tpm)
       #ad <- ad$transpose()
-      tpm_matrix <- Matrix::Matrix(as.matrix(ad$X), sparse = TRUE)
+      tpm_matrix <- as(as(ad$X, 'CsparseMatrix'), 'dgCMatrix')
       rownames(tpm_matrix) <- ad$obs_names
       colnames(tpm_matrix) <- ad$var_names
       anno_tpm <- data.frame(ad$var)
