@@ -19,6 +19,12 @@ knitr::opts_chunk$set(
 )
 ```
 
+```{r}
+library(Seurat)
+library(anndata)
+library(SimBu)
+```
+
 This chapter covers the different input and output options of the package in detail.
 
 # Input
