@@ -1,5 +1,5 @@
 Package: SimBu
-Title: Simulate bulk RNA-seq datasets from single-cell datasets
+Title: Simulate Bulk RNA-seq Datasets from Single-Cell Datasets
 Version: 0.1.0
 Authors@R: 
     person(given = "Alexander",
