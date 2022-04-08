@@ -66,15 +66,15 @@ annotation <- data.frame("ID"=paste0("cell-",rep(1:300)),
                                        rep("Monocytes",20)),
                          row.names = paste0("cell-",rep(1:300)))
 
-ad <- anndata::AnnData(X=counts, 
-                       obs = data.frame(genes=rownames(counts), row.names=rownames(counts)), 
-                       var = annotation)                                                     
-counts_file <- tempfile(pattern = 'test',fileext = '.h5ad')
-anndata::write_h5ad(anndata = ad, filename = counts_file)
-
-
-ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = counts_file,
-                               name = "h5ad_dataset",
-                               cell_id_col = 'ID', 
-                               cell_type_col = 'cell_type')
+#ad <- anndata::AnnData(X=counts, 
+#                      obs = data.frame(genes=rownames(counts), row.names=rownames(counts)), 
+#                      var = annotation)                                                     
+#counts_file <- tempfile(pattern = 'test',fileext = '.h5ad')
+#anndata::write_h5ad(anndata = ad, filename = counts_file)
+#
+#
+#ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = counts_file,
+#                              name = "h5ad_dataset",
+#                              cell_id_col = 'ID', 
+#                              cell_type_col = 'cell_type')
 }
