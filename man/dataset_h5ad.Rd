@@ -2,7 +2,7 @@
 % Please edit documentation in R/dataset.R
 \name{dataset_h5ad}
 \alias{dataset_h5ad}
-\title{Function to generate a \link[SummarizedExperiment]{SummarizedExperiment} using a h5ad file for the counts}
+\title{Build \link[SummarizedExperiment]{SummarizedExperiment} using a h5ad file for the counts}
 \usage{
 dataset_h5ad(
   h5ad_file_counts,
@@ -23,7 +23,7 @@ dataset_h5ad(
 
 \item{h5ad_file_tpm}{h5ad file with TPM count data}
 
-\item{cell_id_col}{(mandatory) name of column in Seurat meta.data with unique cell ids}
+\item{cell_id_col}{(mandatory) name of column in Seurat meta.data with unique cell ids; 0 for rownames}
 
 \item{cell_type_col}{(mandatory) name of column in Seurat meta.data with cell type name}
 
@@ -45,36 +45,15 @@ dataset_h5ad(
 Return a \link[SummarizedExperiment]{SummarizedExperiment} object
 }
 \description{
-Function to generate a \link[SummarizedExperiment]{SummarizedExperiment} using a h5ad file for the counts
+Build \link[SummarizedExperiment]{SummarizedExperiment} using a h5ad file for the counts
 }
 \examples{
-counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
-tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
-tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
+counts_file <- tempfile(pattern = 'test',fileext = '.h5ad')
+url <- "https://seurat.nygenome.org/pbmc3k_final.h5ad"
+curl::curl_download(url, counts_file)
 
-colnames(counts) <- paste0("cell-",rep(1:300))
-colnames(tpm) <- paste0("cell-",rep(1:300))
-rownames(counts) <- paste0("gene-",rep(1:1000))
-rownames(tpm) <- paste0("gene-",rep(1:1000))
-
-annotation <- data.frame("ID"=paste0("cell-",rep(1:300)), 
-                         "cell_type"=c(rep("T cells CD4",50), 
-                                       rep("T cells CD8",50),
-                                       rep("Macrophages",100),
-                                       rep("NK cells",10),
-                                       rep("B cells",70),
-                                       rep("Monocytes",20)),
-                         row.names = paste0("cell-",rep(1:300)))
-
-#ad <- anndata::AnnData(X=counts, 
-#                      obs = data.frame(genes=rownames(counts), row.names=rownames(counts)), 
-#                      var = annotation)                                                     
-#counts_file <- tempfile(pattern = 'test',fileext = '.h5ad')
-#anndata::write_h5ad(anndata = ad, filename = counts_file)
-#
-#
-#ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = counts_file,
-#                              name = "h5ad_dataset",
-#                              cell_id_col = 'ID', 
-#                              cell_type_col = 'cell_type')
+ds <- dataset_h5ad(h5ad_file_counts = counts_file,
+                   cell_id_col = 0, # this will us the rownames as cell identifiers,
+                   cell_type_col = 'leiden')
+                   
 }

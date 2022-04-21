@@ -2,7 +2,7 @@
 % Please edit documentation in R/dataset.R
 \name{dataset_sfaira}
 \alias{dataset_sfaira}
-\title{Build a dataset using a single sfaira entry ID}
+\title{Build \link[SummarizedExperiment]{SummarizedExperiment} using a single sfaira entry ID}
 \usage{
 dataset_sfaira(
   sfaira_id,
@@ -42,7 +42,7 @@ dataset_sfaira(
 dataset object
 }
 \description{
-Build a dataset using a single sfaira entry ID
+Build \link[SummarizedExperiment]{SummarizedExperiment} using a single sfaira entry ID
 }
 \examples{
 \dontrun{

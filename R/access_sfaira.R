@@ -18,7 +18,7 @@
 setup_sfaira <- function(basedir){
   tryCatch({
     # create conda environment with sfaira
-    proc <- basilisk::basiliskStart(sfaira_env)
+    proc <- basilisk::basiliskStart(SimBu_env)
     on.exit(basilisk::basiliskStop(proc))
     
     # initialize sfaira environment
@@ -54,11 +54,11 @@ setup_sfaira <- function(basedir){
 #' @param synapse_user character; username for synapse portal (https://www.synapse.org)
 #' @param synapse_pw character; password for synapse portal (https://www.synapse.org)
 #'
-#' @return a anndata object, stores counts, metadata and other information on the dataset
+#' @return matrix, gene names and cell IDs
 #'
 download_sfaira <- function(setup_list, id, force=FALSE, synapse_user=NULL, synapse_pw=NULL){
   # create conda environment with sfaira
-  proc <- basilisk::basiliskStart(sfaira_env)
+  proc <- basilisk::basiliskStart(SimBu_env)
   on.exit(basilisk::basiliskStop(proc))
   
   # download and load count matrix of given sfaira ID
@@ -119,7 +119,7 @@ download_sfaira <- function(setup_list, id, force=FALSE, synapse_user=NULL, syna
 #'
 download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, assays=NULL, force=FALSE){
   # create conda environment with sfaira
-  proc <- basilisk::basiliskStart(sfaira_env)
+  proc <- basilisk::basiliskStart(SimBu_env)
   on.exit(basilisk::basiliskStop(proc))
   
   
@@ -189,7 +189,7 @@ download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, a
 sfaira_overview <- function(setup_list){
   
   # create conda environment with sfaira
-  proc <- basilisk::basiliskStart(sfaira_env)
+  proc <- basilisk::basiliskStart(SimBu_env)
   on.exit(basilisk::basiliskStop(proc))
   
   info_list <- basilisk::basiliskRun(proc, function(setup_list){

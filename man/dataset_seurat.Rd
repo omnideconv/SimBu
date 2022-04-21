@@ -2,7 +2,7 @@
 % Please edit documentation in R/dataset.R
 \name{dataset_seurat}
 \alias{dataset_seurat}
-\title{Function to generate a \link[SummarizedExperiment]{SummarizedExperiment} using a \link[Seurat]{Seurat} object}
+\title{Build \link[SummarizedExperiment]{SummarizedExperiment} using a \link[Seurat]{Seurat} object}
 \usage{
 dataset_seurat(
   seurat_obj,
@@ -48,7 +48,7 @@ dataset_seurat(
 Return a \link[SummarizedExperiment]{SummarizedExperiment} object
 }
 \description{
-Function to generate a \link[SummarizedExperiment]{SummarizedExperiment} using a \link[Seurat]{Seurat} object
+Build \link[SummarizedExperiment]{SummarizedExperiment} using a \link[Seurat]{Seurat} object
 }
 \examples{
 counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)

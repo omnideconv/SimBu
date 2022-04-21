@@ -269,7 +269,7 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
 #'
 #' @param h5ad_file_counts (mandatory) h5ad file with raw count data
 #' @param h5ad_file_tpm h5ad file with TPM count data
-#' @param cell_id_col (mandatory) name of column in Seurat meta.data with unique cell ids
+#' @param cell_id_col (mandatory) name of column in Seurat meta.data with unique cell ids; 0 for rownames
 #' @param cell_type_col (mandatory) name of column in Seurat meta.data with cell type name
 #' @param name name of the dataset; will be used for new unique IDs of cells#' @param spike_in_col which column in annotation contains information on spike_in counts, which can be used to re-scale counts; mandatory for spike_in scaling factor in simulation
 #' @param spike_in_col which column in annotation contains information on spike_in counts, which can be used to re-scale counts; mandatory for spike_in scaling factor in simulation
@@ -283,36 +283,14 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
 #' @export
 #'
 #' @examples
-#' counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
-#' tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
-#' tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
-#' 
-#' colnames(counts) <- paste0("cell-",rep(1:300))
-#' colnames(tpm) <- paste0("cell-",rep(1:300))
-#' rownames(counts) <- paste0("gene-",rep(1:1000))
-#' rownames(tpm) <- paste0("gene-",rep(1:1000))
-#' 
-#' annotation <- data.frame("ID"=paste0("cell-",rep(1:300)), 
-#'                          "cell_type"=c(rep("T cells CD4",50), 
-#'                                        rep("T cells CD8",50),
-#'                                        rep("Macrophages",100),
-#'                                        rep("NK cells",10),
-#'                                        rep("B cells",70),
-#'                                        rep("Monocytes",20)),
-#'                          row.names = paste0("cell-",rep(1:300)))
-#' 
-#' #ad <- anndata::AnnData(X=counts, 
-#' #                      obs = data.frame(genes=rownames(counts), row.names=rownames(counts)), 
-#' #                      var = annotation)                                                     
-#' #counts_file <- tempfile(pattern = 'test',fileext = '.h5ad')
-#' #anndata::write_h5ad(anndata = ad, filename = counts_file)
-#' #
-#' #
-#' #ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = counts_file,
-#' #                              name = "h5ad_dataset",
-#' #                              cell_id_col = 'ID', 
-#' #                              cell_type_col = 'cell_type')
- 
+#' counts_file <- tempfile(pattern = 'test',fileext = '.h5ad')
+#' url <- "https://seurat.nygenome.org/pbmc3k_final.h5ad"
+#' curl::curl_download(url, counts_file)
+#'
+#' ds <- dataset_h5ad(h5ad_file_counts = counts_file,
+#'                    cell_id_col = 0, # this will us the rownames as cell identifiers,
+#'                    cell_type_col = 'leiden')
+#'                    
 dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = 'ID', cell_type_col = 'cell_type', name = "SimBu_dataset",spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
 
   if(all(is.null(c(h5ad_file_counts, h5ad_file_tpm)))){
@@ -321,22 +299,30 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = '
 
   if(!is.null(h5ad_file_counts) && !file.exists(h5ad_file_counts)){
     stop("Incorrect path to counts file given; file does not exist.")
+    
   }else if(!is.null(h5ad_file_counts)){
     h5ad_file_counts <- normalizePath(h5ad_file_counts)
 
     file_type <- tools::file_ext(h5ad_file_counts)
     if(file_type == "h5ad"){
-      ad <- anndata::read_h5ad(h5ad_file_counts)
-      #ad <- ad$transpose()
-      count_matrix <- methods::as(methods::as(ad$X, 'CsparseMatrix'), 'dgCMatrix')
-      rownames(count_matrix) <- ad$obs_names
-      colnames(count_matrix) <- ad$var_names
-      anno_counts <- data.frame(ad$var)
+      h5ad_data <- h5ad_to_adata(h5ad_file_counts)
+      count_matrix <- h5ad_data$mm
+      anno_counts <- h5ad_data$anno
+      
+      # find cell id information in annotation dataframe
       if(!cell_id_col %in% colnames(anno_counts)){
-        stop('Cannot find cell_id_col in cell annotation of h5ad_file_counts.')
+        # use rownames as ID if wished
+        if(cell_id_col == 0){
+          anno_counts$ID <- rownames(anno_counts)
+          cell_id_col <- 'ID'
+        }else{
+          stop(paste0('Cannot find "',cell_id_col,'" column in cell annotation of h5ad_file_counts.'))  
+        }
       }
+      
+      # find cell type information in annotation dataframe
       if(!cell_type_col %in% colnames(anno_counts)){
-        stop('Cannot find cell_type_col in cell annotation of h5ad_file_counts.')
+        stop(paste0('Cannot find "',cell_type_col,'" column in cell annotation of h5ad_file_counts.'))
       }
       colnames(anno_counts)[which(colnames(anno_counts) == cell_id_col)] <- 'ID'
       colnames(anno_counts)[which(colnames(anno_counts) == cell_type_col)] <- 'cell_type'
@@ -349,23 +335,31 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = '
   }
 
   if(!is.null(h5ad_file_tpm) && !file.exists(h5ad_file_tpm)){
-    stop("Incorrect path to tpm file given; file does not exist.")
+    stop("Incorrect path to counts file given; file does not exist.")
+    
   }else if(!is.null(h5ad_file_tpm)){
     h5ad_file_tpm <- normalizePath(h5ad_file_tpm)
-
+    
     file_type <- tools::file_ext(h5ad_file_tpm)
     if(file_type == "h5ad"){
-      ad <- anndata::read_h5ad(h5ad_file_tpm)
-      #ad <- ad$transpose()
-      tpm_matrix <- methods::as(methods::as(ad$X, 'CsparseMatrix'), 'dgCMatrix')
-      rownames(tpm_matrix) <- ad$obs_names
-      colnames(tpm_matrix) <- ad$var_names
-      anno_tpm <- data.frame(ad$var)
+      h5ad_data <- h5ad_to_adata(h5ad_file_tpm)
+      tpm_matrix <- h5ad_data$mm
+      anno_tpm <- h5ad_data$anno
+      
+      # find cell id information in annotation dataframe
       if(!cell_id_col %in% colnames(anno_tpm)){
-        stop('Cannot find cell_id_col in cell annotation of h5ad_file_tpm.')
+        # use rownames as ID if wished
+        if(cell_id_col == 0){
+          anno_tpm$ID <- rownames(anno_tpm)
+          cell_id_col <- 'ID'
+        }else{
+          stop(paste0('Cannot find "',cell_id_col,'" column in cell annotation of h5ad_file_tpm.'))  
+        }
       }
+      
+      # find cell type information in annotation dataframe
       if(!cell_type_col %in% colnames(anno_tpm)){
-        stop('Cannot find cell_type_col in cell annotation of h5ad_file_tpm.')
+        stop(paste0('Cannot find "',cell_type_col,'" column in cell annotation of h5ad_file_tpm.'))
       }
       colnames(anno_tpm)[which(colnames(anno_tpm) == cell_id_col)] <- 'ID'
       colnames(anno_tpm)[which(colnames(anno_tpm) == cell_type_col)] <- 'cell_type'
@@ -630,6 +624,39 @@ dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, s
                                  type_abundance_cutoff=type_abundance_cutoff,
                                  scale_tpm=scale_tpm
   )
+}
+
+
+#' Use basilisk environment to read h5ad file and access anndata object
+#'
+#' @param h5ad_path path to h5ad file
+#'
+#' @return matrix contained on h5ad file as dgCMatrix
+#'
+h5ad_to_adata <- function(h5ad_path){
+  
+  h5ad_path<-normalizePath(h5ad_path)
+  
+  # create conda environment with anndata
+  proc <- basilisk::basiliskStart(SimBu_env)
+  on.exit(basilisk::basiliskStop(proc))
+  
+  tryCatch({
+    # initialize environment
+    h5ad_data <- basilisk::basiliskRun(proc, function(){
+      sp <- reticulate::import("scanpy")
+      adata <- sp$read_h5ad(h5ad_path)
+      mm <- Matrix::t(methods::as(methods::as(adata$X, 'CsparseMatrix'), 'dgCMatrix'))
+      colnames(mm) <- rownames(data.frame(adata$obs))
+      rownames(mm) <- rownames(data.frame(adata$var))
+      return(list(mm=mm, 
+                  anno=adata$obs))
+    })
+    return(h5ad_data)
+  }, error=function(e){
+    message('Could not access h5ad file: ', h5ad_path)
+    return(NULL)
+  })
 }
 
 

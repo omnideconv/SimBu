@@ -10,6 +10,10 @@ colnames(tpm) <- paste0("cell_",rep(1:300))
 rownames(counts) <- paste0("gene-",rep(1:1000))
 rownames(tpm) <- paste0("gene-",rep(1:1000))
 
+counts_file <- tempfile(pattern = 'test',fileext = '.h5ad')
+url <- "https://seurat.nygenome.org/pbmc3k_final.h5ad"
+curl::curl_download(url, counts_file)
+
 test_that('can create dataset with counts or counts+tpm', {
 
   annotation <- data.frame("ID" = paste0("cell_",rep(1:300)),
@@ -60,4 +64,16 @@ test_that('can create dataset from seurat object', {
   seurat_obj[['tpm']] <- tpm_assay
   
   testthat::expect_s4_class(SimBu::dataset_seurat(seurat_obj = seurat_obj, count_assay = "counts",cell_id_col = 'ID', cell_type_col = 'cell_type', tpm_assay = 'tpm', name = "seurat_dataset"), 'SummarizedExperiment')
+})
+
+test_that('can load h5ad file', {
+  testthat::expect_s4_class(SimBu::dataset_h5ad(h5ad_file_counts = counts_file,name = "h5ad_dataset",cell_id_col = 0,cell_type_col = 'leiden'))         
+})
+
+
+test_that('check sfaira connection', {
+  setup_list <- SimBu::setup_sfaira(tempdir())
+
+  testthat::expect_s4_class(SimBu::dataset_sfaira(sfaira_id = 'homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x',sfaira_setup = setup_list, name = "test_dataset"))
+  testthat::expect_s4_class(SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,organisms = "Homo sapiens",tissues = "pancreas",name = "human_pancreas"))
 })

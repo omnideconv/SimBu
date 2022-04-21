@@ -2,7 +2,7 @@
 % Please edit documentation in R/dataset.R
 \name{dataset}
 \alias{dataset}
-\title{Default function to generate a \link[SummarizedExperiment]{SummarizedExperiment}}
+\title{Build \link[SummarizedExperiment]{SummarizedExperiment} using local annotation and count matrix R objects}
 \usage{
 dataset(
   annotation,
@@ -42,7 +42,7 @@ dataset(
 Return a \link[SummarizedExperiment]{SummarizedExperiment} object
 }
 \description{
-Default function to generate a \link[SummarizedExperiment]{SummarizedExperiment}
+Build \link[SummarizedExperiment]{SummarizedExperiment} using local annotation and count matrix R objects
 }
 \examples{
 

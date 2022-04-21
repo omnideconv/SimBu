@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 
 ```{r}
 library(Seurat)
-library(anndata)
+library(curl)
 library(SimBu)
 ```
 
@@ -83,22 +83,21 @@ ds_seurat <- SimBu::dataset_seurat(seurat_obj = seurat_obj,
 
 ### h5ad files
 
-It is possible to use an h5ad file directly, a file format which stores [AnnData](https://anndata.readthedocs.io/en/latest/) objects. As h5ad files can store cell specific information in the `var` layer, no additional annotation input for SimBu is needed. \
-Note: if you want both counts and tpm data as input, you will have to provide two files; the annotation layer `var` has to match between these files, otherwise the intersection will be used. You can provide the column names in `var` which store cell id and cell type with the `cell_id_col` and `cell_type_col` parameters respectively. 
+It is possible to use an h5ad file directly, a file format which stores [AnnData](https://anndata.readthedocs.io/en/latest/) objects. As h5ad files can store cell specific information in the `obs` layer, no additional annotation input for SimBu is needed. \
+Note: if you want both counts and tpm data as input, you will have to provide two files; the annotation layer `obs` has to match between these files, otherwise the intersection will be used. You can provide the column names in `obs` which store cell id and cell type with the `cell_id_col` and `cell_type_col` parameters respectively. 
+As this function uses the `SimBu` python environment to read the h5ad files and extract the data, it may take some more time to initalize the conda environment at the *first* usage only. 
 
 ```{r}
 
-ad <- anndata::AnnData(X=counts, 
-                       obs = data.frame(genes=rownames(counts), row.names=rownames(counts)), # obs stores gene information
-                       var = annotation)                                                     # var stores cell information
 counts_file <- tempfile(pattern = 'test',fileext = '.h5ad')
-anndata::write_h5ad(anndata = ad, filename = counts_file)
+url <- "https://seurat.nygenome.org/pbmc3k_final.h5ad"
+curl::curl_download(url, counts_file)
 
 
 ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = counts_file,
                                name = "h5ad_dataset",
-                               cell_id_col = 'ID', 
-                               cell_type_col = 'cell_type')
+                               cell_id_col = 0,                  # this will use the row names of the metadata as cell identifiers
+                               cell_type_col = 'leiden')         # this will use the 'leiden' column of the metadata as cell type info
 
 ```
 
