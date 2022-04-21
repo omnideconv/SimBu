@@ -9,6 +9,7 @@ dataset_h5ad(
   h5ad_file_tpm = NULL,
   cell_id_col = "ID",
   cell_type_col = "cell_type",
+  cells_in_obs = T,
   name = "SimBu_dataset",
   spike_in_col = NULL,
   additional_cols = NULL,
@@ -26,6 +27,8 @@ dataset_h5ad(
 \item{cell_id_col}{(mandatory) name of column in Seurat meta.data with unique cell ids; 0 for rownames}
 
 \item{cell_type_col}{(mandatory) name of column in Seurat meta.data with cell type name}
+
+\item{cells_in_obs}{boolean, if TRUE, cell identifiers are taken from \code{obs} layer in anndata object; if FALSE, they are taken from \code{var}}
 
 \item{name}{name of the dataset; will be used for new unique IDs of cells#' @param spike_in_col which column in annotation contains information on spike_in counts, which can be used to re-scale counts; mandatory for spike_in scaling factor in simulation}
 

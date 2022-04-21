@@ -271,6 +271,7 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
 #' @param h5ad_file_tpm h5ad file with TPM count data
 #' @param cell_id_col (mandatory) name of column in Seurat meta.data with unique cell ids; 0 for rownames
 #' @param cell_type_col (mandatory) name of column in Seurat meta.data with cell type name
+#' @param cells_in_obs boolean, if TRUE, cell identifiers are taken from `obs` layer in anndata object; if FALSE, they are taken from `var`
 #' @param name name of the dataset; will be used for new unique IDs of cells#' @param spike_in_col which column in annotation contains information on spike_in counts, which can be used to re-scale counts; mandatory for spike_in scaling factor in simulation
 #' @param spike_in_col which column in annotation contains information on spike_in counts, which can be used to re-scale counts; mandatory for spike_in scaling factor in simulation
 #' @param additional_cols list of column names in annotation, that should be stored as well in dataset object
@@ -291,7 +292,7 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
 #'                    cell_id_col = 0, # this will us the rownames as cell identifiers,
 #'                    cell_type_col = 'leiden')
 #'                    
-dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = 'ID', cell_type_col = 'cell_type', name = "SimBu_dataset",spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
+dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = 'ID', cell_type_col = 'cell_type', cells_in_obs = T, name = "SimBu_dataset",spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
 
   if(all(is.null(c(h5ad_file_counts, h5ad_file_tpm)))){
     stop("You need to provide at least one h5ad file.")
@@ -305,7 +306,7 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = '
 
     file_type <- tools::file_ext(h5ad_file_counts)
     if(file_type == "h5ad"){
-      h5ad_data <- h5ad_to_adata(h5ad_file_counts)
+      h5ad_data <- h5ad_to_adata(h5ad_file_counts, cells_in_obs)
       count_matrix <- h5ad_data$mm
       anno_counts <- h5ad_data$anno
       
@@ -342,7 +343,7 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = '
     
     file_type <- tools::file_ext(h5ad_file_tpm)
     if(file_type == "h5ad"){
-      h5ad_data <- h5ad_to_adata(h5ad_file_tpm)
+      h5ad_data <- h5ad_to_adata(h5ad_file_tpm, cells_in_obs)
       tpm_matrix <- h5ad_data$mm
       anno_tpm <- h5ad_data$anno
       
@@ -630,10 +631,11 @@ dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, s
 #' Use basilisk environment to read h5ad file and access anndata object
 #'
 #' @param h5ad_path path to h5ad file
+#' @param cells_in_obs boolean, if TRUE, cell identifiers are taken from `obs` layer in anndata object; if FALSE, they are taken from `var`
 #'
 #' @return matrix contained on h5ad file as dgCMatrix
 #'
-h5ad_to_adata <- function(h5ad_path){
+h5ad_to_adata <- function(h5ad_path, cells_in_obs){
   
   h5ad_path<-normalizePath(h5ad_path)
   
@@ -646,6 +648,7 @@ h5ad_to_adata <- function(h5ad_path){
     h5ad_data <- basilisk::basiliskRun(proc, function(){
       sp <- reticulate::import("scanpy")
       adata <- sp$read_h5ad(h5ad_path)
+      if(!cells_in_obs){adata <- adata$T}
       mm <- Matrix::t(methods::as(methods::as(adata$X, 'CsparseMatrix'), 'dgCMatrix'))
       colnames(mm) <- rownames(data.frame(adata$obs))
       rownames(mm) <- rownames(data.frame(adata$var))

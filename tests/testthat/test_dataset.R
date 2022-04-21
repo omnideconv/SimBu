@@ -75,5 +75,4 @@ test_that('check sfaira connection', {
   setup_list <- SimBu::setup_sfaira(tempdir())
 
   testthat::expect_s4_class(SimBu::dataset_sfaira(sfaira_id = 'homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x',sfaira_setup = setup_list, name = "test_dataset"), 'SummarizedExperiment')
-  testthat::expect_s4_class(SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,organisms = "Homo sapiens",tissues = "pancreas",name = "human_pancreas"), 'SummarizedExperiment')
 })

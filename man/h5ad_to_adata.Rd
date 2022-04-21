@@ -4,10 +4,12 @@
 \alias{h5ad_to_adata}
 \title{Use basilisk environment to read h5ad file and access anndata object}
 \usage{
-h5ad_to_adata(h5ad_path)
+h5ad_to_adata(h5ad_path, cells_in_obs)
 }
 \arguments{
 \item{h5ad_path}{path to h5ad file}
+
+\item{cells_in_obs}{boolean, if TRUE, cell identifiers are taken from \code{obs} layer in anndata object; if FALSE, they are taken from \code{var}}
 }
 \value{
 matrix contained on h5ad file as dgCMatrix

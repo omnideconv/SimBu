@@ -48,16 +48,16 @@ You can provide a single word (like we do here) or for example a list of tissues
 you want to download: `c("pancreas","lung")`. An additional parameter is the `assays` parameter,
 where you subset the database further to only download datasets from certain sequencing
 assays (for examples `Smart-seq2`). \
-The `name` parameter is used later on to give each sample a unique name.
+The `name` parameter is used later on to give each sample (cell) a unique name.
 
-```{r, warning=TRUE, message=TRUE}
-SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
-                               organisms = "Homo sapiens", 
-                               tissues = "pancreas", 
-                               name="human_pancreas")
+```{r, warning=TRUE, message=TRUE, eval=FALSE}
+ds_pancrease <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
+                                               organisms = "Homo sapiens", 
+                                               tissues = "pancreas", 
+                                               name="human_pancreas")
 ```
 
-Currently there are two datasets in sfaira from human pancreas, which have cell-type annotation.
+Currently there are three datasets in sfaira from human pancreas, which have cell-type annotation.
 The package will download them for you automatically and merge them together into a single expression
 matrix and a streamlined annotation table, which we can use for our simulation. \
 It can happen, that some datasets from sfaira are not (yet) ready for the automatic download,
@@ -69,7 +69,7 @@ all_datasets <- SimBu::sfaira_overview(setup_list = setup_list)
 head(all_datasets)
 ```
 
-This allows you to find the specific IDs of datasets, which you can download directly using the following function:
+This allows you to find the specific IDs of datasets, which you can download directly:
 
 ```{r}
 SimBu::dataset_sfaira(sfaira_id = 'homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x',
