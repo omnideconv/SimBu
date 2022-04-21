@@ -51,9 +51,10 @@ Note: only datasets in sfaira with annotation are considered!
 }
 \examples{
 \dontrun{
+setup_list <- SimBu::setup_sfaira(tempdir())
 ds_human_pancreas <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
                                                     organisms = "Homo sapiens",
                                                     tissues = "pancreas",
-                                                    name="human_pancreas")
+                                                    name = "human_pancreas")
 }
 }

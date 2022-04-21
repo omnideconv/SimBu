@@ -46,8 +46,9 @@ Build a dataset using a single sfaira entry ID
 }
 \examples{
 \dontrun{
-ds_miller <- dataset_sfaira(sfaira_id="human_lung_2020_10x3v2_miller_001_10.1016/j.devcel.2020.01.033",
-                            sfaira_setup = setup_list,name = "Miller")
+setup_list <- SimBu::setup_sfaira(tempdir())
+ds <- SimBu::dataset_sfaira(sfaira_id = 'homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x',
+                     sfaira_setup = setup_list,
+                     name = "test_dataset")
 }
-
 }

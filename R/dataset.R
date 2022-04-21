@@ -139,7 +139,7 @@ generate_summarized_experiment <- function(annotation, count_matrix, tpm_matrix,
 
 
 
-#' Default function to generate a \link[SummarizedExperiment]{SummarizedExperiment}
+#' Build \link[SummarizedExperiment]{SummarizedExperiment} using local annotation and count matrix R objects
 #'
 #' @param annotation (mandatory) dataframe; needs columns 'ID' and 'cell_type'; 'ID' needs to be equal with cell_names in count_matrix
 #' @param count_matrix (mandatory) sparse count matrix; raw count data is expected with genes in rows, cells in columns
@@ -265,7 +265,7 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
 
 }
 
-#' Function to generate a \link[SummarizedExperiment]{SummarizedExperiment} using a h5ad file for the counts
+#' Build \link[SummarizedExperiment]{SummarizedExperiment} using a h5ad file for the counts
 #'
 #' @param h5ad_file_counts (mandatory) h5ad file with raw count data
 #' @param h5ad_file_tpm h5ad file with TPM count data
@@ -403,7 +403,7 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = '
   )
 }
 
-#' Function to generate a \link[SummarizedExperiment]{SummarizedExperiment} using a \link[Seurat]{Seurat} object
+#' Build \link[SummarizedExperiment]{SummarizedExperiment} using a \link[Seurat]{Seurat} object
 #'
 #' @param seurat_obj (mandatory) \link[Seurat]{Seurat} object with TPM counts
 #' @param count_assay (mandatory) name of assay in Seurat object which contains count data in 'counts' slot
@@ -510,7 +510,7 @@ dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, 
   )
 }
 
-#' Build a dataset using a single sfaira entry ID
+#' Build \link[SummarizedExperiment]{SummarizedExperiment} using a single sfaira entry ID
 #'
 #' @param sfaira_id (mandatory) ID of a sfaira dataset
 #' @param sfaira_setup (mandatory) the sfaira setup; given by \code{\link{setup_sfaira}}
@@ -528,10 +528,11 @@ dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, 
 #'
 #' @examples
 #' \dontrun{
-#' ds_miller <- dataset_sfaira(sfaira_id="human_lung_2020_10x3v2_miller_001_10.1016/j.devcel.2020.01.033",
-#'                             sfaira_setup = setup_list,name = "Miller")
+#' setup_list <- SimBu::setup_sfaira(tempdir())
+#' ds <- SimBu::dataset_sfaira(sfaira_id = 'homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x',
+#'                      sfaira_setup = setup_list,
+#'                      name = "test_dataset")
 #' }
-#'
 dataset_sfaira <- function(sfaira_id, sfaira_setup, name,
                            spike_in_col=NULL, additional_cols=NULL, force=FALSE, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
 
@@ -539,12 +540,13 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name,
     warning("You need to setup sfaira first; please use setup_sfaira() to do so.")
     return(NULL)
   }
-  adata <- download_sfaira(setup_list = sfaira_setup, id = sfaira_id, force = force)
-  count_matrix <- Matrix::t(Matrix::as.matrix(adata$X))
-  if(!is.null(adata$var$gene_symbol)){
-    rownames(count_matrix) <- adata$var$gene_symbol
+  print(paste0('Starting to download dataset from Sfaria with id: ', sfaira_id))
+  sfaira_data <- download_sfaira(setup_list = sfaira_setup, id = sfaira_id, force = force)
+  count_matrix <- Matrix::t(sfaira_data$X)
+  if(!is.null(sfaira_data$var$gene_symbol)){
+    rownames(count_matrix) <- sfaira_data$var$gene_symbol
   }
-  annotation <- check_annotation(adata$obs)
+  annotation <- check_annotation(sfaira_data$obs)
   if(is.null(colnames(count_matrix)) && dim(count_matrix)[2] == dim(annotation)[1]){
     colnames(count_matrix) <- annotation[["ID"]]
   }
@@ -591,10 +593,11 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name,
 #'
 #' @examples
 #' \dontrun{
+#' setup_list <- SimBu::setup_sfaira(tempdir())
 #' ds_human_pancreas <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
 #'                                                     organisms = "Homo sapiens",
 #'                                                     tissues = "pancreas",
-#'                                                     name="human_pancreas")
+#'                                                     name = "human_pancreas")
 #' }
 dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, sfaira_setup, name,
                                     spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
@@ -602,12 +605,13 @@ dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, s
     warning("You need to setup sfaira first; please use setup_sfaira() to do so.")
     return(NULL)
   }
-  adata <- download_sfaira_multiple(sfaira_setup, organisms, tissues, assays)
-  count_matrix <- Matrix::t(Matrix::as.matrix(adata$X))
-  if(!is.null(adata$var$gene_symbol)){
-    rownames(count_matrix) <- adata$var$gene_symbol
+  print(paste0('Starting to download dataset from Sfaria with organism: ', organisms,' , tissue: ', tissues, ' and assay: ', assays))
+  sfaira_data <- download_sfaira_multiple(sfaira_setup, organisms, tissues, assays)
+  count_matrix <- Matrix::t(sfaira_data$X)
+  if(!is.null(sfaira_data$var$gene_symbol)){
+    rownames(count_matrix) <- sfaira_data$var$gene_symbol
   }
-  annotation <- check_annotation(adata$obs)
+  annotation <- check_annotation(sfaira_data$obs)
   if(is.null(colnames(count_matrix)) && dim(count_matrix)[2] == dim(annotation)[1]){
     colnames(count_matrix) <- annotation[["ID"]]
   }
