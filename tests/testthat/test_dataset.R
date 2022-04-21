@@ -67,13 +67,13 @@ test_that('can create dataset from seurat object', {
 })
 
 test_that('can load h5ad file', {
-  testthat::expect_s4_class(SimBu::dataset_h5ad(h5ad_file_counts = counts_file,name = "h5ad_dataset",cell_id_col = 0,cell_type_col = 'leiden'))         
+  testthat::expect_s4_class(SimBu::dataset_h5ad(h5ad_file_counts = counts_file,name = "h5ad_dataset",cell_id_col = 0,cell_type_col = 'leiden'), 'SummarizedExperiment')         
 })
 
 
 test_that('check sfaira connection', {
   setup_list <- SimBu::setup_sfaira(tempdir())
 
-  testthat::expect_s4_class(SimBu::dataset_sfaira(sfaira_id = 'homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x',sfaira_setup = setup_list, name = "test_dataset"))
-  testthat::expect_s4_class(SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,organisms = "Homo sapiens",tissues = "pancreas",name = "human_pancreas"))
+  testthat::expect_s4_class(SimBu::dataset_sfaira(sfaira_id = 'homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x',sfaira_setup = setup_list, name = "test_dataset"), 'SummarizedExperiment')
+  testthat::expect_s4_class(SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,organisms = "Homo sapiens",tissues = "pancreas",name = "human_pancreas"), 'SummarizedExperiment')
 })
