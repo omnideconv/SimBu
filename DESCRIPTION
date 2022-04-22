@@ -34,6 +34,7 @@ Imports:
 Suggests:
     curl,
     knitr,
+    matrixStats,
     rmarkdown,
     Seurat,
     testthat (>= 3.0.0)
