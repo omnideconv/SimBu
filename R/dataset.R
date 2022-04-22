@@ -564,7 +564,7 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name,
 }
 
 
-#' Build a dataset using multiple sfaira entries
+#' Build \link[SummarizedExperiment]{SummarizedExperiment} using multiple sfaira entries
 #'
 #' You can apply different filters on the whole data-zoo of sfaria; the resulting single-cell datasets will
 #' be combined into a single dataset which you can use for simulation

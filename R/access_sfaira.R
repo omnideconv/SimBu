@@ -8,7 +8,7 @@
 #'
 #' @param basedir name of the directory, where the raw files will be downloaded into
 #'
-#' @return list with sfaira package and file directories; must be used for other sfaira functions
+#' @return list with sfaira file directories; must be used as input for other sfaira based functions
 #' @export
 #'
 #' @examples
