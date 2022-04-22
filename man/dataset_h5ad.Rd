@@ -51,12 +51,11 @@ Return a \link[SummarizedExperiment]{SummarizedExperiment} object
 Build \link[SummarizedExperiment]{SummarizedExperiment} using a h5ad file for the counts
 }
 \examples{
-counts_file <- tempfile(pattern = 'test',fileext = '.h5ad')
-url <- "https://seurat.nygenome.org/pbmc3k_final.h5ad"
-curl::curl_download(url, counts_file)
-
-ds <- dataset_h5ad(h5ad_file_counts = counts_file,
-                   cell_id_col = 0, # this will us the rownames as cell identifiers,
-                   cell_type_col = 'leiden')
+h5 <- system.file('extdata', 'anndata.h5ad', package='SimBu')
+ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = h5,
+                               name = "h5ad_dataset",
+                               cell_id_col = 'ID',                  # this will use the 'ID' column of the metadata as cell identifiers
+                               cell_type_col = 'cell_type',         # this will use the 'cell-type' column of the metadata as cell type info
+                               cells_in_obs = TRUE)                 # in case your cell information is stored in the var layer, switch to FALSE
                    
 }

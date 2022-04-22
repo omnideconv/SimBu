@@ -84,20 +84,20 @@ ds_seurat <- SimBu::dataset_seurat(seurat_obj = seurat_obj,
 ### h5ad files
 
 It is possible to use an h5ad file directly, a file format which stores [AnnData](https://anndata.readthedocs.io/en/latest/) objects. As h5ad files can store cell specific information in the `obs` layer, no additional annotation input for SimBu is needed. \
-Note: if you want both counts and tpm data as input, you will have to provide two files; the annotation layer `obs` has to match between these files, otherwise the intersection will be used. You can provide the column names in `obs` which store cell id and cell type with the `cell_id_col` and `cell_type_col` parameters respectively. 
+Note: if you want both counts and tpm data as input, you will have to provide two files; the cell annotation has to match between these two files. As SimBu expects the cells to be in the columns and genes/features in the rows of the input matrix, but this is not necessarily the case for anndata objects [https://falexwolf.de/img/scanpy/anndata.svg](https://falexwolf.de/img/scanpy/anndata.svg), SimBu can handle h5ad files with cells in the `obs` or `var` layer. If your cells are in `obs`, use  `cells_in_obs=TRUE` and `FALSE` otherwise. This will also automatically transpose the matrix.
+To know, which columns in the cell annotation layer correspond to the cell identifiers and cell type labels, use the `cell_id_col` and `cell_type_col` parameters, respectively.\
+
 As this function uses the `SimBu` python environment to read the h5ad files and extract the data, it may take some more time to initalize the conda environment at the *first* usage only. 
 
 ```{r}
 
-counts_file <- tempfile(pattern = 'test',fileext = '.h5ad')
-url <- "https://seurat.nygenome.org/pbmc3k_final.h5ad"
-curl::curl_download(url, counts_file)
-
-
-ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = counts_file,
+# example h5ad file, where cell type info is stored in `obs` layer
+h5 <- system.file('extdata', 'anndata.h5ad', package='SimBu')
+ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = h5,
                                name = "h5ad_dataset",
-                               cell_id_col = 0,                  # this will use the row names of the metadata as cell identifiers
-                               cell_type_col = 'leiden')         # this will use the 'leiden' column of the metadata as cell type info
+                               cell_id_col = 'ID',                  # this will use the 'ID' column of the metadata as cell identifiers
+                               cell_type_col = 'cell_type',         # this will use the 'cell_type' column of the metadata as cell type info
+                               cells_in_obs = TRUE)                 # in case your cell information is stored in the var layer, switch to FALSE
 
 ```
 

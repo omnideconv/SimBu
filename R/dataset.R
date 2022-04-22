@@ -284,13 +284,12 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
 #' @export
 #'
 #' @examples
-#' counts_file <- tempfile(pattern = 'test',fileext = '.h5ad')
-#' url <- "https://seurat.nygenome.org/pbmc3k_final.h5ad"
-#' curl::curl_download(url, counts_file)
-#'
-#' ds <- dataset_h5ad(h5ad_file_counts = counts_file,
-#'                    cell_id_col = 0, # this will us the rownames as cell identifiers,
-#'                    cell_type_col = 'leiden')
+#' h5 <- system.file('extdata', 'anndata.h5ad', package='SimBu')
+#' ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = h5,
+#'                                name = "h5ad_dataset",
+#'                                cell_id_col = 'ID',                  # this will use the 'ID' column of the metadata as cell identifiers
+#'                                cell_type_col = 'cell_type',         # this will use the 'cell-type' column of the metadata as cell type info
+#'                                cells_in_obs = TRUE)                 # in case your cell information is stored in the var layer, switch to FALSE
 #'                    
 dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = 'ID', cell_type_col = 'cell_type', cells_in_obs = T, name = "SimBu_dataset",spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
 
@@ -645,7 +644,7 @@ h5ad_to_adata <- function(h5ad_path, cells_in_obs){
   
   tryCatch({
     # initialize environment
-    h5ad_data <- basilisk::basiliskRun(proc, function(){
+    h5ad_data <- basilisk::basiliskRun(proc, function(h5ad_path, cells_in_obs){
       sp <- reticulate::import("scanpy")
       adata <- sp$read_h5ad(h5ad_path)
       if(!cells_in_obs){adata <- adata$T}
@@ -653,8 +652,8 @@ h5ad_to_adata <- function(h5ad_path, cells_in_obs){
       colnames(mm) <- rownames(data.frame(adata$obs))
       rownames(mm) <- rownames(data.frame(adata$var))
       return(list(mm=mm, 
-                  anno=adata$obs))
-    })
+                  anno=data.frame(adata$obs, stringsAsFactors = F)))
+    },h5ad_path=h5ad_path, cells_in_obs=cells_in_obs)
     return(h5ad_data)
   }, error=function(e){
     message('Could not access h5ad file: ', h5ad_path)
