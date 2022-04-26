@@ -67,8 +67,8 @@ test_that('can load h5ad file with cells in obs and var', {
   h5 <- system.file('extdata', 'anndata.h5ad', package='SimBu')
   h5_rev <- system.file('extdata', 'anndata_rev.h5ad', package='SimBu')
   
-  testthat::expect_s4_class(SimBu::dataset_h5ad(h5ad_file_counts = h5,name = "h5ad_dataset",cell_id_col = 'ID',cell_type_col = 'cell_type', cells_in_obs = T), 'SummarizedExperiment')         
-  testthat::expect_s4_class(SimBu::dataset_h5ad(h5ad_file_counts = h5_rev,name = "h5ad_dataset",cell_id_col = 'ID',cell_type_col = 'cell_type', cells_in_obs = F), 'SummarizedExperiment')         
+  testthat::expect_s4_class(SimBu::dataset_h5ad(h5ad_file_counts = h5,name = "h5ad_dataset",cell_id_col = 'ID',cell_type_col = 'cell_type', cells_in_obs = TRUE), 'SummarizedExperiment')         
+  testthat::expect_s4_class(SimBu::dataset_h5ad(h5ad_file_counts = h5_rev,name = "h5ad_dataset",cell_id_col = 'ID',cell_type_col = 'cell_type', cells_in_obs = FALSE), 'SummarizedExperiment')         
 })
 
 

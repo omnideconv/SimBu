@@ -1,3 +1,7 @@
+url: ~
+template:
+  bootstrap: 5
+
 reference:
   - title: Dataset generation
     desc: Methods linked to generating the internal dataset object
@@ -29,3 +33,4 @@ articles:
     - simulator_input_output
     - sfaira_vignette
     - simulator_scaling_factors
+    

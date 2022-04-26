@@ -291,7 +291,7 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
 #'                                cell_type_col = 'cell_type',         # this will use the 'cell-type' column of the metadata as cell type info
 #'                                cells_in_obs = TRUE)                 # in case your cell information is stored in the var layer, switch to FALSE
 #'                    
-dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = 'ID', cell_type_col = 'cell_type', cells_in_obs = T, name = "SimBu_dataset",spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
+dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = 'ID', cell_type_col = 'cell_type', cells_in_obs = TRUE, name = "SimBu_dataset",spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
 
   if(all(is.null(c(h5ad_file_counts, h5ad_file_tpm)))){
     stop("You need to provide at least one h5ad file.")
@@ -652,7 +652,7 @@ h5ad_to_adata <- function(h5ad_path, cells_in_obs){
       colnames(mm) <- rownames(data.frame(adata$obs))
       rownames(mm) <- rownames(data.frame(adata$var))
       return(list(mm=mm, 
-                  anno=data.frame(adata$obs, stringsAsFactors = F)))
+                  anno=data.frame(adata$obs, stringsAsFactors = FALSE)))
     },h5ad_path=h5ad_path, cells_in_obs=cells_in_obs)
     return(h5ad_data)
   }, error=function(e){
