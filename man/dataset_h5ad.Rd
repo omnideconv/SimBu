@@ -9,7 +9,7 @@ dataset_h5ad(
   h5ad_file_tpm = NULL,
   cell_id_col = "ID",
   cell_type_col = "cell_type",
-  cells_in_obs = T,
+  cells_in_obs = TRUE,
   name = "SimBu_dataset",
   spike_in_col = NULL,
   additional_cols = NULL,

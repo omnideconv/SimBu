@@ -2,7 +2,7 @@
 % Please edit documentation in R/dataset.R
 \name{dataset_sfaira_multiple}
 \alias{dataset_sfaira_multiple}
-\title{Build a dataset using multiple sfaira entries}
+\title{Build \link[SummarizedExperiment]{SummarizedExperiment} using multiple sfaira entries}
 \usage{
 dataset_sfaira_multiple(
   organisms = NULL,

@@ -157,8 +157,8 @@ generate_summarized_experiment <- function(annotation, count_matrix, tpm_matrix,
 #'
 #' @examples
 #'
-#' counts <-  Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
-#' tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' counts <-  Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol=300), sparse = TRUE)
 #' tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
 #'
 #' colnames(counts) <- paste0("cell_",rep(1:300))
@@ -204,8 +204,8 @@ dataset <- function(annotation, count_matrix = NULL, tpm_matrix = NULL, name = "
 #'
 #' @examples
 #'
-#' counts <-  Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
-#' tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' counts <-  Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol=300), sparse = TRUE)
 #' tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
 #'
 #' colnames(counts) <- paste0("cell_",rep(1:300))
@@ -416,8 +416,8 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = '
 #' @export
 #'
 #' @examples
-#' counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
-#' tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' counts <- Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol=300), sparse = TRUE)
+#' tpm <- Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol=300), sparse = TRUE)
 #' tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
 #' 
 #' colnames(counts) <- paste0("cell-",rep(1:300))

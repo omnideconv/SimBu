@@ -82,8 +82,8 @@ will be sampled for the simulation. Also a \code{scenario} has to be selected, w
 \examples{
 #generate sample single-cell data to work with:
 
-counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
-tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+counts <- Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol=300), sparse = TRUE)
+tpm <- Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol=300), sparse = TRUE)
 tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
 
 colnames(counts) <- paste0("cell_",rep(1:300))

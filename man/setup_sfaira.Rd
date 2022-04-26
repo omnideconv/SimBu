@@ -10,7 +10,7 @@ setup_sfaira(basedir)
 \item{basedir}{name of the directory, where the raw files will be downloaded into}
 }
 \value{
-list with sfaira package and file directories; must be used for other sfaira functions
+list with sfaira file directories; must be used as input for other sfaira based functions
 }
 \description{
 If you want to download datasets from Sfaira, you need to specify a directory where the datasets are saved into.
