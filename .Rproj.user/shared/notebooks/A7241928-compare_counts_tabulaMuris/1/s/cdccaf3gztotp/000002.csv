@@ -1,0 +1,32 @@
+"0","```r
+# load tabula muris data of spleen
+
+load('~/omnideconv/data/tabula_muris/droplet_spleen_seurat_tiss.Robj')
+seurat_10x <- tiss
+seurat_10x <- UpdateSeuratObject(seurat_10x)
+```"
+"1","Updating from v2.X to v3.X
+Validating object structure
+Updating object slots
+Ensuring keys are in the proper strucutre
+Ensuring feature names don't have underscores or pipes
+Object representation is consistent with the most current Seurat version
+"
+"0","```r
+rm(tiss)
+load('~/omnideconv/data/tabula_muris/facs_spleen_seurat_tiss.Robj')
+seurat_ss2 <- tiss
+seurat_ss2 <- UpdateSeuratObject(seurat_ss2)
+```"
+"1","Updating from v2.X to v3.X
+Validating object structure
+Updating object slots
+Ensuring keys are in the proper strucutre
+Ensuring feature names don't have underscores or pipes
+Object representation is consistent with the most current Seurat version
+"
+"0","```r
+seurat_ss2$orig.ident <- 'smart-seq2'
+rm(tiss)
+
+```"

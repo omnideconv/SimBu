@@ -1,0 +1,6 @@
+"0","```r
+tr_sc_mean_var <- data.frame(means = rowMeans(assays(travaglini)[['counts']]), vars= sparseMatrixStats::rowVars(assays(travaglini)[['counts']]),data=\"single cell counts (Travaglini)\")
+hao_sc_mean_var <- data.frame(means = rowMeans(assays(hao)[['counts']]), vars= sparseMatrixStats::rowVars(assays(hao)[['counts']]),data=\"single cell counts (Hao)\")
+
+mean_var_sc <- rbindlist(list(tr_sc_mean_var, hao_sc_mean_var, df_fino))
+```"

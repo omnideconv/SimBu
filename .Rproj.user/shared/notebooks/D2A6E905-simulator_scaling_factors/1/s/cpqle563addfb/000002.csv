@@ -1,0 +1,13 @@
+"0","sim_epic <- SimBu::simulate_bulk(data=ds,"
+"0","                                 scenario = ""random"","
+"0","                                 scaling_factor=""epic"","
+"0","                                 nsamples = 10, "
+"0","                                 ncells=100,"
+"0","                                 BPPARAM = BiocParallel::MulticoreParam(workers = 4),  "
+"0","                                 run_parallel = TRUE)"
+"2","Using parallel generation of simulations.
+"
+"2","Using EPIC scaling factors.
+"
+"2","Finished simulation.
+"

@@ -1,0 +1,11 @@
+^simulator\.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^README\.Rmd$
+^Dockerfile$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$
+^SimBu\.Rproj$
+^\.Rdata$

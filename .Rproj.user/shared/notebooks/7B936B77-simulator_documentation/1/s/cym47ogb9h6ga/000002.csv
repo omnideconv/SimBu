@@ -1,0 +1,8 @@
+"0","setup_list <- SimBu::setup_sfaira(python_path = ""/nfs/home/students/adietrich/.conda/envs/sfaira/bin/python3"","
+"0","                                      env_name = ""sfaira"", "
+"0","                                      basedir = ""/nfs/home/students/adietrich/ma/data/sfaira"")"
+"2","* Owlready2 * Warning: optimized Cython parser module 'owlready2_optimized' is not available, defaulting to slower Python implementation
+"
+"2","2022-02-02 14:37:53.181484: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /usr/lib/R/lib:/lib:/usr/lib/x86_64-linux-gnu:/usr/lib/jvm/default-java/lib/server
+2022-02-02 14:37:53.181519: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+"

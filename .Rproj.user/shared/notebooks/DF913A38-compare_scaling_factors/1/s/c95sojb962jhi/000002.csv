@@ -1,0 +1,8 @@
+"0","```r
+tr_long <- load_travaglini_full()
+tmp_wide<-spread(tr_long, key=method, value=value)
+tmp_wide$cell_type_fill <- ifelse(tmp_wide$cell_type %in% whitelist_travaglini, tmp_wide$cell_type, 'other')
+```"
+"1","Error in h(simpleError(msg, call)) : 
+  error in evaluating the argument 'table' in selecting a method for function '%in%': object 'whitelist_travaglini' not found
+"

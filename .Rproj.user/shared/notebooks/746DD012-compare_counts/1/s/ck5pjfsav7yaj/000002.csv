@@ -1,0 +1,4 @@
+"0","```r
+simulations_hao_tpm <- do.call(cbind, mapply('[[', sim_hao, 2))
+simulations_tr_tpm <- do.call(cbind, mapply('[[', sim_travaglini, 2))
+```"

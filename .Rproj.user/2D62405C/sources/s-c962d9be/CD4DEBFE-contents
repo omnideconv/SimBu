@@ -1,0 +1,18 @@
+## ---- include = FALSE---------------------------------------------------------
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+## ----setup--------------------------------------------------------------------
+library(SimBu)
+
+## ---- warning=TRUE, message=TRUE----------------------------------------------
+setup_list <- SimBu::setup_sfaira(basedir = tempdir())
+
+## ---- warning=TRUE, message=TRUE----------------------------------------------
+SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
+                               organisms = "Homo sapiens", 
+                               tissues = "pancreas", 
+                               name="human_pancreas")
+

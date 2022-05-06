@@ -1,0 +1,19 @@
+"0","ds <- SimBu::dataset(annotation = annotation,"
+"0","                     count_matrix = counts,"
+"0","                     name = ""test_dataset"","
+"0","                     additional_cols = c('add_1','add_2')) # add columns to dataset"
+"2","Filtering genes...
+"
+"2","Created dataset.
+"
+"0","sim_genes <- SimBu::simulate_bulk(data = ds,"
+"0","                           scenario = ""random"","
+"0","                           scaling_factor = ""add_1"", # use add_1 column as scaling factor"
+"0","                           nsamples = 10,"
+"0","                           ncells = 100,"
+"0","                           BPPARAM = BiocParallel::MulticoreParam(workers = 4),  "
+"0","                           run_parallel = TRUE)"
+"2","Scaling by add_1-column in annotation table; if no scaling is wished instead, use 'NONE'.
+"
+"2","Finished simulation.
+"

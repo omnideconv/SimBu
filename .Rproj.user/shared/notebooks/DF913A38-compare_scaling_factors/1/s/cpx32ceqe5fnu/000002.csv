@@ -1,0 +1,16 @@
+"0","```r
+png(filename=\"~/omnideconv/SimBu_analysis/plots/scaling_factor_comparisons/scaling_factor_correlation.png\", width = 1200, height = 1200)
+p<-corrplot(final_corr$r,
+         method=\"color\",
+         tl.col = \"black\",
+         #title = \"Pairwise correlation between \nthe scaling factors of all cell-types present in both datasets/methods\",
+         p.mat = final_corr$n,
+         insig = \"p-value\",
+         order=\"hclust\",
+         mar=c(0,.1,3,3),
+         diag=T, tl.srt = 50, tl.cex = 1.3, outline = 'white')
+dev.off()
+```"
+"1","null device 
+          1 
+"

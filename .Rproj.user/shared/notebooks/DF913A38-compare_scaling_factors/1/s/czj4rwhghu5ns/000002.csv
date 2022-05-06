@@ -1,0 +1,51 @@
+"0","```r
+# as PDF: 15x10
+annotation_position_rows <- 'left'
+p<- ggplot()+
+  geom_tile(data=dat_cor[complete.cases(dat_cor),], aes(cluster, sample, fill=value),colour='white')+
+  geom_point(data=dat_n[complete.cases(dat_n),], aes(cluster, sample,size=value),color='black', shape=15)+
+  geom_text(data=dat_cor[complete.cases(dat_cor),],aes(cluster, sample,label=round(value,2)), color='black')+
+  #geom_text(data=dat_mixed, aes(cluster, sample,label=round(value,2)), color='black')+
+  scale_fill_gradient( low = 'white',high = '#a64d79')+
+  scale_y_discrete(position = annotation_position_rows, labels = c('EPIC'='EPIC','Monaco'='Monaco','quanTIseq'='quanTIseq','Maynard [census]'='Maynard','Maynard [expressed_genes]'='Maynard','Maynard [read_number]'='Maynard','Travaglini [census]'='Travaglini','Travaglini [expressed_genes]'='Travaglini','Travaglini [read_number]'='Travaglini','Travaglini [spike_in]'='Travaglini','Hao [census]'='Hao','Hao [expressed_genes]'='Hao','Hao [read_number]'='Hao'))+
+  scale_x_discrete(labels = c('EPIC'='EPIC','Monaco'='Monaco','quanTIseq'='quanTIseq','Maynard [census]'='Maynard','Maynard [expressed_genes]'='Maynard','Maynard [read_number]'='Maynard','Travaglini [census]'='Travaglini','Travaglini [expressed_genes]'='Travaglini','Travaglini [read_number]'='Travaglini','Travaglini [spike_in]'='Travaglini','Hao [census]'='Hao','Hao [expressed_genes]'='Hao','Hao [read_number]'='Hao'))+
+  scale_size_continuous(range = c(2, 12))+
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text.x = element_text(size=15,angle = 90, vjust = 1, hjust=1),
+        axis.text.y = element_text(size=15),
+        panel.background = element_rect(fill = \"white\", colour = \"white\"),
+        legend.key = element_rect(fill = \"white\", colour = \"white\"),
+        legend.text = element_text(size=12),
+        legend.title = element_text(size=14),
+        legend.position = 'top'
+  )+
+  labs(fill='spearman correlation', size='number of matching cell types')
+
+
+
+colnames(row_metaData) <- c('Single-cell data', 'Tissue', 'Scaling factor', 'Method')
+annotation_rows <- rownames_to_column(row_metaData,var = \"none1\")
+annotation_color <- col
+names(annotation_color) <- c('Single-cell data', 'Tissue', 'Scaling factor', 'Method')
+annotation_width <- 0.03
+for(i in 1:(ncol(annotation_rows)-1)){
+  annotation_rows$none <- factor(rep(names(annotation_rows)[i+1],nrow(annotation_rows)))
+  rowlist <- list()
+  rowanno <- ggplot()+
+    geom_exec(geom_tile,data = annotation_rows,x=\"none1\",y=\"none\",fill=names(annotation_rows)[i+1])+
+    scale_fill_manual(values =annotation_color[names(annotation_color)==names(annotation_rows)[i+1]][[1]])+
+    theme(axis.title = element_blank(),axis.text.y = element_blank(),
+          axis.ticks = element_blank(),panel.background = element_blank(),
+          axis.text.x.bottom = element_text(size=12,angle = 90,hjust = 0.5,vjust = 0.5, face = 'bold'),
+          legend.text = element_text(size=12),
+          legend.title = element_text(size=14),
+          legend.position = 'right')+
+    coord_flip()+labs(fill=names(annotation_rows)[i+1])
+
+  p <- p%>%insert_right(rowanno,width =annotation_width )
+}
+
+
+```"

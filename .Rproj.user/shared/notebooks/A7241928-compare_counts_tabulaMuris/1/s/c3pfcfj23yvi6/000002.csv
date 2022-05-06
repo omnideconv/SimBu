@@ -1,0 +1,20 @@
+"0","```r
+# read petripez bulk dataset
+load('~/omnideconv/data/petiprez_data/petiprez_FACS_fractions.RData')
+petri_facs <- facs_mMCPcounter
+petri_facs$sample_name <- rownames(petri_facs)
+petri_counts <- fread('~/omnideconv/data/petiprez_data/salmon.merged.gene_counts.tsv')
+petri_tpm <- fread('~/omnideconv/data/petiprez_data/salmon.merged.gene_tpm.tsv')
+petri_meta <- fread('~/omnideconv/data/petiprez_data/samplesheet.txt')
+petri_meta <- unique(merge(x=petri_meta[,c('Source Name','Comment[ENA_EXPERIMENT]')], y=petri_facs, by.x='Source Name', by.y='sample_name', all.y=T))
+colnames(petri_meta)[which(colnames(petri_meta)=='Comment[ENA_EXPERIMENT]')] <- 'sample_id'
+petri_meta$`Source Name`<- NULL
+rownames(petri_counts) <- petri_counts$id
+rownames(petri_tpm) <- petri_tpm$id
+petri_counts$gene_id <- NULL
+petri_counts$gene_name <- NULL
+petri_tpm$gene_id <- NULL
+petri_tpm$gene_name <- NULL
+
+
+```"

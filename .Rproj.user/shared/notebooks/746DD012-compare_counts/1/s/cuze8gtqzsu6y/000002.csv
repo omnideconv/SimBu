@@ -1,0 +1,15 @@
+"0","```r
+print(paste0(\"Common dispersion (Hao):\",disp_hao$common.dispersion))
+```"
+"1","[1] \"Common dispersion (Hao):0.80756361764971\"
+"
+"0","```r
+print(paste0(\"Common dispersion (Travaglini):\",disp_tr$common.dispersion))
+```"
+"1","[1] \"Common dispersion (Travaglini):1.09834115362991\"
+"
+"0","```r
+print(paste0(\"Common dispersion (Finotello):\",disp_fino$common.dispersion))
+```"
+"1","[1] \"Common dispersion (Finotello):0.372899593881182\"
+"

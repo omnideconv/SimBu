@@ -1,0 +1,26 @@
+{
+    "id": "D47BF15C",
+    "path": "~/omnideconv/SimBu/R/dataset.R",
+    "project_path": "R/dataset.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1650971036316.0,
+    "source_on_save": false,
+    "relative_order": 7,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "641,44",
+        "scrollLine": "623"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1650980603,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1650980603112,
+    "read_only": false,
+    "read_only_alternatives": []
+}

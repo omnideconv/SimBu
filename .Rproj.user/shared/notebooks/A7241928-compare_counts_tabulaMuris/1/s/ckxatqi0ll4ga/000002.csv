@@ -1,0 +1,5 @@
+"0","```r
+seurat_integrated <- RunPCA(object = seurat_integrated)
+PCAPlot(seurat_integrated,
+        split.by = \"orig.ident\")  
+```"

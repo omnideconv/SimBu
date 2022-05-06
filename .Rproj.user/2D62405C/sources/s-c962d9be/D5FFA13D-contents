@@ -1,0 +1,50 @@
+test_env <- basilisk::BasiliskEnvironment(envname="test_env3",
+                                            pkgname="SimBu",
+                                            packages=c('python==3.9', zellkonverter::.AnnDataDependencies),
+                                            pip = c('sfaira==0.3.12', 
+                                                    'tables==3.7.0')
+)
+
+proc <- basilisk::basiliskStart(test_env)
+
+id <- 'homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x'
+feature_version <- '104'
+
+sfaira_dataset <- basilisk::basiliskRun(proc, function(setup_list, organisms, tissues, assays, force, feature_version){
+
+  sfaira <- reticulate::import("sfaira")
+  
+  # python code to subset sfaira universe by annotated datasets
+  print("Removing datasets without cell-type annotation...")
+  reticulate::py_run_string("import sfaira")
+  reticulate::py_run_string(paste0("ds = sfaira.data.Universe(data_path=\'",paste(tempdir(),'/raw'),
+                                   "\', meta_path=\'",paste(tempdir(),'/meta'),
+                                   "\', cache_path=\'",paste(tempdir(),'/cache'),"\')"))
+  reticulate::py_run_string("dsg = sfaira.data.DatasetGroup(datasets=dict([(k, v) for k, v in ds.datasets.items() if v.annotated]), collection_id='something')")
+  ds <- reticulate::py$dsg
+  
+  
+  # apply filters on sfaira database
+  if(all(is.null(c(organisms, tissues, assays)))) stop("You must specify at least one filter.", call.=FALSE)
+  if(!is.null(organisms)) {ds$subset(key="organism", values=organisms)}
+  if(!is.null(assays)) {ds$subset(key="assay_sc", values=assays)}
+  if(!is.null(tissues)) {ds$subset(key="organ", values=tissues)}
+  if(length(ds$datasets) == 0){stop("No datasets found with these filters; please check again", call.=FALSE)}
+  
+  print("Downloading datasets...")
+  ds$download()
+  ds$load()
+  
+  #streamline features and meta-data
+  print("Streamlining features & meta-data...")
+  ds$streamline_features(match_to_release = feature_version)
+  ds$streamline_metadata(schema = "sfaira")
+  
+  adata <- ds$adata
+  X <- methods::as(methods::as(adata$X, 'CsparseMatrix'), 'dgCMatrix')
+  obs <- adata$obs
+  var <- adata$var
+  return(list(X=X, obs=obs, var=var))
+  
+}, setup_list=setup_list, organisms=organisms, assays=assays, tissues=tissues, force=force, feature_version = feature_version)
+

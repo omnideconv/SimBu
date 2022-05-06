@@ -1,0 +1,79 @@
+"0","```r
+library(SimBu)
+library(data.table)
+library(UpSetR)
+```"
+"1","Warning: package ‘UpSetR’ was built under R version 4.1.2
+"
+"0","```r
+library(Hmisc)
+```"
+"1","Warning: package ‘Hmisc’ was built under R version 4.1.2
+Loading required package: lattice
+
+Attaching package: ‘lattice’
+
+The following object is masked from ‘package:UpSetR’:
+
+    histogram
+
+Loading required package: survival
+Loading required package: Formula
+
+Attaching package: ‘Hmisc’
+
+The following objects are masked from ‘package:dplyr’:
+
+    src, summarize
+
+The following object is masked from ‘package:SeuratObject’:
+
+    Key
+
+The following object is masked from ‘package:Seurat’:
+
+    Key
+
+The following object is masked from ‘package:Biobase’:
+
+    contents
+
+The following objects are masked from ‘package:base’:
+
+    format.pval, units
+"
+"0","```r
+library(corrplot)
+```"
+"1","corrplot 0.92 loaded
+"
+"0","```r
+library(tidyr)
+library(ggpubr)
+library(reshape2)
+```"
+"1","
+Attaching package: ‘reshape2’
+
+The following object is masked from ‘package:tidyr’:
+
+    smiths
+
+The following objects are masked from ‘package:data.table’:
+
+    dcast, melt
+"
+"0","```r
+library(ggcorrplot)
+library(ggpubr)
+library(ggheatmap)
+library(aplot)
+library(SummarizedExperiment)
+library(RColorBrewer)
+```"
+"1","Warning: package ‘RColorBrewer’ was built under R version 4.1.2
+"
+"0","```r
+library(tidyverse)
+library(ggridges)
+```"

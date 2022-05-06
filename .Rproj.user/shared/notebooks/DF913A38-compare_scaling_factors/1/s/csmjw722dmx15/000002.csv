@@ -1,0 +1,23 @@
+"0","```r
+sources <- unique(data_01$data_long$source_short)
+
+comb <- combn(seq_along(sources), 2, simplify = F, FUN=function(i) sources[i])
+c1 <- unlist(lapply(comb, function(x) x[1]))
+c2 <- unlist(lapply(comb, function(x) x[2]))
+
+combinations <- data.frame(Var1=c1, Var2=c2)
+combinations$combi_name <- paste0(combinations$Var1,\" vs. \",combinations$Var2)
+
+merge_df <- data_01$data_long
+merge_df$source2 <- NULL
+
+tmp<-merge(merge_df, combinations, by.x=\"source_short\", by.y=\"Var1\", all.x=T, allow.cartesian=TRUE)
+tmp2<-merge(tmp, merge_df, by.x=\"Var2\", by.y=\"source_short\", allow.cartesian = T)
+final <- tmp2[(tmp2$type.x == tmp2$type.y),]
+colnames(final) <- c(\"Source_x\", \"Source_y\", \"long_y\", \"mRNA_y\", \"type_y\",\"combi_name\",\"long_x\",\"mRNA_x\",\"type_x\")
+final <- subset(final, !is.na(mRNA_x) & !is.na(mRNA_y))
+final[,pearson_cor:=cor(mRNA_y, mRNA_x, method=\"pearson\", use=\"complete.obs\"), by=combi_name]
+```"
+"1","Error in cor(mRNA_y, mRNA_x, method = \"pearson\", use = \"complete.obs\") : 
+  'x' must be numeric
+"

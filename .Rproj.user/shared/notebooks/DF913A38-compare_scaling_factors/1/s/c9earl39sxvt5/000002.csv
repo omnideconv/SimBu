@@ -1,0 +1,19 @@
+"0","```r
+types_tr <- travaglini$travaglini_reads$type
+types_my <- maynard$maynard_census$type
+types_ha <- hao$census_hao$type
+types_qu <- quantiseq$quantiseq$type
+types_ep <- epic$epic$type
+types_mc <- monaco$monaco$type
+all <- list(types_tr,types_my,types_ha,types_qu,types_ep,types_mc)
+names <- c(\"Travaglini\",\"Maynard\",\"Hao\",\"quantiseq\",\"EPIC\",\"Monaco\")
+
+all_types <- unique(unlist(all))
+data <- unlist(lapply(all, function(x){ x <- as.vector(match(all_types, x));}))
+data[is.na(data)] <- as.integer(0); data[data != 0] <- as.integer(1)
+data <- data.frame(matrix(data, ncol = 6, byrow = F))
+names(data) <- names
+data <- data[, which(colSums(data) != 0)]
+
+upset(data, nsets=6, order.by = \"freq\", sets.bar.color = \"#56B4E9\", text.scale = 1.5)
+```"

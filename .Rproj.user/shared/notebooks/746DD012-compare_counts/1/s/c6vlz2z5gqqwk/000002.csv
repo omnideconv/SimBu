@@ -1,0 +1,19 @@
+"0","```r
+df_hao <- data.frame(raw = simulations_hao_counts[,1], tpm = simulations_hao_tpm[,1], dataset='pseudo bulk (Hao)')
+df_tr <- data.frame(raw = simulations_tr_counts[,1], tpm = simulations_tr_tpm[,1], dataset='pseudo bulk (Travaglini)')
+df_true1 <- data.frame(raw = finotello_pbmc_counts[,1], tpm = finotello_pbmc_tpm[,1], dataset=\"true bulk (Finotello)\")
+
+df_comp <- rbindlist(list(df_hao, df_tr, df_true1))
+
+ggplot(df_comp, aes(x=log10(raw + 1), y=log10(tpm + .1)))+
+  geom_point(size=1, alpha=.5)+
+  facet_wrap(~dataset)+
+  ggtitle(\"Raw vs TPM/CPM counts for simulated and true bulk sample\")+
+  theme_bw()+
+  ylab(\"log10(tpm/cpm + 0.1)\")+
+  geom_abline(color=\"red\",linetype=\"dashed\")+
+  theme(strip.text.x = element_text(size = 15),
+        axis.title.x = element_text(size=20),
+        axis.title.y = element_text(size=20))
+
+```"

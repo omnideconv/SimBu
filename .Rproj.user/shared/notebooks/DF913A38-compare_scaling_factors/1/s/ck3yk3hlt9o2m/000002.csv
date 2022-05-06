@@ -1,0 +1,55 @@
+"0","```r
+cell_type_cutoff <- 100
+
+ds_travaglini <- readRDS('~/omnideconv/data/ready_simbu_datasets/ds_travaglini.RDS')
+census_tr <- census(assays(ds_travaglini)[['tpm']],exp_capture_rate = .25, expr_threshold = 0.1, run_parallel = T)
+meta_tr <- as.data.table(ds_travaglini@colData)
+colnames(meta_tr)[which(colnames(meta_tr)=='spike_in')]<-'ercc'
+meta_tr$census <- census_tr
+meta_tr$spike_in <- (meta_tr$nReads_SimBu)/(meta_tr$nReads_SimBu+meta_tr$ercc)
+meta_tr$ercc <- NULL
+#meta_tr <- meta_tr[!meta_tr$cell_type %in% names(which(table(meta_tr$cell_type) < cell_type_cutoff)),]
+meta_tr <- gather(meta_tr, 'method', 'value', nReads_SimBu:spike_in)
+meta_tr$dataset <- 'Travaglini [SS2; lung]'
+
+ds_maynard <- readRDS('~/omnideconv/data/ready_simbu_datasets/ds_maynard.RDS')
+census_counts <- census(assays(ds_maynard)[['tpm']],exp_capture_rate = .25, expr_threshold = 0.1, run_parallel = T)
+meta_my <- as.data.table(ds_maynard@colData)
+meta_my <- streamline_maynard(meta_my)
+meta_my$census <- census_counts
+meta_my$spike_in <- NA
+#meta_my <- meta_my[!meta_my$cell_type %in% names(which(table(meta_my$cell_type) < cell_type_cutoff)),]
+meta_my <- gather(meta_my, 'method', 'value', nReads_SimBu:spike_in)
+meta_my$dataset <- 'Maynard [SS2; lung]'
+
+ds_hao <- readRDS('~/omnideconv/data/ready_simbu_datasets/ds_hao.RDS')
+census_hao <- census(assays(ds_hao)[['tpm']],exp_capture_rate = .25, expr_threshold = 0.1, run_parallel = T)
+census_hao[which(census_hao==\"NaN\")]<-NA
+meta_ha <- as.data.table(ds_hao@colData)
+meta_ha <- streamline_hao(meta_ha)
+meta_ha$census <- census_hao
+meta_ha$spike_in <- NA
+#meta_ha <- meta_ha[!meta_ha$cell_type %in% names(which(table(meta_ha$cell_type) < cell_type_cutoff)),]
+meta_ha <- gather(meta_ha, 'method', 'value', nReads_SimBu:spike_in)
+meta_ha$dataset <- 'Hao [CITE-seq; PBMC]'
+
+#ds_tm10x <- readRDS('~/omnideconv/data/ready_simbu_datasets/ds_TM_spleen_droplet.RDS')
+#census_tm10x <- census(assays(ds_tm10x)[['tpm']],exp_capture_rate = .25, expr_threshold = 0.1, run_parallel = T)
+# census_tm10x[which(census_tm10x==\"NaN\")]<-NA
+# meta_tm10x <- as.data.table(ds_tm10x@colData)
+# meta_tm10x$census <- census_tm10x
+# meta_tm10x$spike_in <- NA
+# meta_tm10x <- gather(meta_tm10x, 'method', 'value', nReads_SimBu:spike_in)
+# meta_tm10x$dataset <- 'Tabula Muris [10x; Spleen]'
+# 
+# #ds_tmss2 <- readRDS('~/omnideconv/data/ready_simbu_datasets/ds_TM_spleen_facs.RDS')
+# #census_tmss2 <- census(assays(ds_tmss2)[['tpm']],exp_capture_rate = .25, expr_threshold = 0.1, run_parallel = T)
+# census_tmss2[which(census_tmss2==\"NaN\")]<-NA
+# meta_tmss2 <- as.data.table(ds_tmss2@colData)
+# meta_tmss2$census <- census_tmss2
+# meta_tmss2$spike_in <- NA
+# meta_tmss2 <- gather(meta_tmss2, 'method', 'value', nReads_SimBu:spike_in)
+# meta_tmss2$dataset <- 'Tabula Muris [SS2; Spleen]'
+
+data <- rbindlist(list(meta_tr, meta_my, meta_ha))
+```"

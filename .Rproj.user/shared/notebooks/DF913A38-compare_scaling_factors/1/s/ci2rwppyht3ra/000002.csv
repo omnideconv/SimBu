@@ -1,0 +1,26 @@
+"0","```r
+ggplot(final, aes(x=mRNA_y, y=mRNA_x))+
+  geom_point(aes(color=type_x),size=3.5, alpha=.6)+
+  facet_grid(Source_y~Source_x)+
+  #ggtitle(\"Pairwise comparison of scaling factors for cell-types of different sources.\")+
+  xlab(\"Scaling factor of vertical source\")+
+  ylab(\"Scaling factor of horizontal source\")+
+  scale_color_discrete(name = \"Cell type\")+
+  scale_size(guide=\"none\")+
+  geom_smooth(method=\"lm\", se=F, color=\"red\", alpha=0.5, linetype='dashed', size=.5)+
+  geom_abline(color='grey', size=.5)+
+  stat_cor(label.x = 0, label.y = 1)+
+  theme_bw()+
+  theme(#axis.text.x = element_text(angle = 90),
+        legend.position=\"top\",
+        axis.title=element_text(size=15,face=\"bold\"),
+        legend.text = element_text(size=10),
+        legend.title = element_text(size=15, face=\"bold\"),
+        legend.key.size = unit(1,\"cm\"), 
+        legend.spacing.x = unit(.1,'cm'),
+        plot.title = element_text(size=20, face=\"bold\"),
+        strip.text.x = element_text(size = 10))
+
+```"
+"1","`geom_smooth()` using formula 'y ~ x'
+"

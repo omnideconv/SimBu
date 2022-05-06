@@ -1,0 +1,6 @@
+"0","```r
+# combine count data of both seurat objects and create a new one
+counts <- cbind(seurat_10x@assays$RNA@counts, seurat_ss2@assays$RNA@data)
+meta_both <- rbind(seurat_10x[[c('orig.ident','cell_ontology_class')]],seurat_ss2[[c('orig.ident','cell_ontology_class')]])
+seurat_both <- CreateSeuratObject(counts = counts, assay='RNA', meta.data = meta_both)
+```"

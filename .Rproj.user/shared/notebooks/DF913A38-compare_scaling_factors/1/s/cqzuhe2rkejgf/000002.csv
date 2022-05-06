@@ -1,0 +1,23 @@
+"0","```r
+ggpairs(tmp_wide[,3:6], 
+        mapping = aes(alpha=.5),
+        upper = list(continuous = wrap(\"cor\", method = \"spearman\")),
+        lower = list(continuous = my_facet))+
+  theme_bw()
+
+```"
+"1","
+ plot: [1,1] [=====>--------------------------------------------------------------------------------------------------]  6% est: 0s 
+ plot: [1,2] [============>-------------------------------------------------------------------------------------------] 12% est: 2s Warning in cor.test.default(x, y, method = method, use = use) :
+  Cannot compute exact p-value with ties
+
+ plot: [1,3] [===================>------------------------------------------------------------------------------------] 19% est: 2s Warning in cor.test.default(x, y, method = method, use = use) :
+  Cannot compute exact p-value with ties
+
+ plot: [1,4] [=========================>------------------------------------------------------------------------------] 25% est: 2s Warning in cor.test.default(x, y, method = method, use = use) :
+  Cannot compute exact p-value with ties
+
+ plot: [2,1] [===============================>------------------------------------------------------------------------] 31% est: 2s Warning: Raster pixels are placed at uneven horizontal intervals and will be shifted. Consider using geom_tile() instead.
+Warning: Raster pixels are placed at uneven vertical intervals and will be shifted. Consider using geom_tile() instead.
+Error: cannot allocate vector of size 13623.2 Gb
+"

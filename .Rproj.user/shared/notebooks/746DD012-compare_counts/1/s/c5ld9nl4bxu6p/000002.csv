@@ -1,0 +1,7 @@
+"0","```r
+whitelist_travaglini <- Reduce(intersect,list(rownames(finotello_pbmc_facs), unique(travaglini$cell_type)))
+whitelist_hao <- Reduce(intersect,list(rownames(finotello_pbmc_facs), unique(hao$cell_type)))
+nsamples <- 10
+ncells <- 500
+remove_bias_in_counts <- F
+```"

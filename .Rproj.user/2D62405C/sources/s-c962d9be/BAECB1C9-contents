@@ -1,0 +1,11 @@
+.Rproj.user
+SimBu.Rproj
+.Rhistory
+.RData
+.Ruserdata
+.Rdata
+.httr-oauth
+.DS_Store
+inst/doc
+docs
+SimBu.Rproj

@@ -1,0 +1,21 @@
+library(SimBu)
+library(ggplot2)
+pkgdown::build_article('simulator_input_output')
+
+# example h5ad file, where cell type info is stored in `obs` layer
+h5_rev <- system.file('extdata', 'anndata_rev.h5ad', package='SimBu')
+proc <- basilisk::basiliskStart(SimBu_env)
+
+h5ad_data <- basilisk::basiliskRun(proc, function(h5ad_path){
+  sp <- reticulate::import("scanpy")
+  adata <- sp$read_h5ad(h5ad_path)
+  return(adata$X)
+},h5ad_path=h5_rev)
+
+
+ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = h5_rev,
+                               name = "h5ad_dataset",
+                               cell_id_col = 'ID',                  # this will use the 'ID' column of the metadata as cell identifiers
+                               cell_type_col = 'cell_type',         # this will use the 'cell_type' column of the metadata as cell type info
+                               cells_in_obs = FALSE)                 # in case your cell information is stored in the var layer, switch to FALSE
+

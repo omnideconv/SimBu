@@ -1,0 +1,44 @@
+"0","```r
+library(SimBu)
+```"
+"1","Warning message:
+package ‘matrixStats’ was built under R version 4.1.1 
+"
+"0","```r
+library(ggplot2)
+library(data.table)
+```"
+"1","Registered S3 method overwritten by 'data.table':
+  method           from
+  print.data.table     
+data.table 1.14.2 using 80 threads (see ?getDTthreads).  Latest news: r-datatable.com
+
+Attaching package: ‘data.table’
+
+The following object is masked from ‘package:SummarizedExperiment’:
+
+    shift
+
+The following object is masked from ‘package:GenomicRanges’:
+
+    shift
+
+The following object is masked from ‘package:IRanges’:
+
+    shift
+
+The following objects are masked from ‘package:S4Vectors’:
+
+    first, second
+"
+"0","```r
+library(edgeR)
+```"
+"1","Loading required package: limma
+
+Attaching package: ‘limma’
+
+The following object is masked from ‘package:BiocGenerics’:
+
+    plotMA
+"
