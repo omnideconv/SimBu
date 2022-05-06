@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/omnideconv/simulator/workflows/R-CMD-check/badge.svg)](https://github.com/omnideconv/simulator/actions)
+[![docs](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://alex-d13.github.io/index.html)
 <!-- badges: end -->
 
 The goal of SimBu is to simulate pseudo-bulk RNAseq datasets from public or private single-cell RNAseq datasets.
