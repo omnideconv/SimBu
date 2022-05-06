@@ -12,22 +12,25 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
 
 # Installation
 
 To install the package, run this:
 (Since it is a private repository, you currently need an authentication token for this repository.)
 
-
-```r
+```{r, eval=FALSE}
 install.packages("devtools")
 devtools::install_github("omnideconv/SimBu") #add auth_token=XXX to download from private repository
 ```
 
 
-
-```r
+```{r setup}
 library(SimBu)
 ```
 
@@ -51,17 +54,14 @@ We will create some toy data to use for our simulations; two matrices with 300 c
 One represents raw count data, while the other matrix represents scaled TPM-like data. We will assign these cells to some
 immune cell types.
 
-
-```r
+```{r}
 counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
 tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
 tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
-
 colnames(counts) <- paste0("cell_",rep(1:300))
 colnames(tpm) <- paste0("cell_",rep(1:300))
 rownames(counts) <- paste0("gene_",rep(1:1000))
 rownames(tpm) <- paste0("gene_",rep(1:1000))
-
 annotation <- data.frame("ID"=paste0("cell_",rep(1:300)), 
                          "cell_type"=c(rep("T cells CD4",50), 
                                        rep("T cells CD8",50),
@@ -81,14 +81,11 @@ Additionally, the cell type annotation of the cells has to be given in a datafra
 
 To generate a dataset that can be used in SimBu, you can use the `dataset()` method; other methods exist as well, which are covered in the ["Inputs & Outputs"](simulator_input_output.Rmd) vignette.
 
-
-```r
+```{r}
 ds <- SimBu::dataset(annotation = annotation,
                      count_matrix = counts,
                      tpm_matrix = tpm,
                      name = "test_dataset")
-#> Filtering genes...
-#> Created dataset.
 ```
 
 SimBu offers basic filtering options for your dataset, which you can apply during dataset generation: \
@@ -104,8 +101,7 @@ SimBu offers basic filtering options for your dataset, which you can apply durin
 
 We are now ready to simulate the first pseudo bulk samples with the created dataset:
 
-
-```r
+```{r}
 simulation <- SimBu::simulate_bulk(data = ds,
                                    scenario = "random", 
                                    scaling_factor = "NONE", 
@@ -113,8 +109,6 @@ simulation <- SimBu::simulate_bulk(data = ds,
                                    nsamples = 10, 
                                    BPPARAM = BiocParallel::MulticoreParam(workers = 4),  #this will use 4 threads to run the simulation
                                    run_parallel = TRUE)                                 #multi-threading to TRUE
-#> Using parallel generation of simulations.
-#> Finished simulation.
 ```
 
 `ncells` sets the number of cells in each sample, while `nsamples` sets the total amount of simulated samples. \
@@ -152,8 +146,7 @@ one sample (therefore the number of rows need to match the `nsamples` parameter)
 one cell-type, which also occurs in the dataset and describes the fraction of this cell-type in a sample. The fractions
 per sample need to sum up to 1. An example can be seen here:
 
-
-```r
+```{r, format="markdown"}
 pure_scenario_dataframe <- data.frame(
   "B cells" = c(0.2, 0.1, 0.5, 0.3),
   "T cells" = c(0.3, 0.8, 0.2, 0.5),
@@ -161,11 +154,6 @@ pure_scenario_dataframe <- data.frame(
   row.names = c("sample1","sample2","sample3","sample4")
 )
 pure_scenario_dataframe
-#>         B.cells T.cells NK.cells
-#> sample1     0.2     0.3      0.5
-#> sample2     0.1     0.8      0.1
-#> sample3     0.5     0.2      0.3
-#> sample4     0.3     0.5      0.2
 ```
 
 
@@ -175,12 +163,9 @@ The `simulation` object contains three named entries: \
 
 * `bulk`: a SummarizedExperiment object with the pseudo-bulk dataset(s) stored in the `assays`. They can be accessed like this:
 
-
-```r
+```{r}
 dim(SummarizedExperiment::assays(simulation$bulk)[["bulk_counts"]])
-#> [1] 1000   10
 dim(SummarizedExperiment::assays(simulation$bulk)[["bulk_tpm"]])
-#> [1] 1000   10
 ```
 
 If only a single matrix was given to the dataset initially, only one assay is filled.
@@ -191,9 +176,7 @@ If only a single matrix was given to the dataset initially, only one assay is fi
 
 It is also possible to merge simulations:
 
-
-```r
-
+```{r}
 simulation2 <- SimBu::simulate_bulk(data = ds,
                                    scenario = "even", 
                                    scaling_factor = "NONE", 
@@ -201,21 +184,15 @@ simulation2 <- SimBu::simulate_bulk(data = ds,
                                    nsamples = 10, 
                                    BPPARAM = BiocParallel::MulticoreParam(workers = 4),  
                                    run_parallel = TRUE)
-#> Using parallel generation of simulations.
-#> Finished simulation.
-
 merged_simulations <- SimBu::merge_simulations(list(simulation, simulation2))
 ```
 
 
 Finally here is a barplot of the resulting simulation:
 
-
-```r
+```{r, fig.width=8, fig.height=8}
 SimBu::plot_simulation(simulation = merged_simulations)
 ```
-
-![plot of chunk unnamed-chunk-9](unnamed-chunk-9-1.png)
 
 
 # More features
@@ -225,8 +202,7 @@ SimBu::plot_simulation(simulation = merged_simulations)
 
 Sometimes, you are only interested in specific cell-types (for example T cells), but the dataset you are using has too many other cell-types; you can handle this issue during simulation using the `whitelist` parameter:
 
-
-```r
+```{r, fig.width=8, fig.height=8}
 simulation <- SimBu::simulate_bulk(data = ds,
                                    scenario = "random", 
                                    scaling_factor = "NONE", 
@@ -235,73 +211,14 @@ simulation <- SimBu::simulate_bulk(data = ds,
                                    BPPARAM = BiocParallel::MulticoreParam(workers = 4),  
                                    run_parallel = TRUE,
                                    whitelist = c("T cells CD4", "T cells CD8"))
-#> Using parallel generation of simulations.
-#> Finished simulation.
-
 SimBu::plot_simulation(simulation = simulation)
 ```
-
-![plot of chunk unnamed-chunk-10](unnamed-chunk-10-1.png)
 
 In the same way, you can also provide a `blacklist` parameter, where you name the
 cell-types you **don't** want to be included in your simulation.
 
-
-```r
+```{r}
 sessionInfo()
-#> R version 4.1.0 (2021-05-18)
-#> Platform: x86_64-pc-linux-gnu (64-bit)
-#> Running under: Ubuntu 18.04.6 LTS
-#> 
-#> Matrix products: default
-#> BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.7.1
-#> LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.7.1
-#> 
-#> locale:
-#>  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
-#>  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8    LC_PAPER=en_US.UTF-8       LC_NAME=C                 
-#>  [9] LC_ADDRESS=C               LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
-#> 
-#> attached base packages:
-#> [1] parallel  stats4    stats     graphics  grDevices utils     datasets  methods   base     
-#> 
-#> other attached packages:
-#>  [1] SimBu_0.99.0                SummarizedExperiment_1.22.0 Biobase_2.52.0              GenomicRanges_1.44.0       
-#>  [5] GenomeInfoDb_1.28.4         IRanges_2.26.0              S4Vectors_0.30.2            BiocGenerics_0.38.0        
-#>  [9] MatrixGenerics_1.4.3        matrixStats_0.61.0          Matrix_1.3-4               
-#> 
-#> loaded via a namespace (and not attached):
-#>   [1] utf8_1.2.2              reticulate_1.24         RUnit_0.4.32            tidyselect_1.1.2        htmlwidgets_1.5.4      
-#>   [6] grid_4.1.0              BiocParallel_1.26.2     Rtsne_0.15              munsell_0.5.0           codetools_0.2-18       
-#>  [11] ica_1.0-2               future_1.24.0           miniUI_0.1.1.1          withr_2.5.0             spatstat.random_2.1-0  
-#>  [16] colorspace_2.0-3        filelock_1.0.2          highr_0.9               knitr_1.33              rstudioapi_0.13        
-#>  [21] Seurat_4.1.0            ROCR_1.0-11             tensor_1.5              listenv_0.8.0           labeling_0.4.2         
-#>  [26] optparse_1.7.1          GenomeInfoDbData_1.2.6  polyclip_1.10-0         farver_2.1.0            rprojroot_2.0.2        
-#>  [31] basilisk_1.4.0          parallelly_1.30.0       vctrs_0.3.8             generics_0.1.2          xfun_0.30              
-#>  [36] R6_2.5.1                bitops_1.0-7            spatstat.utils_2.3-0    cachem_1.0.6            DelayedArray_0.18.0    
-#>  [41] assertthat_0.2.1        promises_1.2.0.1        scales_1.1.1            gtable_0.3.0            downlit_0.4.0          
-#>  [46] biocViews_1.60.0        globals_0.14.0          processx_3.5.3          goftest_1.2-3           rlang_1.0.2            
-#>  [51] splines_4.1.0           lazyeval_0.2.2          spatstat.geom_2.3-2     BiocManager_1.30.16     yaml_2.3.5             
-#>  [56] reshape2_1.4.4          abind_1.4-5             httpuv_1.6.5            RBGL_1.68.0             tools_4.1.0            
-#>  [61] ggplot2_3.3.5           ellipsis_0.3.2          spatstat.core_2.4-0     RColorBrewer_1.1-2      ggridges_0.5.3         
-#>  [66] Rcpp_1.0.8.3            plyr_1.8.7              sparseMatrixStats_1.4.2 zlibbioc_1.38.0         purrr_0.3.4            
-#>  [71] RCurl_1.98-1.6          basilisk.utils_1.4.0    ps_1.6.0                rpart_4.1-15            deldir_1.0-6           
-#>  [76] pbapply_1.5-0           cowplot_1.1.1           zoo_1.8-9               SeuratObject_4.0.4      ggrepel_0.9.1          
-#>  [81] cluster_2.1.2           fs_1.5.2                here_1.0.1              magrittr_2.0.1          data.table_1.14.2      
-#>  [86] scattermore_0.8         lmtest_0.9-40           RANN_2.6.1              fitdistrplus_1.1-8      patchwork_1.1.1        
-#>  [91] mime_0.10               evaluate_0.14           xtable_1.8-4            XML_4.0-0               gridExtra_2.3          
-#>  [96] testthat_3.1.2          compiler_4.1.0          tibble_3.1.6            KernSmooth_2.23-20      crayon_1.5.1           
-#> [101] htmltools_0.5.2         proxyC_0.2.4            mgcv_1.8-36             later_1.3.0             tidyr_1.2.0            
-#> [106] RcppParallel_5.1.5      DBI_1.1.2               MASS_7.3-54             getopt_1.20.3           brio_1.1.3             
-#> [111] cli_3.2.0               igraph_1.2.11           pkgconfig_2.0.3         pkgdown_2.0.2           dir.expiry_1.0.0       
-#> [116] plotly_4.10.0           spatstat.sparse_2.1-0   xml2_1.3.3              stringdist_0.9.8        XVector_0.32.0         
-#> [121] BiocCheck_1.28.0        stringr_1.4.0           callr_3.7.0             digest_0.6.27           sctransform_0.3.3      
-#> [126] RcppAnnoy_0.0.19        graph_1.70.0            spatstat.data_2.1-2     rmarkdown_2.13          leiden_0.3.9           
-#> [131] uwot_0.1.11             curl_4.3.2              shiny_1.7.1             commonmark_1.8.0        lifecycle_1.0.1        
-#> [136] nlme_3.1-152            jsonlite_1.7.2          desc_1.4.1              viridisLite_0.4.0       fansi_1.0.3            
-#> [141] pillar_1.7.0            lattice_0.20-44         fastmap_1.1.0           httr_1.4.2              survival_3.2-11        
-#> [146] glue_1.6.2              png_0.1-7               stringi_1.6.1           memoise_2.0.1           dplyr_1.0.8            
-#> [151] irlba_2.3.5             future.apply_1.8.1
 ```
 
 # References
