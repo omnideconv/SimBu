@@ -1,6 +1,6 @@
 
 # dependencies for sfaira and anndata0.7.6 (taken from zellkonverter package)
-SimBu_env <- basilisk::BasiliskEnvironment(envname="SimBu_env_0_99_0",
+SimBu_env <- basilisk::BasiliskEnvironment(envname="SimBu_env_0_99_2",
                                             pkgname="SimBu",
                                             packages=c('python==3.9', 
                                                        "anndata==0.7.6",
@@ -15,3 +15,4 @@ SimBu_env <- basilisk::BasiliskEnvironment(envname="SimBu_env_0_99_0",
                                             pip = c('sfaira==0.3.12', 
                                                     'tables==3.7.0')
 )
+

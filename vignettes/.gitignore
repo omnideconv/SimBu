@@ -1,2 +1,4 @@
 *.R
 *.html
+sfaira_vignette.Rmd.orig
+simulator_input_output.Rmd.orig
