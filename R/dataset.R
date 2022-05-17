@@ -284,14 +284,12 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col=NUL
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' h5 <- system.file('extdata', 'anndata.h5ad', package='SimBu')
 #' ds_h5ad <- SimBu::dataset_h5ad(h5ad_file_counts = h5,
 #'                                name = "h5ad_dataset",
 #'                                cell_id_col = 'id',                  # this will use the 'id' column of the metadata as cell identifiers
 #'                                cell_type_col = 'group',             # this will use the 'group' column of the metadata as cell type info
 #'                                cells_in_obs = TRUE)                 # in case your cell information is stored in the var layer, switch to FALSE
-#' }                    
 dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = 'ID', cell_type_col = 'cell_type', cells_in_obs = TRUE, name = "SimBu_dataset",spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
 
   if(all(is.null(c(h5ad_file_counts, h5ad_file_tpm)))){

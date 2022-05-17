@@ -12,9 +12,7 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' sfaira_list <- setup_sfaira(basedir=tempdir())
-#' }
 setup_sfaira <- function(basedir){
   tryCatch({
     # create conda environment with sfaira
@@ -185,7 +183,7 @@ download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, a
 #' @export
 #'
 #' @examples
-#' \dontrun{all_datasets <- sfaira_overview(setup_list)}
+#' all_datasets <- sfaira_overview(setup_list)
 sfaira_overview <- function(setup_list){
   
   # create conda environment with sfaira
