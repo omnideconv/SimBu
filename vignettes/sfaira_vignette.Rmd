@@ -36,7 +36,7 @@ You can browse them interactively here: [https://theislab.github.io/sfaira-porta
 In order to use this database, we first need to install it. This can easily be done, by running the `setup_sfaira()` function for the first time. In the background we use the [basilisik](https://bioconductor.org/packages/release/bioc/html/basilisk.utils.html) package to establish a conda environment that has all sfaira dependencies installed. The installation will be only performed one single time, even if you close your R session and call `setup_sfaira()` again. The given directory serves as the storage for all future downloaded datasets from sfaira:
 
 
-```{r, warning=TRUE, message=TRUE, eval = FALSE}
+```{r}
 setup_list <- SimBu::setup_sfaira(basedir = tempdir())
 ```
 
@@ -50,7 +50,7 @@ where you subset the database further to only download datasets from certain seq
 assays (for examples `Smart-seq2`). \
 The `name` parameter is used later on to give each sample (cell) a unique name.
 
-```{r, warning=TRUE, message=TRUE, eval=FALSE}
+```{r, eval=FALSE}
 ds_pancrease <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
                                                organisms = "Homo sapiens", 
                                                tissues = "pancreas", 
@@ -64,14 +64,14 @@ It can happen, that some datasets from sfaira are not (yet) ready for the automa
 an error message will then appear in R, telling you which file to download and where to put it. \
 
 If you wish to see all datasets which are included in sfaira you can use the following command:
-```{r, eval = FALSE}
+```{r}
 all_datasets <- SimBu::sfaira_overview(setup_list = setup_list)
 head(all_datasets)
 ```
 
 This allows you to find the specific IDs of datasets, which you can download directly:
 
-```{r, eval = FALSE}
+```{r}
 SimBu::dataset_sfaira(sfaira_id = 'homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x',
                       sfaira_setup = setup_list,
                       name = "dataset_by_id")
