@@ -13,6 +13,6 @@ SimBu_env <- basilisk::BasiliskEnvironment(envname="SimBu_env_0_99_4",
                                                       "scipy==1.6.3",   
                                                       "sqlite==3.35.5"),
                                            pip = c('sfaira==0.3.12',
-                                                   'tables=3.6.1')
+                                                   'tables==3.6.1')
 )
 
