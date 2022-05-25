@@ -60,6 +60,7 @@ test_that('can create dataset from seurat object', {
   seurat_obj[['tpm']] <- tpm_assay
   
   testthat::expect_s4_class(SimBu::dataset_seurat(seurat_obj = seurat_obj, count_assay = "counts",cell_id_col = 'ID', cell_type_col = 'cell_type', tpm_assay = 'tpm', name = "seurat_dataset"), 'SummarizedExperiment')
+  testthat::expect_s4_class(SimBu::dataset_seurat(seurat_obj = seurat_obj, count_assay = "counts",cell_id_col = 'ID', cell_type_col = 'cell_type', name = "seurat_dataset"), 'SummarizedExperiment')
 })
 
 

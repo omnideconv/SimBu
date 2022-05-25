@@ -488,6 +488,8 @@ dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, 
       stop(paste("Could not access count matrix from Seurat object (tpm): ", e))
       return(NULL)
     })
+  }else{
+    tpm_matrix <- NULL
   }
 
   generate_summarized_experiment(annotation=annotation,
