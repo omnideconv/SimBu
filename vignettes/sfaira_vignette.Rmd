@@ -71,7 +71,7 @@ head(all_datasets)
 
 This allows you to find the specific IDs of datasets, which you can download directly:
 
-```{r}
+```{r, eval=FALSE}
 SimBu::dataset_sfaira(sfaira_id = 'homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x',
                       sfaira_setup = setup_list,
                       name = "dataset_by_id")
