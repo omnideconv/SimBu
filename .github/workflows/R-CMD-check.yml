@@ -52,5 +52,3 @@ jobs:
           #build_args: 'c("--no-build-vignettes")'
           error-on: '"error"'
           check-dir: '"check"'
-          
-      - uses: insightsengineering/bioc-check-action@v1
