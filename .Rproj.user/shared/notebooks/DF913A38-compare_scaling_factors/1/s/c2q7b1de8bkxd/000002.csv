@@ -1,7 +1,0 @@
-"0","```r
-tmp <- data_raw$df_wide2
-tmp$type <- NULL
-tmp <- tmp %>% select(EPIC, Monaco, quanTIseq, `Maynard [census]`, `Maynard [expressed_genes]`, `Maynard [read_number]`, `Travaglini [census]`, `Travaglini [expressed_genes]`, `Travaglini [read_number]`, `Travaglini [spike_in]`, `Hao [census]`, `Hao [expressed_genes]`, `Hao [read_number]`)
-final_corr <- rcorr(as.matrix(tmp), type = \"spearman\")
-
-```"

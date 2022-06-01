@@ -1,4 +1,0 @@
-"0","```r
-simulations_hao_counts <- do.call(cbind, mapply('[[', sim_hao, 1))
-hao_mean_var <- data.frame(means = rowMeans(simulations_hao_counts), vars= matrixStats::rowVars(as.matrix(simulations_hao_counts)), data=\"simulated counts (Hao)\")
-```"

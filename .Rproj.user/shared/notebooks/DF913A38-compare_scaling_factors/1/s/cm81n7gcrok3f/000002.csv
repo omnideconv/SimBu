@@ -1,8 +1,0 @@
-"0","```r
-rownames(row_metaData) <- ifelse(startsWith(rownames(row_metaData), 'Travaglini'),'Travaglini',rownames(row_metaData))
-
-```"
-"1","Warning: non-unique value when setting 'row.names': ‘Travaglini’
-Error in `.rowNamesDF<-`(x, value = value) : 
-  duplicate 'row.names' are not allowed
-"

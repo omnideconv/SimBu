@@ -1,8 +1,0 @@
-"0","```r
-mean_var <- rbind(hao_mean_var, tr_mean_var)
-
-df_fino <- data.frame(means = rowMeans(finotello_pbmc_counts), vars=matrixStats::rowVars(as.matrix(finotello_pbmc_counts)))
-df_fino$data <- \"true bulk counts (Finotello)\"
-
-mean_var <- rbind(mean_var, df_fino)
-```"

@@ -1,8 +1,0 @@
-"0","```r
-seurat_both <- SCTransform(seurat_both)
-seurat_split <- SplitObject(seurat_both, split.by = 'orig.ident')
-integ_features <- SelectIntegrationFeatures(object.list = seurat_split, nfeatures = 3000)
-seurat_split <- PrepSCTIntegration(object.list = seurat_split, anchor.features = integ_features)
-integ_anchors <- FindIntegrationAnchors(object.list = seurat_split, normalization.method = 'SCT', anchor.features = integ_features)
-seurat_integrated <- IntegrateData(anchorset = integ_anchors, normalization.method = 'SCT')
-```"

@@ -1,6 +1,0 @@
-"0","```r
-simulations_tr_counts <- do.call(cbind, mapply('[[', sim_travaglini, 1))
-```"
-"1","Error in do.call(cbind, mapply(\"[[\", sim_travaglini, 1)) : 
-  second argument must be a list
-"

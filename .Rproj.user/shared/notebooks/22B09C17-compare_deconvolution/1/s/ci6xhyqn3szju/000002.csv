@@ -1,7 +1,0 @@
-"0","ncells <- 1000"
-"0","nsamples <- 100"
-"0","remove_bias_in_counts <- T"
-"0","norm_counts <- T"
-"0","whitelist_hao <- c(""Monocytes"",""T cells CD8"", ""T cells CD4"",""NK cells"",""T regulatory cells"",""B cells"",""Dendritic cells"")"
-"0","whitelist_travaglini <- c(""B cells"",""Dendritic cells"",""Macrophages"",""Monocytes"",""Neutrophils"",""NK cells"",""T cells CD4"" ,""T cells CD8"")"
-"0","whitelist_maynard <- c('Monocytes','Macrophages','B cells','T cells CD4','T cells CD8','NK cells','T regulatory cells','Dendritic cells')"

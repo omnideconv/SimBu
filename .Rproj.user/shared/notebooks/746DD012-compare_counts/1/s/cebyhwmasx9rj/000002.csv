@@ -1,5 +1,0 @@
-"0","```r
-#df_hoek <- data.frame(means = rowMeans(hoek_pbmc_counts), vars = matrixStats::rowVars(as.matrix(hoek_pbmc_counts)))
-#df_hoek$data <- \"true counts (Hoek)\"
-#mean_var <- rbind(mean_var, df_hoek)
-```"

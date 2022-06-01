@@ -1,6 +1,0 @@
-"0","```r
-data$value <- log(data$value)
-
-```"
-"1","Warning in log(data$value) : NaNs produced
-"

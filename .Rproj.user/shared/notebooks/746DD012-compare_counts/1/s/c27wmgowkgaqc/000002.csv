@@ -1,7 +1,0 @@
-"0","```r
-max_fino <- data.frame(max_counts=apply(finotello_pbmc_counts, 2, max), data='Finotello')
-max_hao <- data.frame(max_counts=apply(simulations_tr_counts, 2, max), data='Travaglini')
-max_tr <- data.frame(max_counts=apply(simulations_hao_counts, 2, max), data='Hao')
-max_df <- rbindlist(list(max_fino,max_hao,max_tr))
-ggplot(max_df, aes(x=data, y=log(max_counts)))+geom_boxplot()
-```"

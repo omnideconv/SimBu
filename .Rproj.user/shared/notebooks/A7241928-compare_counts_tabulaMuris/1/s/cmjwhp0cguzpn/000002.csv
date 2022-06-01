@@ -1,9 +1,0 @@
-"0","```r
-# Run UMAP
-seurat_integrated <- RunUMAP(seurat_integrated, 
-                             dims = 1:40,
-			     reduction = \"pca\")
-
-# Plot UMAP                             
-DimPlot(seurat_integrated, group.by = 'cell_ontology_class', order = T)  
-```"
