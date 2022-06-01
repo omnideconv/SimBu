@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">SimBu</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.7</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,14 +36,16 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item">
+  <a class="nav-link" href="../articles/SimBu.html">Get started</a>
+</li>
+<li class="nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
 </li>
 <li class="active nav-item dropdown">
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
-    <a class="dropdown-item" href="../articles/simulator_documentation.html">Getting started with the pseudo-bulk simulator R package</a>
-    <a class="dropdown-item" href="../articles/simulator_input_output.html">Inputs &amp; Outputs</a>
     <a class="dropdown-item" href="../articles/sfaira_vignette.html">Public Data Integration using Sfaira</a>
+    <a class="dropdown-item" href="../articles/simulator_input_output.html">Inputs and Outputs</a>
     <a class="dropdown-item" href="../articles/simulator_scaling_factors.html">Introducing mRNA bias into simulations with scaling factors</a>
   </div>
 </li>
@@ -95,18 +97,15 @@ The scaling factors will always be applied on the single-cell dataset first, alt
 <span class="va">counts</span> <span class="op">&lt;-</span>  <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/Matrix.html" class="external-link">Matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span><span class="fl">3e5</span>, <span class="fl">5</span><span class="op">)</span>, ncol<span class="op">=</span><span class="fl">300</span><span class="op">)</span>, sparse <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
 <span class="va">tpm</span> <span class="op">&lt;-</span> <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/Matrix.html" class="external-link">Matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span><span class="fl">3e5</span>, <span class="fl">5</span><span class="op">)</span>, ncol<span class="op">=</span><span class="fl">300</span><span class="op">)</span>, sparse <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
 <span class="va">tpm</span> <span class="op">&lt;-</span> <span class="fu">Matrix</span><span class="fu">::</span><span class="fu">t</span><span class="op">(</span><span class="fl">1e6</span><span class="op">*</span><span class="fu">Matrix</span><span class="fu">::</span><span class="fu">t</span><span class="op">(</span><span class="va">tpm</span><span class="op">)</span><span class="op">/</span><span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">tpm</span><span class="op">)</span><span class="op">)</span>
-
 <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"cell_"</span>,<span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">300</span><span class="op">)</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">tpm</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"cell_"</span>,<span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">300</span><span class="op">)</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"gene_"</span>,<span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">1000</span><span class="op">)</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">tpm</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"gene_"</span>,<span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">1000</span><span class="op">)</span><span class="op">)</span>  
-
 <span class="va">annotation</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="st">"ID"</span><span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"cell_"</span>,<span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">300</span><span class="op">)</span><span class="op">)</span>,
                            <span class="st">"cell_type"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"T cells CD4"</span>,<span class="fl">150</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"T cells CD8"</span>,<span class="fl">150</span><span class="op">)</span><span class="op">)</span>,
                            <span class="st">'spikes'</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">300</span><span class="op">)</span>,
                            <span class="st">'add_1'</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">300</span><span class="op">)</span>,
                            <span class="st">'add_2'</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">300</span><span class="op">)</span><span class="op">)</span>
-
 <span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/dataset.html">dataset</a></span><span class="op">(</span>annotation <span class="op">=</span> <span class="va">annotation</span>,
                      count_matrix <span class="op">=</span> <span class="va">counts</span>,
                      name <span class="op">=</span> <span class="st">"test_dataset"</span><span class="op">)</span>
@@ -144,7 +143,6 @@ The scaling factors will always be applied on the single-cell dataset first, alt
            <span class="fl">0.4000</span><span class="op">)</span>
   
 <span class="op">)</span>
-
 <span class="va">epic</span>
 <span class="co">#&gt;                  type   mRNA</span>
 <span class="co">#&gt; 1             B cells 0.4016</span>
@@ -185,7 +183,6 @@ The scaling factors will always be applied on the single-cell dataset first, alt
             <span class="fl">68.89323</span><span class="op">)</span>
   
 <span class="op">)</span>
-
 <span class="va">quantiseq</span>
 <span class="co">#&gt;                  type      mRNA</span>
 <span class="co">#&gt; 1             B cells  65.66148</span>
@@ -237,8 +234,7 @@ The scaling factors will always be applied on the single-cell dataset first, alt
 </h4>
 <p>Two straight forward approaches would be the number of reads or number of expressed genes/features. As these values are easily obtainable from the provided count data, SimBu already calculates them during dataset generation.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R">
-<span class="va">sim_reads</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/simulate_bulk.html">simulate_bulk</a></span><span class="op">(</span>data<span class="op">=</span><span class="va">ds</span>, 
+<code class="sourceCode R"><span class="va">sim_reads</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/simulate_bulk.html">simulate_bulk</a></span><span class="op">(</span>data<span class="op">=</span><span class="va">ds</span>, 
                            scenario <span class="op">=</span> <span class="st">"random"</span>, 
                            scaling_factor<span class="op">=</span><span class="st">"read_number"</span>,  <span class="co"># use number of reads as scaling factor</span>
                            nsamples <span class="op">=</span> <span class="fl">10</span>, 
@@ -247,7 +243,6 @@ The scaling factors will always be applied on the single-cell dataset first, alt
                            run_parallel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
 <span class="co">#&gt; Using parallel generation of simulations.</span>
 <span class="co">#&gt; Finished simulation.</span>
-
 <span class="va">sim_genes</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/simulate_bulk.html">simulate_bulk</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">ds</span>,
                            scenario <span class="op">=</span> <span class="st">"random"</span>,
                            scaling_factor <span class="op">=</span> <span class="st">"expressed_genes"</span>, <span class="co"># use number of expressed genes column as scaling factor</span>
@@ -260,13 +255,13 @@ The scaling factors will always be applied on the single-cell dataset first, alt
 <p>These options would also allow you to use other numerical measurements you have for the single cells as scaling factors, such as weight or size for example. Lets pretend, <code>add_1</code> and <code>add_2</code> are such measurements. With the <code>additional_cols</code> parameter, they can be added to the SimBu dataset and we can use them as scaling factor as well:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">annotation</span><span class="op">)</span>
-<span class="co">#&gt;       ID   cell_type     spikes     add_1       add_2</span>
-<span class="co">#&gt; 1 cell_1 T cells CD4 0.09136481 0.4811858 0.435582586</span>
-<span class="co">#&gt; 2 cell_2 T cells CD4 0.61761242 0.6596912 0.358060187</span>
-<span class="co">#&gt; 3 cell_3 T cells CD4 0.28130156 0.1950135 0.350385112</span>
-<span class="co">#&gt; 4 cell_4 T cells CD4 0.44271955 0.6874199 0.008552276</span>
-<span class="co">#&gt; 5 cell_5 T cells CD4 0.69949660 0.2325767 0.595156309</span>
-<span class="co">#&gt; 6 cell_6 T cells CD4 0.88835517 0.3133121 0.328329093</span></code></pre></div>
+<span class="co">#&gt;       ID   cell_type    spikes      add_1     add_2</span>
+<span class="co">#&gt; 1 cell_1 T cells CD4 0.1597796 0.46271393 0.7033428</span>
+<span class="co">#&gt; 2 cell_2 T cells CD4 0.6241975 0.96044188 0.9220271</span>
+<span class="co">#&gt; 3 cell_3 T cells CD4 0.3297018 0.53908581 0.7762526</span>
+<span class="co">#&gt; 4 cell_4 T cells CD4 0.4754758 0.73229890 0.1608492</span>
+<span class="co">#&gt; 5 cell_5 T cells CD4 0.5413142 0.91740369 0.4511458</span>
+<span class="co">#&gt; 6 cell_6 T cells CD4 0.8696100 0.04730843 0.7437313</span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/dataset.html">dataset</a></span><span class="op">(</span>annotation <span class="op">=</span> <span class="va">annotation</span>,
                      count_matrix <span class="op">=</span> <span class="va">counts</span>,
@@ -274,7 +269,6 @@ The scaling factors will always be applied on the single-cell dataset first, alt
                      additional_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'add_1'</span>,<span class="st">'add_2'</span><span class="op">)</span><span class="op">)</span> <span class="co"># add columns to dataset</span>
 <span class="co">#&gt; Filtering genes...</span>
 <span class="co">#&gt; Created dataset.</span>
-
 <span class="va">sim_genes</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/simulate_bulk.html">simulate_bulk</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">ds</span>,
                            scenario <span class="op">=</span> <span class="st">"random"</span>,
                            scaling_factor <span class="op">=</span> <span class="st">"add_1"</span>, <span class="co"># use add_1 column as scaling factor</span>
@@ -296,7 +290,6 @@ The scaling factors will always be applied on the single-cell dataset first, alt
                      count_matrix <span class="op">=</span> <span class="va">counts</span>,
                      name <span class="op">=</span> <span class="st">"test_dataset"</span>,
                      spike_in_col <span class="op">=</span> <span class="st">'spikes'</span><span class="op">)</span>    <span class="co"># give the name in the annotation file, that contains spike-in information</span>
-
 <span class="va">sim_spike</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/simulate_bulk.html">simulate_bulk</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">ds</span>,
                            scenario <span class="op">=</span> <span class="st">"random"</span>,
                            scaling_factor <span class="op">=</span> <span class="st">"spike_in"</span>, <span class="co"># use spike-in scaling factor</span>
@@ -312,14 +305,12 @@ The scaling factors will always be applied on the single-cell dataset first, alt
 <p><a href="http://cole-trapnell-lab.github.io/monocle-release/docs/#census" class="external-link">Census</a> is an approach which tries to convert TPM counts into relative transcript counts. This basically means, you get the mRNA counts per cell, which can differ between cell-types.<br><span class="citation">(<a href="#ref-Qiu2017" role="doc-biblioref">Qiu et al. 2017</a>)</span> state in their paper, that it should only be applied to TPM/FPKM normalized data, but I tried it out with raw expression counts as well, which worked as well.<br>
 Census calculates a vector with a scaling value for each cell in a sample. You can switch this feature on, by setting the <code>scaling_factor</code> parameter to <code>census</code>.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R">
-<span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/dataset.html">dataset</a></span><span class="op">(</span>annotation <span class="op">=</span> <span class="va">annotation</span>,
+<code class="sourceCode R"><span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/dataset.html">dataset</a></span><span class="op">(</span>annotation <span class="op">=</span> <span class="va">annotation</span>,
                      count_matrix <span class="op">=</span> <span class="va">counts</span>,
                      tpm_matrix <span class="op">=</span> <span class="va">tpm</span>,
                      name <span class="op">=</span> <span class="st">"test_dataset"</span><span class="op">)</span>
 <span class="co">#&gt; Filtering genes...</span>
 <span class="co">#&gt; Created dataset.</span>
-
 <span class="va">sim_census</span> <span class="op">&lt;-</span>  <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/simulate_bulk.html">simulate_bulk</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">ds</span>,
                              scenario <span class="op">=</span> <span class="st">"random"</span>, 
                              scaling_factor <span class="op">=</span> <span class="st">"census"</span>,   <span class="co"># use census scaling factor</span>
@@ -341,50 +332,48 @@ Census calculates a vector with a scaling value for each cell in a sample. You c
 <span class="co">#&gt; LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.7.1</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; locale:</span>
-<span class="co">#&gt;  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    </span>
-<span class="co">#&gt;  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8    LC_PAPER=en_US.UTF-8       LC_NAME=C                 </span>
-<span class="co">#&gt;  [9] LC_ADDRESS=C               LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       </span>
+<span class="co">#&gt;  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8   </span>
+<span class="co">#&gt;  [6] LC_MESSAGES=en_US.UTF-8    LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C               LC_TELEPHONE=C            </span>
+<span class="co">#&gt; [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       </span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; attached base packages:</span>
 <span class="co">#&gt; [1] parallel  stats4    stats     graphics  grDevices utils     datasets  methods   base     </span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; other attached packages:</span>
-<span class="co">#&gt;  [1] curl_4.3.2                  SeuratObject_4.0.4          Seurat_4.1.0                SimBu_0.99.0               </span>
-<span class="co">#&gt;  [5] SummarizedExperiment_1.22.0 Biobase_2.52.0              GenomicRanges_1.44.0        GenomeInfoDb_1.28.4        </span>
-<span class="co">#&gt;  [9] IRanges_2.26.0              S4Vectors_0.30.2            BiocGenerics_0.38.0         MatrixGenerics_1.4.3       </span>
-<span class="co">#&gt; [13] matrixStats_0.61.0          Matrix_1.3-4               </span>
+<span class="co">#&gt;  [1] curl_4.3.2                  Seurat_4.1.0                SimBu_0.99.6                knitr_1.33                 </span>
+<span class="co">#&gt;  [5] SeuratObject_4.0.4          SummarizedExperiment_1.22.0 Biobase_2.52.0              GenomicRanges_1.44.0       </span>
+<span class="co">#&gt;  [9] GenomeInfoDb_1.28.4         IRanges_2.26.0              S4Vectors_0.30.2            BiocGenerics_0.38.0        </span>
+<span class="co">#&gt; [13] MatrixGenerics_1.4.3        matrixStats_0.61.0          Matrix_1.3-4               </span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; loaded via a namespace (and not attached):</span>
-<span class="co">#&gt;   [1] utf8_1.2.2              reticulate_1.24         RUnit_0.4.32            tidyselect_1.1.2        htmlwidgets_1.5.4      </span>
-<span class="co">#&gt;   [6] grid_4.1.0              BiocParallel_1.26.2     Rtsne_0.15              munsell_0.5.0           codetools_0.2-18       </span>
-<span class="co">#&gt;  [11] ica_1.0-2               future_1.24.0           miniUI_0.1.1.1          withr_2.5.0             spatstat.random_2.1-0  </span>
-<span class="co">#&gt;  [16] colorspace_2.0-3        filelock_1.0.2          highr_0.9               knitr_1.33              rstudioapi_0.13        </span>
-<span class="co">#&gt;  [21] ROCR_1.0-11             tensor_1.5              listenv_0.8.0           labeling_0.4.2          optparse_1.7.1         </span>
-<span class="co">#&gt;  [26] GenomeInfoDbData_1.2.6  polyclip_1.10-0         farver_2.1.0            rprojroot_2.0.2         basilisk_1.4.0         </span>
-<span class="co">#&gt;  [31] parallelly_1.30.0       vctrs_0.3.8             generics_0.1.2          xfun_0.30               R6_2.5.1               </span>
-<span class="co">#&gt;  [36] bitops_1.0-7            spatstat.utils_2.3-0    cachem_1.0.6            DelayedArray_0.18.0     assertthat_0.2.1       </span>
-<span class="co">#&gt;  [41] promises_1.2.0.1        scales_1.1.1            gtable_0.3.0            downlit_0.4.0           biocViews_1.60.0       </span>
-<span class="co">#&gt;  [46] globals_0.14.0          processx_3.5.3          goftest_1.2-3           rlang_1.0.2             splines_4.1.0          </span>
-<span class="co">#&gt;  [51] lazyeval_0.2.2          spatstat.geom_2.3-2     BiocManager_1.30.16     yaml_2.3.5              reshape2_1.4.4         </span>
-<span class="co">#&gt;  [56] abind_1.4-5             httpuv_1.6.5            RBGL_1.68.0             tools_4.1.0             ggplot2_3.3.5          </span>
-<span class="co">#&gt;  [61] ellipsis_0.3.2          spatstat.core_2.4-0     RColorBrewer_1.1-2      ggridges_0.5.3          Rcpp_1.0.8.3           </span>
-<span class="co">#&gt;  [66] plyr_1.8.7              sparseMatrixStats_1.4.2 zlibbioc_1.38.0         purrr_0.3.4             RCurl_1.98-1.6         </span>
-<span class="co">#&gt;  [71] basilisk.utils_1.4.0    ps_1.6.0                rpart_4.1-15            deldir_1.0-6            pbapply_1.5-0          </span>
-<span class="co">#&gt;  [76] cowplot_1.1.1           zoo_1.8-9               ggrepel_0.9.1           cluster_2.1.2           fs_1.5.2               </span>
-<span class="co">#&gt;  [81] here_1.0.1              magrittr_2.0.1          data.table_1.14.2       scattermore_0.8         lmtest_0.9-40          </span>
-<span class="co">#&gt;  [86] RANN_2.6.1              fitdistrplus_1.1-8      patchwork_1.1.1         mime_0.10               evaluate_0.14          </span>
-<span class="co">#&gt;  [91] xtable_1.8-4            XML_4.0-0               gridExtra_2.3           testthat_3.1.2          compiler_4.1.0         </span>
-<span class="co">#&gt;  [96] tibble_3.1.6            KernSmooth_2.23-20      crayon_1.5.1            htmltools_0.5.2         proxyC_0.2.4           </span>
-<span class="co">#&gt; [101] mgcv_1.8-36             later_1.3.0             tidyr_1.2.0             RcppParallel_5.1.5      DBI_1.1.2              </span>
-<span class="co">#&gt; [106] MASS_7.3-54             getopt_1.20.3           brio_1.1.3              cli_3.2.0               igraph_1.2.11          </span>
-<span class="co">#&gt; [111] pkgconfig_2.0.3         pkgdown_2.0.2           dir.expiry_1.0.0        plotly_4.10.0           spatstat.sparse_2.1-0  </span>
-<span class="co">#&gt; [116] xml2_1.3.3              stringdist_0.9.8        XVector_0.32.0          BiocCheck_1.28.0        stringr_1.4.0          </span>
-<span class="co">#&gt; [121] callr_3.7.0             digest_0.6.27           sctransform_0.3.3       RcppAnnoy_0.0.19        graph_1.70.0           </span>
-<span class="co">#&gt; [126] spatstat.data_2.1-2     rmarkdown_2.13          leiden_0.3.9            uwot_0.1.11             shiny_1.7.1            </span>
-<span class="co">#&gt; [131] commonmark_1.8.0        lifecycle_1.0.1         nlme_3.1-152            jsonlite_1.7.2          desc_1.4.1             </span>
-<span class="co">#&gt; [136] viridisLite_0.4.0       fansi_1.0.3             pillar_1.7.0            lattice_0.20-44         fastmap_1.1.0          </span>
-<span class="co">#&gt; [141] httr_1.4.2              survival_3.2-11         glue_1.6.2              png_0.1-7               stringi_1.6.1          </span>
-<span class="co">#&gt; [146] memoise_2.0.1           dplyr_1.0.8             irlba_2.3.5             future.apply_1.8.1</span></code></pre></div>
+<span class="co">#&gt;   [1] plyr_1.8.7              igraph_1.2.11           lazyeval_0.2.2          proxyC_0.2.4            splines_4.1.0          </span>
+<span class="co">#&gt;   [6] BiocParallel_1.26.2     listenv_0.8.0           scattermore_0.8         ggplot2_3.3.5           digest_0.6.27          </span>
+<span class="co">#&gt;  [11] htmltools_0.5.2         fansi_1.0.3             magrittr_2.0.1          memoise_2.0.1           tensor_1.5             </span>
+<span class="co">#&gt;  [16] cluster_2.1.2           ROCR_1.0-11             globals_0.14.0          RcppParallel_5.1.5      pkgdown_2.0.2          </span>
+<span class="co">#&gt;  [21] spatstat.sparse_2.1-0   colorspace_2.0-3        ggrepel_0.9.1           xfun_0.30               dplyr_1.0.8            </span>
+<span class="co">#&gt;  [26] callr_3.7.0             crayon_1.5.1            RCurl_1.98-1.6          jsonlite_1.7.2          spatstat.data_2.1-2    </span>
+<span class="co">#&gt;  [31] survival_3.2-11         zoo_1.8-9               glue_1.6.2              polyclip_1.10-0         gtable_0.3.0           </span>
+<span class="co">#&gt;  [36] zlibbioc_1.38.0         XVector_0.32.0          leiden_0.3.9            DelayedArray_0.18.0     future.apply_1.8.1     </span>
+<span class="co">#&gt;  [41] abind_1.4-5             scales_1.1.1            DBI_1.1.2               spatstat.random_2.1-0   miniUI_0.1.1.1         </span>
+<span class="co">#&gt;  [46] Rcpp_1.0.8.3            viridisLite_0.4.0       xtable_1.8-4            reticulate_1.24         spatstat.core_2.4-0    </span>
+<span class="co">#&gt;  [51] htmlwidgets_1.5.4       httr_1.4.2              dir.expiry_1.0.0        RColorBrewer_1.1-2      ellipsis_0.3.2         </span>
+<span class="co">#&gt;  [56] ica_1.0-2               pkgconfig_2.0.3         farver_2.1.0            uwot_0.1.11             deldir_1.0-6           </span>
+<span class="co">#&gt;  [61] sass_0.4.1              utf8_1.2.2              here_1.0.1              tidyselect_1.1.2        labeling_0.4.2         </span>
+<span class="co">#&gt;  [66] rlang_1.0.2             reshape2_1.4.4          later_1.3.0             munsell_0.5.0           tools_4.1.0            </span>
+<span class="co">#&gt;  [71] cachem_1.0.6            cli_3.2.0               generics_0.1.2          ggridges_0.5.3          evaluate_0.14          </span>
+<span class="co">#&gt;  [76] stringr_1.4.0           fastmap_1.1.0           goftest_1.2-3           yaml_2.3.5              processx_3.5.3         </span>
+<span class="co">#&gt;  [81] fs_1.5.2                fitdistrplus_1.1-8      purrr_0.3.4             RANN_2.6.1              nlme_3.1-152           </span>
+<span class="co">#&gt;  [86] pbapply_1.5-0           future_1.24.0           sparseMatrixStats_1.4.2 mime_0.10               compiler_4.1.0         </span>
+<span class="co">#&gt;  [91] rstudioapi_0.13         plotly_4.10.0           filelock_1.0.2          png_0.1-7               spatstat.utils_2.3-0   </span>
+<span class="co">#&gt;  [96] tibble_3.1.6            bslib_0.3.1             stringi_1.6.1           ps_1.6.0                highr_0.9              </span>
+<span class="co">#&gt; [101] basilisk.utils_1.4.0    desc_1.4.1              lattice_0.20-44         vctrs_0.3.8             pillar_1.7.0           </span>
+<span class="co">#&gt; [106] lifecycle_1.0.1         spatstat.geom_2.3-2     lmtest_0.9-40           jquerylib_0.1.4         RcppAnnoy_0.0.19       </span>
+<span class="co">#&gt; [111] data.table_1.14.2       cowplot_1.1.1           bitops_1.0-7            irlba_2.3.5             httpuv_1.6.5           </span>
+<span class="co">#&gt; [116] patchwork_1.1.1         R6_2.5.1                promises_1.2.0.1        KernSmooth_2.23-20      gridExtra_2.3          </span>
+<span class="co">#&gt; [121] parallelly_1.30.0       codetools_0.2-18        MASS_7.3-54             assertthat_0.2.1        rprojroot_2.0.2        </span>
+<span class="co">#&gt; [126] withr_2.5.0             sctransform_0.3.3       GenomeInfoDbData_1.2.6  mgcv_1.8-36             rpart_4.1-15           </span>
+<span class="co">#&gt; [131] grid_4.1.0              tidyr_1.2.0             basilisk_1.4.0          rmarkdown_2.13          downlit_0.4.0          </span>
+<span class="co">#&gt; [136] Rtsne_0.15              shiny_1.7.1</span></code></pre></div>
 </div>
 </div>
 <div class="section level2">

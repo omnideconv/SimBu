@@ -34,7 +34,7 @@
     
     <a class="navbar-brand me-2" href="index.html">SimBu</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.7</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,14 +44,16 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item">
+  <a class="nav-link" href="articles/SimBu.html">Get started</a>
+</li>
+<li class="nav-item">
   <a class="nav-link" href="reference/index.html">Reference</a>
 </li>
 <li class="nav-item dropdown">
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
-    <a class="dropdown-item" href="articles/simulator_documentation.html">Getting started with the pseudo-bulk simulator R package</a>
-    <a class="dropdown-item" href="articles/simulator_input_output.html">Inputs &amp; Outputs</a>
     <a class="dropdown-item" href="articles/sfaira_vignette.html">Public Data Integration using Sfaira</a>
+    <a class="dropdown-item" href="articles/simulator_input_output.html">Inputs and Outputs</a>
     <a class="dropdown-item" href="articles/simulator_scaling_factors.html">Introducing mRNA bias into simulations with scaling factors</a>
   </div>
 </li>
@@ -82,7 +84,7 @@
 </h1></div>
 <!-- badges: start -->
 
-<p>The goal of SimBu is to simulate pseudo-bulk RNAseq datasets from public or private single-cell RNAseq datasets.</p>
+<p>The goal of SimBu is to simulate pseudo-bulk RNAseq datasets with variable cell-type fractions baed on public or private single-cell RNAseq datasets.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -100,6 +102,8 @@
 <span class="co"># use local data to build dataset</span>
 <span class="va">dataset</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dataset.html">dataset</a></span><span class="op">(</span>annotation <span class="op">=</span> <span class="va">annotation_dataframe</span>, count_matrix <span class="op">=</span> <span class="va">expression_matrix</span>, name <span class="op">=</span> <span class="st">"test_dataset"</span><span class="op">)</span>
 <span class="va">simulation</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/simulate_bulk.html">simulate_bulk</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">dataset</span>, scenario <span class="op">=</span> <span class="st">"random"</span>, scaling_factor <span class="op">=</span> <span class="st">"NONE"</span><span class="op">)</span></code></pre></div>
+<p>For more detailed usage instructions, check out <a href="http://omnideconv.org/SimBu/articles/simulator_documentation.html" class="external-link">Getting started</a>.</p>
+<p>You can find more information on the simulation setup and mRNA bias in our <a href="https://doi.org/10.1101/2022.05.06.490889" class="external-link">SimBu preprint</a>.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
@@ -137,6 +141,7 @@
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
 <li><a href="https://github.com/omnideconv/simulator/actions" class="external-link"><img src="https://github.com/omnideconv/simulator/workflows/R-CMD-check/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://alex-d13.github.io/index.html" class="external-link"><img src="https://img.shields.io/badge/docs-pkgdown-blue.svg" alt="docs"></a></li>
 </ul>
 </div>
 

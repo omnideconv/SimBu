@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">SimBu</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.7</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,15 +18,17 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item">
+      <ul class="navbar-nav me-auto"><li class="nav-item">
+  <a class="nav-link" href="../articles/SimBu.html">Get started</a>
+</li>
+<li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
 </li>
 <li class="nav-item dropdown">
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
-    <a class="dropdown-item" href="../articles/simulator_documentation.html">Getting started with the pseudo-bulk simulator R package</a>
-    <a class="dropdown-item" href="../articles/simulator_input_output.html">Inputs &amp; Outputs</a>
     <a class="dropdown-item" href="../articles/sfaira_vignette.html">Public Data Integration using Sfaira</a>
+    <a class="dropdown-item" href="../articles/simulator_input_output.html">Inputs and Outputs</a>
     <a class="dropdown-item" href="../articles/simulator_scaling_factors.html">Introducing mRNA bias into simulations with scaling factors</a>
   </div>
 </li>
@@ -113,12 +115,11 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="va">h5</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">'extdata'</span>, <span class="st">'anndata.h5ad'</span>, package<span class="op">=</span><span class="st">'SimBu'</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">ds_h5ad</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu">dataset_h5ad</span><span class="op">(</span>h5ad_file_counts <span class="op">=</span> <span class="va">h5</span>,</span>
 <span class="r-in">                               name <span class="op">=</span> <span class="st">"h5ad_dataset"</span>,</span>
-<span class="r-in">                               cell_id_col <span class="op">=</span> <span class="st">'ID'</span>,                  <span class="co"># this will use the 'ID' column of the metadata as cell identifiers</span></span>
-<span class="r-in">                               cell_type_col <span class="op">=</span> <span class="st">'cell_type'</span>,         <span class="co"># this will use the 'cell-type' column of the metadata as cell type info</span></span>
+<span class="r-in">                               cell_id_col <span class="op">=</span> <span class="st">'id'</span>,                  <span class="co"># this will use the 'id' column of the metadata as cell identifiers</span></span>
+<span class="r-in">                               cell_type_col <span class="op">=</span> <span class="st">'group'</span>,             <span class="co"># this will use the 'group' column of the metadata as cell type info</span></span>
 <span class="r-in">                               cells_in_obs <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>                 <span class="co"># in case your cell information is stored in the var layer, switch to FALSE</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Filtering genes...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Created dataset.</span>
-<span class="r-in">                   </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
