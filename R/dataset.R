@@ -536,7 +536,7 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name,
     return(NULL)
   }
   print(paste0('Starting to download dataset from Sfaria with id: ', sfaira_id))
-  sfaira_data <- download_sfaira(setup_list = sfaira_setup, id = sfaira_id, force = force)
+  sfaira_data <- download_sfaira(setup_list = sfaira_setup, ids = sfaira_id, force = force)
   count_matrix <- Matrix::t(sfaira_data$X)
   if(!is.null(sfaira_data$var$gene_symbol)){
     rownames(count_matrix) <- sfaira_data$var$gene_symbol

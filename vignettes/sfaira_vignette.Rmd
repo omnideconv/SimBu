@@ -31,8 +31,8 @@ This vignette will cover the integration of the public database Sfaria. \
 ## Setup
 
 As a public database, sfaira [@Fischer2020] is used, which is a dataset and model repository for single-cell RNA-sequencing
-data. It gives access to about 233 datasets from human and mouse with more than 3 million cells in total. 
-You can browse them interactively here: [https://theislab.github.io/sfaira-portal/Datasets](https://theislab.github.io/sfaira-portal/Datasets). Note that only annotated datasets will be downloaded! \
+data. It gives access to about multiple datasets from human and mouse with more than 3 million cells in total. 
+You can browse them interactively here: [https://theislab.github.io/sfaira-portal/Datasets](https://theislab.github.io/sfaira-portal/Datasets). Note that only annotated datasets will be downloaded! Also there are cases of datasets, which have private URLs and cannot be automatically downloaded; SimBu will skip these datasets. \
 In order to use this database, we first need to install it. This can easily be done, by running the `setup_sfaira()` function for the first time. In the background we use the [basilisik](https://bioconductor.org/packages/release/bioc/html/basilisk.utils.html) package to establish a conda environment that has all sfaira dependencies installed. The installation will be only performed one single time, even if you close your R session and call `setup_sfaira()` again. The given directory serves as the storage for all future downloaded datasets from sfaira:
 
 
@@ -42,7 +42,6 @@ setup_list <- SimBu::setup_sfaira(basedir = tempdir())
 
 ## Creating a dataset
 
-The simulator package works with two internally defined data-structures: *datasets* and *databases*. \
 We will now create a dataset of samples from human pancreas using the `organisms` and `tissues` parameter.
 You can provide a single word (like we do here) or for example a list of tissues
 you want to download: `c("pancreas","lung")`. An additional parameter is the `assays` parameter,

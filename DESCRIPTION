@@ -1,6 +1,6 @@
 Package: SimBu
 Title: Simulate Bulk RNA-seq Datasets from Single-Cell Datasets
-Version: 0.99.6
+Version: 0.99.7
 Authors@R: 
     person(given = "Alexander",
            family = "Dietrich",
@@ -27,6 +27,7 @@ Imports:
     phyloseq,
     proxyC,
     RColorBrewer,
+    RCurl,
     reticulate,
     sparseMatrixStats,
     SummarizedExperiment,

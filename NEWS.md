@@ -13,3 +13,7 @@ submitted package to Bioconductor
 ## Use `basilisk` to solve conda environment and Sfaira dependencies
 
 This removes the manual installation of Sfaira
+
+# SimBu 0.99.7
+
+Added functionality to check Sfaira datasets for accessibilty (if the specified URLs can be downloaded)

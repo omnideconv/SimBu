@@ -1,5 +1,5 @@
-----
-title: "Inputs & Outputs"
+---
+title: "Inputs and Outputs"
 author: "Alexander Dietrich"
 bibliography: references.bib
 biblio-style: apalike
@@ -7,7 +7,7 @@ link-citations: yes
 colorlinks: yes
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Inputs & Outputs}
+  %\VignetteIndexEntry{Inputs and Outputs}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
