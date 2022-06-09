@@ -298,7 +298,7 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = '
 
   if(!is.null(h5ad_file_counts) && !file.exists(h5ad_file_counts)){
     stop("Incorrect path to counts file given; file does not exist.")
-    
+
   }else if(!is.null(h5ad_file_counts)){
     h5ad_file_counts <- normalizePath(h5ad_file_counts)
 
@@ -307,7 +307,7 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = '
       h5ad_data <- h5ad_to_adata(h5ad_file_counts, cells_in_obs)
       count_matrix <- h5ad_data$mm
       anno_counts <- h5ad_data$anno
-      
+
       # find cell id information in annotation dataframe
       if(!cell_id_col %in% colnames(anno_counts)){
         # use rownames as ID if wished
@@ -315,10 +315,10 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = '
           anno_counts$ID <- rownames(anno_counts)
           cell_id_col <- 'ID'
         }else{
-          stop(paste0('Cannot find "',cell_id_col,'" column in cell annotation of h5ad_file_counts.'))  
+          stop(paste0('Cannot find "',cell_id_col,'" column in cell annotation of h5ad_file_counts.'))
         }
       }
-      
+
       # find cell type information in annotation dataframe
       if(!cell_type_col %in% colnames(anno_counts)){
         stop(paste0('Cannot find "',cell_type_col,'" column in cell annotation of h5ad_file_counts.'))
@@ -335,16 +335,16 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = '
 
   if(!is.null(h5ad_file_tpm) && !file.exists(h5ad_file_tpm)){
     stop("Incorrect path to counts file given; file does not exist.")
-    
+
   }else if(!is.null(h5ad_file_tpm)){
     h5ad_file_tpm <- normalizePath(h5ad_file_tpm)
-    
+
     file_type <- tools::file_ext(h5ad_file_tpm)
     if(file_type == "h5ad"){
       h5ad_data <- h5ad_to_adata(h5ad_file_tpm, cells_in_obs)
       tpm_matrix <- h5ad_data$mm
       anno_tpm <- h5ad_data$anno
-      
+
       # find cell id information in annotation dataframe
       if(!cell_id_col %in% colnames(anno_tpm)){
         # use rownames as ID if wished
@@ -352,10 +352,10 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = '
           anno_tpm$ID <- rownames(anno_tpm)
           cell_id_col <- 'ID'
         }else{
-          stop(paste0('Cannot find "',cell_id_col,'" column in cell annotation of h5ad_file_tpm.'))  
+          stop(paste0('Cannot find "',cell_id_col,'" column in cell annotation of h5ad_file_tpm.'))
         }
       }
-      
+
       # find cell type information in annotation dataframe
       if(!cell_type_col %in% colnames(anno_tpm)){
         stop(paste0('Cannot find "',cell_type_col,'" column in cell annotation of h5ad_file_tpm.'))
@@ -369,7 +369,7 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = '
     tpm_matrix <- NULL
     anno_tpm <- NULL
   }
-  
+
   # check if both annotations are equal
   if(!is.null(anno_tpm)){
     if(!all(anno_counts[['ID']] %in% anno_tpm[['ID']])){
@@ -377,7 +377,7 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = '
       intersect_cells <- Reduce(intersect, list(anno_counts[['ID']], anno_tpm[['ID']]))
       annotation <- anno_counts[anno_counts[['ID']] %in%intersect_cells,]
     }else{
-      annotation <- anno_counts  
+      annotation <- anno_counts
     }
   }else{
     annotation <- anno_counts
@@ -418,29 +418,29 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = '
 #' counts <- Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol=300), sparse = TRUE)
 #' tpm <- Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol=300), sparse = TRUE)
 #' tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
-#' 
+#'
 #' colnames(counts) <- paste0("cell-",rep(1:300))
 #' colnames(tpm) <- paste0("cell-",rep(1:300))
 #' rownames(counts) <- paste0("gene-",rep(1:1000))
 #' rownames(tpm) <- paste0("gene-",rep(1:1000))
-#' 
-#' annotation <- data.frame("ID"=paste0("cell-",rep(1:300)), 
-#'                          "cell_type"=c(rep("T cells CD4",50), 
+#'
+#' annotation <- data.frame("ID"=paste0("cell-",rep(1:300)),
+#'                          "cell_type"=c(rep("T cells CD4",50),
 #'                                        rep("T cells CD8",50),
 #'                                        rep("Macrophages",100),
 #'                                        rep("NK cells",10),
 #'                                        rep("B cells",70),
 #'                                        rep("Monocytes",20)),
 #'                          row.names = paste0("cell-",rep(1:300)))
-#' 
+#'
 #' seurat_obj <- Seurat::CreateSeuratObject(counts = counts, assay = 'counts', meta.data = annotation)
 #' tpm_assay <- Seurat::CreateAssayObject(counts = tpm)
 #' seurat_obj[['tpm']] <- tpm_assay
-#' 
-#' ds_seurat <- SimBu::dataset_seurat(seurat_obj = seurat_obj, 
-#'                                    count_assay = "counts", 
-#'                                    cell_id_col = 'ID', 
-#'                                    cell_type_col = 'cell_type', 
+#'
+#' ds_seurat <- SimBu::dataset_seurat(seurat_obj = seurat_obj,
+#'                                    count_assay = "counts",
+#'                                    cell_id_col = 'ID',
+#'                                    cell_type_col = 'cell_type',
 #'                                    tpm_assay = 'tpm',
 #'                                    name = "seurat_dataset")
 dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, tpm_assay=NULL, name = "SimBu_dataset", spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
@@ -535,7 +535,7 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name,
     warning("You need to setup sfaira first; please use setup_sfaira() to do so.")
     return(NULL)
   }
-  print(paste0('Starting to download dataset from Sfaria with id: ', sfaira_id))
+  message(paste0('Starting to download dataset from Sfaria with id: ', sfaira_id))
   sfaira_data <- download_sfaira(setup_list = sfaira_setup, ids = sfaira_id, force = force)
   count_matrix <- Matrix::t(sfaira_data$X)
   if(!is.null(sfaira_data$var$gene_symbol)){
@@ -600,7 +600,7 @@ dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, s
     warning("You need to setup sfaira first; please use setup_sfaira() to do so.")
     return(NULL)
   }
-  print(paste0('Starting to download dataset from Sfaria with organism: ', organisms,' , tissue: ', tissues, ' and assay: ', assays))
+  message(paste0('Starting to download dataset from Sfaria with organism: ', organisms,', tissue: ', tissues, ' and assay: ', assays))
   sfaira_data <- download_sfaira_multiple(sfaira_setup, organisms, tissues, assays)
   count_matrix <- Matrix::t(sfaira_data$X)
   if(!is.null(sfaira_data$var$gene_symbol)){
@@ -636,24 +636,24 @@ dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, s
 #' @return matrix contained on h5ad file as dgCMatrix
 #'
 h5ad_to_adata <- function(h5ad_path, cells_in_obs){
-  
+
   h5ad_path<-normalizePath(h5ad_path)
-  
+
   # create conda environment with anndata
   proc <- basilisk::basiliskStart(SimBu_env)
   on.exit(basilisk::basiliskStop(proc))
-  
+
   tryCatch({
     # initialize environment
     h5ad_data <- basilisk::basiliskRun(proc, function(h5ad_path, cells_in_obs){
       sp <- reticulate::import("scanpy")
       adata <- sp$read_h5ad(h5ad_path)
-      if(!cells_in_obs){adata <- adata$T}
-      mm <- Matrix::t(methods::as(methods::as(adata$X, 'CsparseMatrix'), 'dgCMatrix'))
-      colnames(mm) <- rownames(data.frame(adata$obs))
-      rownames(mm) <- rownames(data.frame(adata$var))
-      return(list(mm=mm, 
-                  anno=data.frame(adata$obs, stringsAsFactors = FALSE)))
+      if(!cells_in_obs){adata <- adata[['T']]}
+      mm <- Matrix::t(methods::as(methods::as(adata[['X']], 'CsparseMatrix'), 'dgCMatrix'))
+      colnames(mm) <- rownames(data.frame(adata[['obs']]))
+      rownames(mm) <- rownames(data.frame(adata[['var']]))
+      return(list(mm=mm,
+                  anno=data.frame(adata[['obs']], stringsAsFactors = FALSE)))
     },h5ad_path=h5ad_path, cells_in_obs=cells_in_obs)
     return(h5ad_data)
   }, error=function(e){
