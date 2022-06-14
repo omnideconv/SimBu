@@ -11,10 +11,10 @@ Description: SimBu can be used to simulate bulk RNA-seq datasets with known cell
     Different pre-defined simulation scenarios exist, as are options to run custom simulations.
     Additionally, expression values can be adapted by adding an mRNA bias, which produces more
     biologically relevant simulations.
-License: GPL (>= 3)
+License: GPL-3 + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE) 
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
 Imports: 
     basilisk,
     BiocParallel,

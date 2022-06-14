@@ -40,3 +40,4 @@ function to sample cells according to given cell-type fractions. This creates a 
 mean expression value per gene over all sampled cells.
 Note: if total_read_counts is used, the cell-fractions are applied to the number of counts, not the number of cells!
 }
+\keyword{internal}

@@ -7,7 +7,7 @@
 dataset_sfaira(
   sfaira_id,
   sfaira_setup,
-  name,
+  name = "SimBu_dataset",
   spike_in_col = NULL,
   additional_cols = NULL,
   force = FALSE,

@@ -54,6 +54,7 @@ setup_sfaira <- function(basedir){
 #'
 #' @return matrix, gene names and cell IDs
 #'
+#' @keywords internal
 download_sfaira <- function(setup_list, ids, force=FALSE, synapse_user=NULL, synapse_pw=NULL){
   # create conda environment with sfaira
   proc <- basilisk::basiliskStart(SimBu_env)
@@ -142,7 +143,8 @@ download_sfaira <- function(setup_list, ids, force=FALSE, synapse_user=NULL, syn
 #' @param force logical; TRUE if you want to force to download all datasets, otherwise only the ones with cell-type annotation will be returned. Default if FALSE
 #'
 #' @return annotated data object, contains count matrix and annotation
-#'
+#' 
+#' @keywords internal
 download_sfaira_multiple <- function(setup_list, organisms=NULL, tissues=NULL, assays=NULL, force=FALSE){
   # create conda environment with sfaira
   proc <- basilisk::basiliskStart(SimBu_env)
@@ -273,7 +275,8 @@ check_sfaira_datasets <- function(dataset){
   ids_checked <- basilisk::basiliskRun(proc, function(ds){
 
     ids_list <- lapply(ds$datasets, function(x){
-      message(paste('Checking file accessibility for id: ', x$id))
+      message('Checking file accessibility for id: ')
+      message(x$id)
       data_url <- x$download_url_data[[1]]
       meta_url <- x$download_url_meta[[1]]
 

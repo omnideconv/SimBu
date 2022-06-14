@@ -17,3 +17,4 @@ intersected matrix
 \description{
 Otherwise intersection of both is used
 }
+\keyword{internal}

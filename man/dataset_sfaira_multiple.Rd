@@ -9,7 +9,7 @@ dataset_sfaira_multiple(
   tissues = NULL,
   assays = NULL,
   sfaira_setup,
-  name,
+  name = "SimBu_dataset",
   spike_in_col = NULL,
   additional_cols = NULL,
   filter_genes = TRUE,

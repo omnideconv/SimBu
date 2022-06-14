@@ -17,3 +17,4 @@ boolean
 \description{
 Checks, if a matrix is TPM-like (columns sum up to 1e6)
 }
+\keyword{internal}

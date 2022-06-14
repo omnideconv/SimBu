@@ -60,8 +60,8 @@ colnames(tpm) <- paste0("cell-",rep(1:300))
 rownames(counts) <- paste0("gene-",rep(1:1000))
 rownames(tpm) <- paste0("gene-",rep(1:1000))
 
-annotation <- data.frame("ID"=paste0("cell-",rep(1:300)), 
-                         "cell_type"=c(rep("T cells CD4",50), 
+annotation <- data.frame("ID"=paste0("cell-",rep(1:300)),
+                         "cell_type"=c(rep("T cells CD4",50),
                                        rep("T cells CD8",50),
                                        rep("Macrophages",100),
                                        rep("NK cells",10),
@@ -73,10 +73,10 @@ seurat_obj <- Seurat::CreateSeuratObject(counts = counts, assay = 'counts', meta
 tpm_assay <- Seurat::CreateAssayObject(counts = tpm)
 seurat_obj[['tpm']] <- tpm_assay
 
-ds_seurat <- SimBu::dataset_seurat(seurat_obj = seurat_obj, 
-                                   count_assay = "counts", 
-                                   cell_id_col = 'ID', 
-                                   cell_type_col = 'cell_type', 
+ds_seurat <- SimBu::dataset_seurat(seurat_obj = seurat_obj,
+                                   count_assay = "counts",
+                                   cell_id_col = 'ID',
+                                   cell_type_col = 'cell_type',
                                    tpm_assay = 'tpm',
                                    name = "seurat_dataset")
 }

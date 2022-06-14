@@ -44,3 +44,4 @@ Return a \link[SummarizedExperiment]{SummarizedExperiment} object
 \description{
 Generate SummarizedExperiment using multiple parameters
 }
+\keyword{internal}

@@ -19,3 +19,4 @@ scaling vector
 \description{
 Create scaling vector from custom or pre-defined scaling factor
 }
+\keyword{internal}

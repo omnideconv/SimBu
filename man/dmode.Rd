@@ -15,3 +15,4 @@ most commonly occurring (log-transformed) TPM value
 \description{
 use gaussian kernel to calculate the mode of transcript counts
 }
+\keyword{internal}

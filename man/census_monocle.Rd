@@ -19,3 +19,4 @@ vector with estimated mRNA values per cell in expr_matrix
 \description{
 Implementation taken from Monocle2: https://github.com/cole-trapnell-lab/monocle-release/blob/master/R/normalization.R#L140
 }
+\keyword{internal}

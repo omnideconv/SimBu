@@ -17,3 +17,4 @@ matrix contained on h5ad file as dgCMatrix
 \description{
 Use basilisk environment to read h5ad file and access anndata object
 }
+\keyword{internal}

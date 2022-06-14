@@ -2,7 +2,7 @@
 % Please edit documentation in R/simulator.R
 \name{simulate_bulk}
 \alias{simulate_bulk}
-\title{simulate whole pseudo-bulk RNAseq dataset}
+\title{Simulate whole pseudo-bulk RNAseq dataset}
 \usage{
 simulate_bulk(
   data,

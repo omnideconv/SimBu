@@ -66,10 +66,9 @@ calc_xi <- function(expr_matrix, expr_threshold){
 #'
 #' @return vector with estimated mRNA values per cell in expr_matrix
 #'
+#' @keywords internal
 census_monocle <- function(expr_matrix, exp_capture_rate, expr_threshold){
 
-  cells <- dim(expr_matrix)[1]
-  i <- 1
   # iterate over all cells
   total <- unlist(apply(expr_matrix, 2, function(x){
     tryCatch({
@@ -84,8 +83,6 @@ census_monocle <- function(expr_matrix, exp_capture_rate, expr_threshold){
       frac_x <- P(t_estimate)
       # find all genes with single mRNA
       num_single_copy_genes <- sum(x <= t_estimate)
-      # counter
-      i <<- i+1
       #final value (this is M_i)
       num_single_copy_genes / frac_x / exp_capture_rate
     }, error=function(e){
@@ -101,6 +98,8 @@ census_monocle <- function(expr_matrix, exp_capture_rate, expr_threshold){
 #' @param x vector of numeric values
 #'
 #' @return most commonly occurring (log-transformed) TPM value
+#' 
+#' @keywords internal
 dmode <- function(x) {
   if (length(x) < 2) return (0);
   den <- stats::density(x, kernel=c("gaussian"))
