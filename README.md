@@ -15,11 +15,20 @@ RNAseq datasets.
 
 ## Installation
 
-To install this package, use the following command:
+To install the developmental version of the package, run:
 
 ``` r
 install.packages("devtools")
 devtools::install_github("omnideconv/SimBu") 
+```
+
+To install from Bioconductor:
+
+``` r
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("SimBu")
 ```
 
 ## Usage
