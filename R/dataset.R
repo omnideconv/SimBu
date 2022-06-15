@@ -535,12 +535,11 @@ dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, 
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' setup_list <- SimBu::setup_sfaira(tempdir())
 #' ds <- SimBu::dataset_sfaira(sfaira_id = 'homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x',
 #'                      sfaira_setup = setup_list,
 #'                      name = "test_dataset")
-#' }
+#' 
 dataset_sfaira <- function(sfaira_id, sfaira_setup, name = "SimBu_dataset",
                            spike_in_col=NULL, additional_cols=NULL, force=FALSE, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
 
@@ -601,13 +600,12 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name = "SimBu_dataset",
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' setup_list <- SimBu::setup_sfaira(tempdir())
-#' ds_human_pancreas <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
+#' ds_human_lung <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
 #'                                                     organisms = "Homo sapiens",
-#'                                                     tissues = "pancreas",
-#'                                                     name = "human_pancreas")
-#' }
+#'                                                     tissues = "lung parenchyma",
+#'                                                     assay = "10x 3' v2",
+#'                                                     name = "human_lung")
 dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, sfaira_setup, name = "SimBu_dataset",
                                     spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
   if(is.null(sfaira_setup)){
