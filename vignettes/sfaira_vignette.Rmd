@@ -50,10 +50,12 @@ assays (for examples `Smart-seq2`). \
 The `name` parameter is used later on to give each sample (cell) a unique name.
 
 ```{r, eval=FALSE}
-ds_pancrease <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
-                                               organisms = "Homo sapiens", 
-                                               tissues = "pancreas", 
-                                               name="human_pancreas")
+ds_pancrease <- SimBu::dataset_sfaira_multiple(
+  sfaira_setup = setup_list,
+  organisms = "Homo sapiens",
+  tissues = "pancreas",
+  name = "human_pancreas"
+)
 ```
 
 Currently there are three datasets in sfaira from human pancreas, which have cell-type annotation.
@@ -71,9 +73,11 @@ head(all_datasets)
 This allows you to find the specific IDs of datasets, which you can download directly:
 
 ```{r, eval=FALSE}
-SimBu::dataset_sfaira(sfaira_id = 'homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x',
-                      sfaira_setup = setup_list,
-                      name = "dataset_by_id")
+SimBu::dataset_sfaira(
+  sfaira_id = "homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x",
+  sfaira_setup = setup_list,
+  name = "dataset_by_id"
+)
 ```
 
 

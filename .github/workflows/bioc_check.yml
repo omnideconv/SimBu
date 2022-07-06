@@ -1,0 +1,23 @@
+name: BiocCheck
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bioc-check:
+    runs-on: ubuntu-latest
+    name: BiocCheck
+    container:
+      image: rocker/verse:4.1.0
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Run rcmdcheck
+        run: |
+          R CMD build .
+          R CMD INSTALL *.tar.gz
+          R CMD check *.tar.gz
+
+      - name: Run BiocCheck
+        uses: insightsengineering/bioc-check-action@v1

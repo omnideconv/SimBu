@@ -28,14 +28,15 @@ To install the developmental version of the package, run:
 
 ```{r, eval=FALSE}
 install.packages("devtools")
-devtools::install_github("omnideconv/SimBu") 
+devtools::install_github("omnideconv/SimBu")
 ```
 
 To install from Bioconductor:
 
 ```{r, eval=FALSE}
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
+if (!require("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager")
+}
 
 BiocManager::install("SimBu")
 ```
@@ -55,7 +56,3 @@ simulation <- simulate_bulk(data = dataset, scenario = "random", scaling_factor 
 For more detailed usage instructions, check out [Getting started](http://omnideconv.org/SimBu/articles/simulator_documentation.html). 
 
 You can find more information on the simulation setup and mRNA bias in our [SimBu preprint](https://doi.org/10.1101/2022.05.06.490889). 
-
-
-
-
