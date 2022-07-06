@@ -32,8 +32,8 @@ needs a sparse matrix with cells in columns and genes in rows. You can find the 
 }
 \examples{
 
-tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
-tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
+tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol = 300), sparse = TRUE)
+tpm <- Matrix::t(1e6 * Matrix::t(tpm) / Matrix::colSums(tpm))
 cen <- SimBu::census(tpm)
 
 }
