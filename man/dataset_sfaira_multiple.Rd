@@ -51,9 +51,11 @@ Note: only datasets in sfaira with annotation are considered!
 }
 \examples{
 setup_list <- SimBu::setup_sfaira(tempdir())
-ds_human_lung <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
-                                                    organisms = "Homo sapiens",
-                                                    tissues = "lung parenchyma",
-                                                    assay = "10x 3' v2",
-                                                    name = "human_lung")
+ds_human_lung <- SimBu::dataset_sfaira_multiple(
+  sfaira_setup = setup_list,
+  organisms = "Homo sapiens",
+  tissues = "lung parenchyma",
+  assay = "10x 3' v2",
+  name = "human_lung"
+)
 }
