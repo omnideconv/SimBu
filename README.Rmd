@@ -17,7 +17,6 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![tests](https://github.com/omnideconv/SimBu/actions/workflows/test.yml/badge.svg)](https://github.com/omnideconv/SimBu/actions/workflows/test.yml)
-[![test-conda](https://github.com/omnideconv/SimBu/actions/workflows/conda/badge.svg)](https://github.com/omnideconv/SimBu/actions/workflows/conda.yml)
 [![license](https://img.shields.io/badge/license-LGPLv3-blue.svg)](https://github.com/omnideconv/SimBu/blob/master/LICENSE.md)
 [![docs](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://omnideconv.github.io/SimBu)
 [![Codecov test coverage](https://codecov.io/gh/omnideconv/SimBu/branch/master/graph/badge.svg)](https://app.codecov.io/gh/omnideconv/SimBu?branch=master)
