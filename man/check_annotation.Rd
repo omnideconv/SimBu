@@ -19,3 +19,4 @@ annotation dataframe with correct column names
 \description{
 check for correct column names in annotation file and replace them if necessary
 }
+\keyword{internal}

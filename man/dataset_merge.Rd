@@ -40,8 +40,8 @@ The objects need to have the same number of assays in order to work.
 }
 \examples{
 
-counts <-  Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
-tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
+counts <-  Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol=300), sparse = TRUE)
+tpm <- Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol=300), sparse = TRUE)
 tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
 
 colnames(counts) <- paste0("cell_",rep(1:300))

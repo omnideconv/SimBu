@@ -1,0 +1,4 @@
+The two .h5 files in the extdata folder contain a tiny 2x2 matrix and arbitrary metadata information, which represents one cell type for each sample.
+One files store these information in an anndata (https://anndata-tutorials.readthedocs.io/en/latest/getting-started.html) object, where the metadata is once stored in the obs layer (anndata.h5ad) and once in the var layer (anndata_rev.h5ad).
+
+These files are only used for internal testing of dataset generation with h5ad files using SimBu.

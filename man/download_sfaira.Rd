@@ -6,7 +6,7 @@
 \usage{
 download_sfaira(
   setup_list,
-  id,
+  ids,
   force = FALSE,
   synapse_user = NULL,
   synapse_pw = NULL
@@ -15,7 +15,7 @@ download_sfaira(
 \arguments{
 \item{setup_list}{the sfaira setup; given by \code{\link{setup_sfaira}}}
 
-\item{id}{the ID of the datasets}
+\item{ids}{the IDs of the datasets}
 
 \item{force}{logical; TRUE if you want to force the download, even though no cell-type annotation exists for this dataset. Default if FALSE}
 
@@ -24,8 +24,9 @@ download_sfaira(
 \item{synapse_pw}{character; password for synapse portal (https://www.synapse.org)}
 }
 \value{
-a anndata object, stores counts, metadata and other information on the dataset
+matrix, gene names and cell IDs
 }
 \description{
 download a specific dataset from sfaira by an ID
 }
+\keyword{internal}

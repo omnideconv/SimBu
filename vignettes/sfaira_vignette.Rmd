@@ -31,73 +31,51 @@ This vignette will cover the integration of the public database Sfaria. \
 ## Setup
 
 As a public database, sfaira [@Fischer2020] is used, which is a dataset and model repository for single-cell RNA-sequencing
-data. It gives access to about 233 datasets from human and mouse with more than 3 million cells in total. 
-You can browse them interactively here: [https://theislab.github.io/sfaira-portal/Datasets](https://theislab.github.io/sfaira-portal/Datasets). Note 
-that only annotated datasets will be downloaded! \
-In order to use this database, we first need to install it. We recommend to use [conda](https://docs.conda.io/projects/conda/en/latest/index.html) to create a new
-environment and install sfaira into this directory. This ensures that no other packages interfere with the installation. \
-*Note:* currently the simulator seems to work only with the develop version of sfaira.\
-A recommended step by step installation would look like this:
-```
-conda create --name sfaira python=3.9 pip
-conda activate sfaira
-/path/to/conda/envs/sfaira/bin/pip install git+https://github.com/theislab/sfaira.git@main #this ensures that the correct pip is used
-```
-Watch out that you are using pip inside of the new environment, not the global pip!\
-Also, we recommend to use the latest sfaira version, at this time it is 0.3.9.\
-
-You do not need to activate the new conda environment each time in order to use it in the R package.\
-To setup sfaira inside of the R package use this command: 
-
-```{r, warning=TRUE, message=TRUE, eval=FALSE}
-setup_list <- SimBu::setup_sfaira(python_path = "/path/to/.conda/envs/sfaira/bin/python3",
-                                      env_name = "sfaira", 
-                                      basedir = "/local/path/to/store/data/sfaira")
-```
+data. It gives access to about multiple datasets from human and mouse with more than 3 million cells in total. 
+You can browse them interactively here: [https://theislab.github.io/sfaira-portal/Datasets](https://theislab.github.io/sfaira-portal/Datasets). Note that only annotated datasets will be downloaded! Also there are cases of datasets, which have private URLs and cannot be automatically downloaded; SimBu will skip these datasets. \
+In order to use this database, we first need to install it. This can easily be done, by running the `setup_sfaira()` function for the first time. In the background we use the [basilisik](https://bioconductor.org/packages/release/bioc/html/basilisk.utils.html) package to establish a conda environment that has all sfaira dependencies installed. The installation will be only performed one single time, even if you close your R session and call `setup_sfaira()` again. The given directory serves as the storage for all future downloaded datasets from sfaira:
 
 
-The `python_path` parameter is used to set the path to the python executable **inside** of the
-newly created conda environment. Similarly, the `env_name` parameter is the name of this newly
-created conda environment. These two parameters need to be set correctly, so that sfaira can be
-used later on. You can find out the python-path in a conda environment named `sfaira` like this:\
+```{r}
+setup_list <- SimBu::setup_sfaira(basedir = tempdir())
 ```
-activate sfaira
-which python3
-```
-
-The third parameter describes the name of a directory in which the raw files, meta data and cached
-data from downloading datasets from sfaira are stored into. \
-You need to save the output of the command above in a variable for later use. \
-If you do not wish to use sfaira, just skip this step entirely. 
 
 ## Creating a dataset
 
-The simulator package works with two internally defined data-structures: *datasets* and *databases*. \
 We will now create a dataset of samples from human pancreas using the `organisms` and `tissues` parameter.
 You can provide a single word (like we do here) or for example a list of tissues
 you want to download: `c("pancreas","lung")`. An additional parameter is the `assays` parameter,
 where you subset the database further to only download datasets from certain sequencing
 assays (for examples `Smart-seq2`). \
-The `name` parameter is used later on to give each sample a unique name.
+The `name` parameter is used later on to give each sample (cell) a unique name.
 
-```{r, warning=TRUE, message=TRUE, eval=FALSE}
-ds_human_pancreas <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
-                                                        organisms = "Homo sapiens", 
-                                                        tissues = "pancreas", 
-                                                        name="human_pancreas")
+```{r, eval=FALSE}
+ds_pancrease <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
+                                               organisms = "Homo sapiens", 
+                                               tissues = "pancreas", 
+                                               name="human_pancreas")
 ```
 
-Currently there are two datasets in sfaira from human pancreas, which have cell-type annotation.
+Currently there are three datasets in sfaira from human pancreas, which have cell-type annotation.
 The package will download them for you automatically and merge them together into a single expression
 matrix and a streamlined annotation table, which we can use for our simulation. \
 It can happen, that some datasets from sfaira are not (yet) ready for the automatic download,
 an error message will then appear in R, telling you which file to download and where to put it. \
 
 If you wish to see all datasets which are included in sfaira you can use the following command:
-```{r, eval=FALSE}
+```{r}
 all_datasets <- SimBu::sfaira_overview(setup_list = setup_list)
 head(all_datasets)
 ```
+
+This allows you to find the specific IDs of datasets, which you can download directly:
+
+```{r, eval=FALSE}
+SimBu::dataset_sfaira(sfaira_id = 'homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x',
+                      sfaira_setup = setup_list,
+                      name = "dataset_by_id")
+```
+
 
 ```{r}
 sessionInfo()

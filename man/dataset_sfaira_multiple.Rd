@@ -2,14 +2,14 @@
 % Please edit documentation in R/dataset.R
 \name{dataset_sfaira_multiple}
 \alias{dataset_sfaira_multiple}
-\title{Build a dataset using multiple sfaira entries}
+\title{Build \link[SummarizedExperiment]{SummarizedExperiment} using multiple sfaira entries}
 \usage{
 dataset_sfaira_multiple(
   organisms = NULL,
   tissues = NULL,
   assays = NULL,
   sfaira_setup,
-  name,
+  name = "SimBu_dataset",
   spike_in_col = NULL,
   additional_cols = NULL,
   filter_genes = TRUE,
@@ -50,10 +50,10 @@ be combined into a single dataset which you can use for simulation
 Note: only datasets in sfaira with annotation are considered!
 }
 \examples{
-\dontrun{
-ds_human_pancreas <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
+setup_list <- SimBu::setup_sfaira(tempdir())
+ds_human_lung <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
                                                     organisms = "Homo sapiens",
-                                                    tissues = "pancreas",
-                                                    name="human_pancreas")
-}
+                                                    tissues = "lung parenchyma",
+                                                    assay = "10x 3' v2",
+                                                    name = "human_lung")
 }

@@ -32,3 +32,4 @@ a named vector with a scaling value for each cell in the dataset
 \description{
 Each scaling factor has a default matrix it will try to use (counts or TPM). If the required matrix is not available, the other one is used and a warning is given.
 }
+\keyword{internal}

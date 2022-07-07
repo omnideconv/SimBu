@@ -21,3 +21,4 @@ filtered matrix
 \description{
 filter one (or two) expression matrix by genes
 }
+\keyword{internal}

@@ -7,7 +7,7 @@
 #' @param matrix sparse count matrix; cells in columns, genes in rows
 #' @param exp_capture_rate expected capture rate; default=0.25
 #' @param expr_threshold expression threshold; default=0
-#' @param BPPARAM BiocParallel::bpparam() by default; if specific number of threads x want to be used, insert: BiocParallel::MulticoreParam(workers = x)  
+#' @param BPPARAM BiocParallel::bpparam() by default; if specific number of threads x want to be used, insert: BiocParallel::MulticoreParam(workers = x)
 #' @param run_parallel boolean, decide if multi-threaded calculation will be run. FALSE by default
 #'
 #' @return a vector for each cell-type, with a scaling factor which can be used to transform the counts of the matrix
@@ -20,12 +20,12 @@
 #' cen <- SimBu::census(tpm)
 #'
 census <- function(matrix, exp_capture_rate=0.25, expr_threshold=0, BPPARAM=BiocParallel::bpparam(), run_parallel=FALSE){
-  
-  # switch multi-threading on/off 
+
+  # switch multi-threading on/off
   if(!run_parallel){
-    BPPARAM <- BiocParallel::MulticoreParam(workers = 1)  
+    BPPARAM <- BiocParallel::MulticoreParam(workers = 1)
   }
-  
+
   #order_cells <- colnames(matrix)
   ncuts <- dim(matrix)[2]/1000
 
@@ -57,7 +57,7 @@ calc_xi <- function(expr_matrix, expr_threshold){
 
 
 #' Census calculation as implemented in monocle
-#' 
+#'
 #' Implementation taken from Monocle2: https://github.com/cole-trapnell-lab/monocle-release/blob/master/R/normalization.R#L140
 #'
 #' @param expr_matrix TPM matrix
@@ -66,10 +66,9 @@ calc_xi <- function(expr_matrix, expr_threshold){
 #'
 #' @return vector with estimated mRNA values per cell in expr_matrix
 #'
+#' @keywords internal
 census_monocle <- function(expr_matrix, exp_capture_rate, expr_threshold){
 
-  cells <- dim(expr_matrix)[1]
-  i <- 1
   # iterate over all cells
   total <- unlist(apply(expr_matrix, 2, function(x){
     tryCatch({
@@ -84,13 +83,10 @@ census_monocle <- function(expr_matrix, exp_capture_rate, expr_threshold){
       frac_x <- P(t_estimate)
       # find all genes with single mRNA
       num_single_copy_genes <- sum(x <= t_estimate)
-      # counter
-      i <<- i+1
       #final value (this is M_i)
       num_single_copy_genes / frac_x / exp_capture_rate
     }, error=function(e){
-      print(x)
-      print(e)
+      message(e$message)
     })
   }))
 
@@ -102,6 +98,8 @@ census_monocle <- function(expr_matrix, exp_capture_rate, expr_threshold){
 #' @param x vector of numeric values
 #'
 #' @return most commonly occurring (log-transformed) TPM value
+#' 
+#' @keywords internal
 dmode <- function(x) {
   if (length(x) < 2) return (0);
   den <- stats::density(x, kernel=c("gaussian"))

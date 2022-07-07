@@ -60,4 +60,20 @@ test_that('can create dataset from seurat object', {
   seurat_obj[['tpm']] <- tpm_assay
   
   testthat::expect_s4_class(SimBu::dataset_seurat(seurat_obj = seurat_obj, count_assay = "counts",cell_id_col = 'ID', cell_type_col = 'cell_type', tpm_assay = 'tpm', name = "seurat_dataset"), 'SummarizedExperiment')
+  testthat::expect_s4_class(SimBu::dataset_seurat(seurat_obj = seurat_obj, count_assay = "counts",cell_id_col = 'ID', cell_type_col = 'cell_type', name = "seurat_dataset"), 'SummarizedExperiment')
 })
+
+
+test_that('can load h5ad file with cells in obs and var', {
+  h5 <- system.file('extdata', 'anndata.h5ad', package='SimBu')
+  h5_rev <- system.file('extdata', 'anndata_rev.h5ad', package='SimBu')
+
+  testthat::expect_s4_class(SimBu::dataset_h5ad(h5ad_file_counts = h5,name = "h5ad_dataset",cell_id_col = 'id',cell_type_col = 'group', cells_in_obs = TRUE), 'SummarizedExperiment')
+  testthat::expect_s4_class(SimBu::dataset_h5ad(h5ad_file_counts = h5_rev,name = "h5ad_dataset",cell_id_col = 'id',cell_type_col = 'group', cells_in_obs = FALSE), 'SummarizedExperiment')
+})
+
+
+# test_that('check sfaira connection', {
+#   setup_list <- SimBu::setup_sfaira(tempdir())
+#   testthat::expect_s4_class(SimBu::dataset_sfaira(sfaira_id = 'homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x',sfaira_setup = setup_list, name = "test_dataset"), 'SummarizedExperiment')
+# })

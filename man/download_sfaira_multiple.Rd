@@ -29,3 +29,4 @@ annotated data object, contains count matrix and annotation
 \description{
 similar to the filters on the sfaira website (\url{https://theislab.github.io/sfaira-portal/Datasets})
 }
+\keyword{internal}

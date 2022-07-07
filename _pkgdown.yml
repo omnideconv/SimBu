@@ -1,3 +1,7 @@
+url: ~
+template:
+  bootstrap: 5
+
 reference:
   - title: Dataset generation
     desc: Methods linked to generating the internal dataset object
@@ -7,6 +11,7 @@ reference:
       - dataset_seurat
       - dataset_sfaira
       - dataset_sfaira_multiple
+      - dataset_merge
   - title: Simulation
     desc: Methods linked to simulating pseudo-bulk datasets
     contents:
@@ -18,12 +23,7 @@ reference:
     contents:
       - sfaira_overview
       - plot_simulation
+      - setup_sfaira
 
-articles:
-  - title: Documentation
-    navbar: ~
-    contents:
-    - simulator_documentation
-    - simulator_input_output
-    - sfaira_vignette
-    - simulator_scaling_factors
+
+    

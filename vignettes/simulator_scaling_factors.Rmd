@@ -30,18 +30,15 @@ The scaling factors will always be applied on the single-cell dataset first, alt
 counts <-  Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
 tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol=300), sparse = TRUE)
 tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
-
 colnames(counts) <- paste0("cell_",rep(1:300))
 colnames(tpm) <- paste0("cell_",rep(1:300))
 rownames(counts) <- paste0("gene_",rep(1:1000))
 rownames(tpm) <- paste0("gene_",rep(1:1000))  
-
 annotation <- data.frame("ID"=paste0("cell_",rep(1:300)),
                            "cell_type" = c(rep("T cells CD4",150), rep("T cells CD8",150)),
                            'spikes' = runif(300),
                            'add_1' = runif(300),
                            'add_2' = runif(300))
-
 ds <- SimBu::dataset(annotation = annotation,
                      count_matrix = counts,
                      name = "test_dataset")
@@ -80,7 +77,6 @@ epic <- data.frame(
            0.4000)
   
 )
-
 epic
 ```
 
@@ -110,7 +106,6 @@ quantiseq <- data.frame(
             68.89323)
   
 )
-
 quantiseq
 ```
 
@@ -125,7 +120,6 @@ sim_epic <- SimBu::simulate_bulk(data=ds,
                                  ncells=100,
                                  BPPARAM = BiocParallel::MulticoreParam(workers = 4),  
                                  run_parallel = TRUE)
-
 ```
 
 
@@ -140,7 +134,6 @@ sim_extreme_b <- SimBu::simulate_bulk(data = ds,
                                       ncells = 100, 
                                       BPPARAM = BiocParallel::MulticoreParam(workers = 4),  
                                       run_parallel = TRUE)
-
 ```
 
 **Important:** Watch out that the cell-type annotation names in your dataset are the same as in the scaling factor! Otherwise the scaling factor will not be applied or even worse, applied to a different cell-type.
@@ -154,7 +147,6 @@ You can also choose to calculate scaling factors, which are depending on your pr
 Two straight forward approaches would be the number of reads or number of expressed genes/features. As these values are easily obtainable from the provided count data, SimBu already calculates them during dataset generation. 
 
 ```{r}
-
 sim_reads <- SimBu::simulate_bulk(data=ds, 
                            scenario = "random", 
                            scaling_factor="read_number",  # use number of reads as scaling factor
@@ -162,7 +154,6 @@ sim_reads <- SimBu::simulate_bulk(data=ds,
                            ncells=100, 
                            BPPARAM = BiocParallel::MulticoreParam(workers = 4),  
                            run_parallel = TRUE)
-
 sim_genes <- SimBu::simulate_bulk(data = ds,
                            scenario = "random",
                            scaling_factor = "expressed_genes", # use number of expressed genes column as scaling factor
@@ -170,9 +161,6 @@ sim_genes <- SimBu::simulate_bulk(data = ds,
                            ncells = 100,
                            BPPARAM = BiocParallel::MulticoreParam(workers = 4),  
                            run_parallel = TRUE)
-
-
-
 ```
 
 These options would also allow you to use other numerical measurements you have for the single cells as scaling factors, such as weight or size for example. Lets pretend, `add_1` and `add_2` are such measurements. With the `additional_cols` parameter, they can be added to the SimBu dataset and we can use them as scaling factor as well:
@@ -186,7 +174,6 @@ ds <- SimBu::dataset(annotation = annotation,
                      count_matrix = counts,
                      name = "test_dataset",
                      additional_cols = c('add_1','add_2')) # add columns to dataset
-
 sim_genes <- SimBu::simulate_bulk(data = ds,
                            scenario = "random",
                            scaling_factor = "add_1", # use add_1 column as scaling factor
@@ -209,7 +196,6 @@ ds <- SimBu::dataset(annotation = annotation,
                      count_matrix = counts,
                      name = "test_dataset",
                      spike_in_col = 'spikes')    # give the name in the annotation file, that contains spike-in information
-
 sim_spike <- SimBu::simulate_bulk(data = ds,
                            scenario = "random",
                            scaling_factor = "spike_in", # use spike-in scaling factor
@@ -231,12 +217,10 @@ Census calculates a vector with a scaling value for each cell in a sample.
 You can switch this feature on, by setting the `scaling_factor` parameter to `census`.
 
 ```{r}
-
 ds <- SimBu::dataset(annotation = annotation,
                      count_matrix = counts,
                      tpm_matrix = tpm,
                      name = "test_dataset")
-
 sim_census <-  SimBu::simulate_bulk(data = ds,
                              scenario = "random", 
                              scaling_factor = "census",   # use census scaling factor

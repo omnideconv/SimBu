@@ -4,28 +4,20 @@
 \alias{setup_sfaira}
 \title{setup the sfaira package}
 \usage{
-setup_sfaira(python_path, env_name, basedir)
+setup_sfaira(basedir)
 }
 \arguments{
-\item{python_path}{path to the python executable}
-
-\item{env_name}{name of the conda environment in which sfaira is installed}
-
 \item{basedir}{name of the directory, where the raw files will be downloaded into}
 }
 \value{
-list with sfaira package and file directories; must be used for other sfaira functions
+list with sfaira file directories; must be used as input for other sfaira based functions
 }
 \description{
-If you want to download datasets from sfaira, you need to setup the connection to their database first.
-Sfaira should be installed in its own conda environment; the python-path used inside of this environment
-as well as the name of the environment have to be given to this function. Additionally you have to give the
-path to a directory where the sfaira datasets will be downloaded into.
+If you want to download datasets from Sfaira, you need to specify a directory where the datasets are saved into.
+Additionally, when this function is called for the first time, a conda environment will be established and sfaira along
+all of its dependencies are installed. This can take some time but will be only performed one single time, as the
+environment can be re-used.
 }
 \examples{
-\dontrun{
-sfaira_list <- setup_sfaira(python_path="/path/to/conda/envs/sfaira/bin/python3",
-                            env_name="sfaira",
-                            basedir="/home/sfaira_data")
-}
+setup_list <- setup_sfaira(basedir=tempdir())
 }
