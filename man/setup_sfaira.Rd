@@ -19,5 +19,5 @@ all of its dependencies are installed. This can take some time but will be only 
 environment can be re-used.
 }
 \examples{
-setup_list <- setup_sfaira(basedir=tempdir())
+setup_list <- setup_sfaira(basedir = tempdir())
 }

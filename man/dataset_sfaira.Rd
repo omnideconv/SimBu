@@ -46,8 +46,10 @@ Build \link[SummarizedExperiment]{SummarizedExperiment} using a single sfaira en
 }
 \examples{
 setup_list <- SimBu::setup_sfaira(tempdir())
-ds <- SimBu::dataset_sfaira(sfaira_id = 'homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x',
-                     sfaira_setup = setup_list,
-                     name = "test_dataset")
+ds <- SimBu::dataset_sfaira(
+  sfaira_id = "homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x",
+  sfaira_setup = setup_list,
+  name = "test_dataset"
+)
 
 }

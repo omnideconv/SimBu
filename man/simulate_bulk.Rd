@@ -80,65 +80,77 @@ will be sampled for the simulation. Also a \code{scenario} has to be selected, w
 \code{scaling_factor} on how the read counts will be transformed proir to the simulation.
 }
 \examples{
-#generate sample single-cell data to work with:
+# generate sample single-cell data to work with:
 
-counts <- Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol=300), sparse = TRUE)
-tpm <- Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol=300), sparse = TRUE)
-tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
+counts <- Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol = 300), sparse = TRUE)
+tpm <- Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol = 300), sparse = TRUE)
+tpm <- Matrix::t(1e6 * Matrix::t(tpm) / Matrix::colSums(tpm))
 
-colnames(counts) <- paste0("cell_",rep(1:300))
-colnames(tpm) <- paste0("cell_",rep(1:300))
-rownames(counts) <- paste0("gene_",rep(1:1000))
-rownames(tpm) <- paste0("gene_",rep(1:1000))
+colnames(counts) <- paste0("cell_", rep(1:300))
+colnames(tpm) <- paste0("cell_", rep(1:300))
+rownames(counts) <- paste0("gene_", rep(1:1000))
+rownames(tpm) <- paste0("gene_", rep(1:1000))
 
-annotation <- data.frame("ID"=paste0("cell_",rep(1:300)),
-                         "cell_type"=c(rep("T cells CD4",50),
-                                       rep("T cells CD8",50),
-                                       rep("Macrophages",100),
-                                       rep("NK cells",10),
-                                       rep("B cells",70),
-                                       rep("Monocytes",20)))
+annotation <- data.frame(
+  "ID" = paste0("cell_", rep(1:300)),
+  "cell_type" = c(
+    rep("T cells CD4", 50),
+    rep("T cells CD8", 50),
+    rep("Macrophages", 100),
+    rep("NK cells", 10),
+    rep("B cells", 70),
+    rep("Monocytes", 20)
+  )
+)
 
-dataset <- SimBu::dataset(annotation = annotation,
-                          count_matrix = counts,
-                          tpm_matrix = tpm,
-                          name = "test_dataset")
+dataset <- SimBu::dataset(
+  annotation = annotation,
+  count_matrix = counts,
+  tpm_matrix = tpm,
+  name = "test_dataset"
+)
 
 # this creates a basic pseudo-bulk dataset with uniform cell-type distribution
 # and no additional transformation of the data with 10 samples and 2000 cells each
 
-s<-SimBu::simulate_bulk(dataset,
-              scenario="even",
-              scaling_factor="NONE",
-              nsamples=10,
-              ncells=100)
+s <- SimBu::simulate_bulk(dataset,
+  scenario = "even",
+  scaling_factor = "NONE",
+  nsamples = 10,
+  ncells = 100
+)
 
 # use a blacklist to exclude certain cell-types for the simulation
-s<-SimBu::simulate_bulk(dataset,
-              scenario="even",
-              scaling_factor="NONE",
-              nsamples=10,
-              ncells=2000,
-              blacklist=c("Monocytes","Macrophages"))
+s <- SimBu::simulate_bulk(dataset,
+  scenario = "even",
+  scaling_factor = "NONE",
+  nsamples = 10,
+  ncells = 2000,
+  blacklist = c("Monocytes", "Macrophages")
+)
 
 
 # use the pure scenario to only have B cells
-s<-SimBu::simulate_bulk(dataset,
-              scenario="pure",
-              scaling_factor="NONE",
-              nsamples=10,
-              ncells=100,
-              pure_cell_type="B cells")
+s <- SimBu::simulate_bulk(dataset,
+  scenario = "pure",
+  scaling_factor = "NONE",
+  nsamples = 10,
+  ncells = 100,
+  pure_cell_type = "B cells"
+)
 
 # simulate a dataset with custom cell-type fraction for each of the 3 samples
-fractions <- data.frame("B cells"=c(0.2,0.4,0.2),
-                        "T cells CD4"=c(0.4,0.2,0.1),
-                        "Macrophages"=c(0.4,0.4,0.7), check.names = FALSE)
-s<-SimBu::simulate_bulk(dataset,
-              scenario="custom",
-              scaling_factor="NONE",
-              nsamples=3,
-              ncells=2000,
-              custom_scenario_data=fractions)
+fractions <- data.frame(
+  "B cells" = c(0.2, 0.4, 0.2),
+  "T cells CD4" = c(0.4, 0.2, 0.1),
+  "Macrophages" = c(0.4, 0.4, 0.7), check.names = FALSE
+)
+s <- SimBu::simulate_bulk(dataset,
+  scenario = "custom",
+  scaling_factor = "NONE",
+  nsamples = 3,
+  ncells = 2000,
+  custom_scenario_data = fractions
+)
 
 }
