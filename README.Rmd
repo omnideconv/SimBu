@@ -16,8 +16,11 @@ knitr::opts_chunk$set(
 # SimBu
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/omnideconv/simulator/workflows/R-CMD-check/badge.svg)](https://github.com/omnideconv/simulator/actions)
-[![docs](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://alex-d13.github.io/index.html)
+[![tests](https://github.com/omnideconv/SimBu/actions/workflows/test.yml/badge.svg)](https://github.com/omnideconv/SimBu/actions/workflows/test.yml)
+[![test-conda](https://github.com/omnideconv/SimBu/actions/workflows/conda/badge.svg)](https://github.com/omnideconv/SimBu/actions/workflows/conda.yml)
+[![license](https://img.shields.io/badge/license-LGPLv3-blue.svg)](https://github.com/omnideconv/SimBu/blob/master/LICENSE.md)
+[![docs](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://omnideconv.github.io/SimBu)
+[![Codecov test coverage](https://codecov.io/gh/omnideconv/SimBu/branch/master/graph/badge.svg)](https://app.codecov.io/gh/omnideconv/SimBu?branch=master)
 <!-- badges: end -->
 
 The goal of SimBu is to simulate pseudo-bulk RNAseq datasets with variable cell-type fractions baed on public or private single-cell RNAseq datasets.
