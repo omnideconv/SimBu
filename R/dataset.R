@@ -533,13 +533,14 @@ dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, 
 #'
 #' @return dataset object
 #' @export
-#'
+#' 
 #' @examples
+#' donttest{
 #' setup_list <- SimBu::setup_sfaira(tempdir())
 #' ds <- SimBu::dataset_sfaira(sfaira_id = 'homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x',
 #'                      sfaira_setup = setup_list,
 #'                      name = "test_dataset")
-#' 
+#' }
 dataset_sfaira <- function(sfaira_id, sfaira_setup, name = "SimBu_dataset",
                            spike_in_col=NULL, additional_cols=NULL, force=FALSE, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
 
@@ -600,12 +601,14 @@ dataset_sfaira <- function(sfaira_id, sfaira_setup, name = "SimBu_dataset",
 #' @export
 #'
 #' @examples
+#' donttest{
 #' setup_list <- SimBu::setup_sfaira(tempdir())
 #' ds_human_lung <- SimBu::dataset_sfaira_multiple(sfaira_setup = setup_list,
 #'                                                     organisms = "Homo sapiens",
 #'                                                     tissues = "lung parenchyma",
 #'                                                     assay = "10x 3' v2",
 #'                                                     name = "human_lung")
+#' }                                                     
 dataset_sfaira_multiple <- function(organisms=NULL, tissues=NULL, assays=NULL, sfaira_setup, name = "SimBu_dataset",
                                     spike_in_col=NULL, additional_cols=NULL, filter_genes=TRUE, variance_cutoff=0, type_abundance_cutoff=0, scale_tpm=TRUE){
   if(is.null(sfaira_setup)){
@@ -783,14 +786,14 @@ filter_matrix <- function(m1, m2=NULL, filter_genes=TRUE, variance_cutoff=0){
     message("Filtering genes...")
     # filter by expression
     low_expressed_genes_1 <- rownames(m1[which(Matrix::rowSums(m1) == 0),])
-    if(!is.null(m2)){low_expressed_genes_2 <- rownames(m2[which(Matrix::rowSums(m2) == 0),])}else{low_expressed_genes_2=genes}
+    if(!is.null(m2)){low_expressed_genes_2 <- rownames(m2[which(Matrix::rowSums(m2) == 0),])}else{low_expressed_genes_2 <- genes}
     low_expressed_genes <- unlist(Reduce(intersect, list(low_expressed_genes_1, low_expressed_genes_2)))
 
     #filter by variance
     m1_m <- methods::as(m1, "dgCMatrix")
     if(!is.null(m2)){m2_m <- methods::as(m2, "dgCMatrix")}
     low_variance_genes_1 <- rownames(m1_m[which(sparseMatrixStats::rowVars(m1_m) < variance_cutoff),])
-    if(!is.null(m2)){low_variance_genes_2 <- rownames(m2_m[which(sparseMatrixStats::rowVars(m2_m) < variance_cutoff),])}else{low_variance_genes_2=genes}
+    if(!is.null(m2)){low_variance_genes_2 <- rownames(m2_m[which(sparseMatrixStats::rowVars(m2_m) < variance_cutoff),])}else{low_variance_genes_2 <- genes}
     low_variance_genes <- unlist(Reduce(intersect, list(low_variance_genes_1, low_variance_genes_2)))
     genes_to_keep <- genes[which(!genes %in% unique(c(low_expressed_genes, low_variance_genes)))]
 
