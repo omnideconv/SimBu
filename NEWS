@@ -1,3 +1,6 @@
+Changes in version 0.99.10 (2022-07-07)
++ Added long tests to test the download of sfaira datasets
+
 Changes in version 0.99.7 (2022-06-01)
 + Added functionality to check Sfaira datasets for accessibility (if the specified URLs can be downloaded)
 + Added list of Sfaira IDs, which are currently not downloadable

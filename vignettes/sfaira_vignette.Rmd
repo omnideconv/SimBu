@@ -36,7 +36,7 @@ You can browse them interactively here: [https://theislab.github.io/sfaira-porta
 In order to use this database, we first need to install it. This can easily be done, by running the `setup_sfaira()` function for the first time. In the background we use the [basilisik](https://bioconductor.org/packages/release/bioc/html/basilisk.utils.html) package to establish a conda environment that has all sfaira dependencies installed. The installation will be only performed one single time, even if you close your R session and call `setup_sfaira()` again. The given directory serves as the storage for all future downloaded datasets from sfaira:
 
 
-```{r}
+```{r, eval=FALSE}
 setup_list <- SimBu::setup_sfaira(basedir = tempdir())
 ```
 
@@ -65,7 +65,7 @@ It can happen, that some datasets from sfaira are not (yet) ready for the automa
 an error message will then appear in R, telling you which file to download and where to put it. \
 
 If you wish to see all datasets which are included in sfaira you can use the following command:
-```{r}
+```{r, eval=FALSE}
 all_datasets <- SimBu::sfaira_overview(setup_list = setup_list)
 head(all_datasets)
 ```

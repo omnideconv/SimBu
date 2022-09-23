@@ -564,7 +564,7 @@ dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, 
 #'
 #' @return dataset object
 #' @export
-#'
+#' 
 #' @examples
 #' \donttest{
 #' setup_list <- SimBu::setup_sfaira(tempdir())
@@ -572,7 +572,6 @@ dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, 
 #'                      sfaira_setup = setup_list,
 #'                      name = "test_dataset")
 #' }
-#'
 dataset_sfaira <- function(sfaira_id, sfaira_setup, name = "SimBu_dataset",
                            spike_in_col = NULL, additional_cols = NULL, force = FALSE, filter_genes = TRUE, variance_cutoff = 0, type_abundance_cutoff = 0, scale_tpm = TRUE) {
   if (is.null(sfaira_setup)) {
