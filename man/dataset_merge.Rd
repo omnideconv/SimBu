@@ -40,17 +40,19 @@ The objects need to have the same number of assays in order to work.
 }
 \examples{
 
-counts <-  Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol=300), sparse = TRUE)
-tpm <- Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol=300), sparse = TRUE)
-tpm <- Matrix::t(1e6*Matrix::t(tpm)/Matrix::colSums(tpm))
+counts <- Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol = 300), sparse = TRUE)
+tpm <- Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol = 300), sparse = TRUE)
+tpm <- Matrix::t(1e6 * Matrix::t(tpm) / Matrix::colSums(tpm))
 
-colnames(counts) <- paste0("cell_",rep(1:300))
-colnames(tpm) <- paste0("cell_",rep(1:300))
-rownames(counts) <- paste0("gene_",rep(1:1000))
-rownames(tpm) <- paste0("gene_",rep(1:1000))
+colnames(counts) <- paste0("cell_", rep(1:300))
+colnames(tpm) <- paste0("cell_", rep(1:300))
+rownames(counts) <- paste0("gene_", rep(1:1000))
+rownames(tpm) <- paste0("gene_", rep(1:1000))
 
-annotation <- data.frame("ID" = paste0("cell_",rep(1:300)),
-                         "cell_type" = c(rep("T cells CD4",300)))
+annotation <- data.frame(
+  "ID" = paste0("cell_", rep(1:300)),
+  "cell_type" = c(rep("T cells CD4", 300))
+)
 
 ds1 <- SimBu::dataset(annotation = annotation, count_matrix = counts, tpm_matrix = tpm, name = "test_dataset1")
 ds2 <- SimBu::dataset(annotation = annotation, count_matrix = counts, tpm_matrix = tpm, name = "test_dataset2")

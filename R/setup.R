@@ -95,4 +95,3 @@ names(pkg.globals$qtsq_scaling) <- c(
   "Dendritic cells",
   "T cells"
 )
-

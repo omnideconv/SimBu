@@ -1,4 +1,4 @@
-url: ~
+url: https://omnideconv.org/SimBu
 template:
   bootstrap: 5
 
@@ -24,6 +24,7 @@ reference:
       - sfaira_overview
       - plot_simulation
       - setup_sfaira
-
-
-    
+  - title: internal
+    contents:
+      - census
+      - SimBu
