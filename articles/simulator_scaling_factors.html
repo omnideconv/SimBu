@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">SimBu</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.14</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.15</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -272,13 +272,13 @@ The scaling factors will always be applied on the single-cell dataset first, alt
 <p>These options would also allow you to use other numerical measurements you have for the single cells as scaling factors, such as weight or size for example. Lets pretend, <code>add_1</code> and <code>add_2</code> are such measurements. With the <code>additional_cols</code> parameter, they can be added to the SimBu dataset and we can use them as scaling factor as well:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">annotation</span><span class="op">)</span></span>
-<span><span class="co">#&gt;       ID   cell_type    spikes     add_1     add_2</span></span>
-<span><span class="co">#&gt; 1 cell_1 T cells CD4 0.4905005 0.5083404 0.8341018</span></span>
-<span><span class="co">#&gt; 2 cell_2 T cells CD4 0.8322282 0.9613615 0.9055763</span></span>
-<span><span class="co">#&gt; 3 cell_3 T cells CD4 0.8469002 0.4779618 0.7383954</span></span>
-<span><span class="co">#&gt; 4 cell_4 T cells CD4 0.2360362 0.6170505 0.2104006</span></span>
-<span><span class="co">#&gt; 5 cell_5 T cells CD4 0.2369937 0.7754415 0.5345475</span></span>
-<span><span class="co">#&gt; 6 cell_6 T cells CD4 0.4914096 0.7357322 0.1097357</span></span></code></pre></div>
+<span><span class="co">#&gt;       ID   cell_type    spikes     add_1      add_2</span></span>
+<span><span class="co">#&gt; 1 cell_1 T cells CD4 0.7122946 0.1072345 0.26766819</span></span>
+<span><span class="co">#&gt; 2 cell_2 T cells CD4 0.2498312 0.6127412 0.04966607</span></span>
+<span><span class="co">#&gt; 3 cell_3 T cells CD4 0.4274488 0.6267233 0.04171059</span></span>
+<span><span class="co">#&gt; 4 cell_4 T cells CD4 0.3171081 0.2413492 0.15596123</span></span>
+<span><span class="co">#&gt; 5 cell_5 T cells CD4 0.3369888 0.4010110 0.14990765</span></span>
+<span><span class="co">#&gt; 6 cell_6 T cells CD4 0.4714805 0.2029796 0.19527042</span></span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/dataset.html">dataset</a></span><span class="op">(</span></span>
 <span>  annotation <span class="op">=</span> <span class="va">annotation</span>,</span>
@@ -374,14 +374,14 @@ Census calculates a vector with a scaling value for each cell in a sample. You c
 <span><span class="co">#&gt;  [3] GenomeInfoDb_1.32.4         bslib_0.4.0                </span></span>
 <span><span class="co">#&gt;  [5] compiler_4.2.1              jquerylib_0.1.4            </span></span>
 <span><span class="co">#&gt;  [7] zlibbioc_1.42.0             bitops_1.0-7               </span></span>
-<span><span class="co">#&gt;  [9] MatrixGenerics_1.8.1        proxyC_0.3.2               </span></span>
-<span><span class="co">#&gt; [11] tools_4.2.1                 digest_0.6.29              </span></span>
-<span><span class="co">#&gt; [13] jsonlite_1.8.0              evaluate_0.16              </span></span>
+<span><span class="co">#&gt;  [9] MatrixGenerics_1.8.1        proxyC_0.3.3               </span></span>
+<span><span class="co">#&gt; [11] tools_4.2.1                 digest_0.6.30              </span></span>
+<span><span class="co">#&gt; [13] jsonlite_1.8.2              evaluate_0.17              </span></span>
 <span><span class="co">#&gt; [15] memoise_2.0.1               lattice_0.20-45            </span></span>
-<span><span class="co">#&gt; [17] rlang_1.0.5                 Matrix_1.5-1               </span></span>
-<span><span class="co">#&gt; [19] DelayedArray_0.22.0         cli_3.4.0                  </span></span>
-<span><span class="co">#&gt; [21] parallel_4.2.1              yaml_2.3.5                 </span></span>
-<span><span class="co">#&gt; [23] pkgdown_2.0.6               xfun_0.33                  </span></span>
+<span><span class="co">#&gt; [17] rlang_1.0.6                 Matrix_1.5-1               </span></span>
+<span><span class="co">#&gt; [19] DelayedArray_0.22.0         cli_3.4.1                  </span></span>
+<span><span class="co">#&gt; [21] parallel_4.2.1              yaml_2.3.6                 </span></span>
+<span><span class="co">#&gt; [23] pkgdown_2.0.6               xfun_0.34                  </span></span>
 <span><span class="co">#&gt; [25] fastmap_1.1.0               GenomeInfoDbData_1.2.8     </span></span>
 <span><span class="co">#&gt; [27] stringr_1.4.1               knitr_1.40                 </span></span>
 <span><span class="co">#&gt; [29] IRanges_2.30.1              S4Vectors_0.34.0           </span></span>
@@ -389,15 +389,15 @@ Census calculates a vector with a scaling value for each cell in a sample. You c
 <span><span class="co">#&gt; [33] sass_0.4.2                  systemfonts_1.0.4          </span></span>
 <span><span class="co">#&gt; [35] stats4_4.2.1                rprojroot_2.0.3            </span></span>
 <span><span class="co">#&gt; [37] grid_4.2.1                  Biobase_2.56.0             </span></span>
-<span><span class="co">#&gt; [39] SimBu_0.99.14               R6_2.5.1                   </span></span>
-<span><span class="co">#&gt; [41] textshaping_0.3.6           BiocParallel_1.30.3        </span></span>
-<span><span class="co">#&gt; [43] rmarkdown_2.16              purrr_0.3.4                </span></span>
+<span><span class="co">#&gt; [39] SimBu_0.99.15               R6_2.5.1                   </span></span>
+<span><span class="co">#&gt; [41] textshaping_0.3.6           BiocParallel_1.30.4        </span></span>
+<span><span class="co">#&gt; [43] rmarkdown_2.17              purrr_0.3.5                </span></span>
 <span><span class="co">#&gt; [45] magrittr_2.0.3              codetools_0.2-18           </span></span>
 <span><span class="co">#&gt; [47] GenomicRanges_1.48.0        htmltools_0.5.3            </span></span>
 <span><span class="co">#&gt; [49] matrixStats_0.62.0          sparseMatrixStats_1.8.0    </span></span>
 <span><span class="co">#&gt; [51] BiocGenerics_0.42.0         SummarizedExperiment_1.26.1</span></span>
-<span><span class="co">#&gt; [53] ragg_1.2.2                  stringi_1.7.8              </span></span>
-<span><span class="co">#&gt; [55] RCurl_1.98-1.8              RcppParallel_5.1.5         </span></span>
+<span><span class="co">#&gt; [53] ragg_1.2.3                  stringi_1.7.8              </span></span>
+<span><span class="co">#&gt; [55] RCurl_1.98-1.9              RcppParallel_5.1.5         </span></span>
 <span><span class="co">#&gt; [57] cachem_1.0.6</span></span></code></pre></div>
 </div>
 </div>
