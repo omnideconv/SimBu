@@ -16,6 +16,8 @@ a dataframe with information on each dataset
 Gives an overview of the possible datasets you can use from the sfaira database
 }
 \examples{
-setup_list <- setup_sfaira(basedir = tempdir())
-all_datasets <- sfaira_overview(setup_list)
+\donttest{
+  setup_list <- setup_sfaira(basedir=tempdir())
+  # all_datasets <- sfaira_overview(setup_list)
+}
 }
