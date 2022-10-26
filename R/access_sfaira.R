@@ -248,11 +248,10 @@ download_sfaira_multiple <- function(setup_list, organisms = NULL, tissues = NUL
 #' @return a dataframe with information on each dataset
 #' @export
 #'
-#' @examples
-#' 
+#' @examples 
 #' \donttest{
 #'   setup_list <- setup_sfaira(basedir=tempdir())
-#'   all_datasets <- sfaira_overview(setup_list)
+#'   # all_datasets <- sfaira_overview(setup_list)
 #' }
 sfaira_overview <- function(setup_list){
   # create conda environment with sfaira
