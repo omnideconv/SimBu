@@ -343,7 +343,7 @@ simulate_bulk <- function(data,
       m <- matrix(m, ncol = n_cell_types)
       m <- sweep(m, 1, rowSums(m), FUN = "/")
       simulation_vector <- as.vector(m[1, ])
-      names(simulation_vector) <- unique(SummarizedExperiment::colData(data)[["cell_type"]])
+      names(simulation_vector) <- names(mirror_values)
       return(simulation_vector)
     })
     sample_names <- paste0("mirror_db_sample", seq_len(nsamples))

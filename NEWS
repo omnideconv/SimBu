@@ -1,3 +1,9 @@
+Changes in version 1.0.1 (2022-11-02)
++ Bugfix in mirror_db scenario, where cell type fractions were not correctly annotated in the cell_fraction output (thanks to @arielah for helping out here)
+
+Changes in version 1.0.0 (2022-11-01)
++ SimBu was released on Bioconductor 3.16
+
 Changes in version 0.99.10 (2022-07-07)
 + Added long tests to test the download of sfaira datasets
 
