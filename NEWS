@@ -1,4 +1,4 @@
-Changes in version 1.0.1 (2022-11-02)
+Changes in version 1.1.1 (2022-11-02)
 + Bugfix in mirror_db scenario, where cell type fractions were not correctly annotated in the cell_fraction output (thanks to @arielah for helping out here)
 
 Changes in version 1.0.0 (2022-11-01)
