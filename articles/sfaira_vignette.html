@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">SimBu</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.15</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.18</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,7 +74,8 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Public Data Integration using Sfaira</h1>
-                        <h4 data-toc-skip class="author">Alexander Dietrich</h4>
+                        <h4 data-toc-skip class="author">Alexander
+Dietrich</h4>
             
       
       <small class="dont-index">Source: <a href="https://github.com/omnideconv/SimBu/blob/HEAD/vignettes/sfaira_vignette.Rmd" class="external-link"><code>vignettes/sfaira_vignette.Rmd</code></a></small>
@@ -88,20 +89,42 @@
 <div class="section level2">
 <h2 id="sfaira-integeration">Sfaira Integeration<a class="anchor" aria-label="anchor" href="#sfaira-integeration"></a>
 </h2>
-<p>This vignette will cover the integration of the public database Sfaria.<br></p>
+<p>This vignette will cover the integration of the public database
+Sfaria.<br></p>
 <div class="section level3">
 <h3 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
 </h3>
-<p>As a public database, sfaira <span class="citation">(<a href="#ref-Fischer2020" role="doc-biblioref">Fischer et al. 2020</a>)</span> is used, which is a dataset and model repository for single-cell RNA-sequencing data. It gives access to about multiple datasets from human and mouse with more than 3 million cells in total. You can browse them interactively here: <a href="https://theislab.github.io/sfaira-portal/Datasets" class="external-link">https://theislab.github.io/sfaira-portal/Datasets</a>. Note that only annotated datasets will be downloaded! Also there are cases of datasets, which have private URLs and cannot be automatically downloaded; SimBu will skip these datasets.<br>
-In order to use this database, we first need to install it. This can easily be done, by running the <code><a href="../reference/setup_sfaira.html">setup_sfaira()</a></code> function for the first time. In the background we use the <a href="https://bioconductor.org/packages/release/bioc/html/basilisk.utils.html" class="external-link">basilisik</a> package to establish a conda environment that has all sfaira dependencies installed. The installation will be only performed one single time, even if you close your R session and call <code><a href="../reference/setup_sfaira.html">setup_sfaira()</a></code> again. The given directory serves as the storage for all future downloaded datasets from sfaira:</p>
+<p>As a public database, sfaira <span class="citation">(<a href="#ref-Fischer2020" role="doc-biblioref">Fischer et al.
+2020</a>)</span> is used, which is a dataset and model repository for
+single-cell RNA-sequencing data. It gives access to about multiple
+datasets from human and mouse with more than 3 million cells in total.
+You can browse them interactively here: <a href="https://theislab.github.io/sfaira-portal/Datasets" class="external-link">https://theislab.github.io/sfaira-portal/Datasets</a>.
+Note that only annotated datasets will be downloaded! Also there are
+cases of datasets, which have private URLs and cannot be automatically
+downloaded; SimBu will skip these datasets.<br>
+In order to use this database, we first need to install it. This can
+easily be done, by running the <code><a href="../reference/setup_sfaira.html">setup_sfaira()</a></code> function for
+the first time. In the background we use the <a href="https://bioconductor.org/packages/release/bioc/html/basilisk.utils.html" class="external-link">basilisik</a>
+package to establish a conda environment that has all sfaira
+dependencies installed. The installation will be only performed one
+single time, even if you close your R session and call
+<code><a href="../reference/setup_sfaira.html">setup_sfaira()</a></code> again. The given directory serves as the
+storage for all future downloaded datasets from sfaira:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">setup_list</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/setup_sfaira.html">setup_sfaira</a></span><span class="op">(</span>basedir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="creating-a-dataset">Creating a dataset<a class="anchor" aria-label="anchor" href="#creating-a-dataset"></a>
 </h3>
-<p>We will now create a dataset of samples from human pancreas using the <code>organisms</code> and <code>tissues</code> parameter. You can provide a single word (like we do here) or for example a list of tissues you want to download: <code>c("pancreas","lung")</code>. An additional parameter is the <code>assays</code> parameter, where you subset the database further to only download datasets from certain sequencing assays (for examples <code>Smart-seq2</code>).<br>
-The <code>name</code> parameter is used later on to give each sample (cell) a unique name.</p>
+<p>We will now create a dataset of samples from human pancreas using the
+<code>organisms</code> and <code>tissues</code> parameter. You can
+provide a single word (like we do here) or for example a list of tissues
+you want to download: <code>c("pancreas","lung")</code>. An additional
+parameter is the <code>assays</code> parameter, where you subset the
+database further to only download datasets from certain sequencing
+assays (for examples <code>Smart-seq2</code>).<br>
+The <code>name</code> parameter is used later on to give each sample
+(cell) a unique name.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ds_pancrease</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/dataset_sfaira_multiple.html">dataset_sfaira_multiple</a></span><span class="op">(</span></span>
 <span>  sfaira_setup <span class="op">=</span> <span class="va">setup_list</span>,</span>
@@ -109,13 +132,21 @@ The <code>name</code> parameter is used later on to give each sample (cell) a un
 <span>  tissues <span class="op">=</span> <span class="st">"pancreas"</span>,</span>
 <span>  name <span class="op">=</span> <span class="st">"human_pancreas"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Currently there are three datasets in sfaira from human pancreas, which have cell-type annotation. The package will download them for you automatically and merge them together into a single expression matrix and a streamlined annotation table, which we can use for our simulation.<br>
-It can happen, that some datasets from sfaira are not (yet) ready for the automatic download, an error message will then appear in R, telling you which file to download and where to put it.<br></p>
-<p>If you wish to see all datasets which are included in sfaira you can use the following command:</p>
+<p>Currently there are three datasets in sfaira from human pancreas,
+which have cell-type annotation. The package will download them for you
+automatically and merge them together into a single expression matrix
+and a streamlined annotation table, which we can use for our
+simulation.<br>
+It can happen, that some datasets from sfaira are not (yet) ready for
+the automatic download, an error message will then appear in R, telling
+you which file to download and where to put it.<br></p>
+<p>If you wish to see all datasets which are included in sfaira you can
+use the following command:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">all_datasets</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/sfaira_overview.html">sfaira_overview</a></span><span class="op">(</span>setup_list <span class="op">=</span> <span class="va">setup_list</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">all_datasets</span><span class="op">)</span></span></code></pre></div>
-<p>This allows you to find the specific IDs of datasets, which you can download directly:</p>
+<p>This allows you to find the specific IDs of datasets, which you can
+download directly:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/dataset_sfaira.html">dataset_sfaira</a></span><span class="op">(</span></span>
 <span>  sfaira_id <span class="op">=</span> <span class="st">"homosapiens_lungparenchyma_2019_10x3v2_madissoon_001_10.1186/s13059-019-1906-x"</span>,</span>
@@ -124,7 +155,7 @@ It can happen, that some datasets from sfaira are not (yet) ready for the automa
 <span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; R version 4.2.1 (2022-06-23)</span></span>
+<span><span class="co">#&gt; R version 4.2.2 (2022-10-31)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu (64-bit)</span></span>
 <span><span class="co">#&gt; Running under: Ubuntu 20.04.5 LTS</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -142,20 +173,23 @@ It can happen, that some datasets from sfaira are not (yet) ready for the automa
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] SimBu_0.99.15</span></span>
+<span><span class="co">#&gt; [1] SimBu_0.99.18</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
-<span><span class="co">#&gt;  [1] knitr_1.40        magrittr_2.0.3    R6_2.5.1          ragg_1.2.3       </span></span>
-<span><span class="co">#&gt;  [5] rlang_1.0.6       fastmap_1.1.0     stringr_1.4.1     tools_4.2.1      </span></span>
+<span><span class="co">#&gt;  [1] knitr_1.40        magrittr_2.0.3    R6_2.5.1          ragg_1.2.4       </span></span>
+<span><span class="co">#&gt;  [5] rlang_1.0.6       fastmap_1.1.0     stringr_1.4.1     tools_4.2.2      </span></span>
 <span><span class="co">#&gt;  [9] xfun_0.34         cli_3.4.1         jquerylib_0.1.4   htmltools_0.5.3  </span></span>
 <span><span class="co">#&gt; [13] systemfonts_1.0.4 yaml_2.3.6        digest_0.6.30     rprojroot_2.0.3  </span></span>
 <span><span class="co">#&gt; [17] pkgdown_2.0.6     textshaping_0.3.6 purrr_0.3.5       sass_0.4.2       </span></span>
 <span><span class="co">#&gt; [21] fs_1.5.2          memoise_2.0.1     cachem_1.0.6      evaluate_0.17    </span></span>
-<span><span class="co">#&gt; [25] rmarkdown_2.17    stringi_1.7.8     compiler_4.2.1    bslib_0.4.0      </span></span>
-<span><span class="co">#&gt; [29] desc_1.4.2        jsonlite_1.8.2</span></span></code></pre></div>
+<span><span class="co">#&gt; [25] rmarkdown_2.17    stringi_1.7.8     compiler_4.2.2    bslib_0.4.0      </span></span>
+<span><span class="co">#&gt; [29] desc_1.4.2        jsonlite_1.8.3</span></span></code></pre></div>
 <div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-Fischer2020" class="csl-entry">
-Fischer, David S., Leander Dony, Martin König, Abdul Moeed, Luke Zappia, Sophie Tritschler, Olle Holmberg, Hananeh Aliee, and Fabian J. Theis. 2020. <span>“Sfaira Accelerates Data and Model Reuse in Single Cell Genomics.”</span> <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2020.12.16.419036" class="external-link">https://doi.org/10.1101/2020.12.16.419036</a>.
+Fischer, David S., Leander Dony, Martin König, Abdul Moeed, Luke Zappia,
+Sophie Tritschler, Olle Holmberg, Hananeh Aliee, and Fabian J. Theis.
+2020. <span>“Sfaira Accelerates Data and Model Reuse in Single Cell
+Genomics.”</span> <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2020.12.16.419036" class="external-link">https://doi.org/10.1101/2020.12.16.419036</a>.
 </div>
 </div>
 </div>
