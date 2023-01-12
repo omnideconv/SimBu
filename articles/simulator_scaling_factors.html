@@ -308,13 +308,13 @@ weight or size for example. Lets pretend, <code>add_1</code> and
 dataset and we can use them as scaling factor as well:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">annotation</span><span class="op">)</span></span>
-<span><span class="co">#&gt;       ID   cell_type    spikes     add_1     add_2</span></span>
-<span><span class="co">#&gt; 1 cell_1 T cells CD4 0.3117167 0.9060389 0.5183609</span></span>
-<span><span class="co">#&gt; 2 cell_2 T cells CD4 0.9556572 0.1323930 0.6134127</span></span>
-<span><span class="co">#&gt; 3 cell_3 T cells CD4 0.3257239 0.2847573 0.6809519</span></span>
-<span><span class="co">#&gt; 4 cell_4 T cells CD4 0.8184507 0.3029316 0.4371162</span></span>
-<span><span class="co">#&gt; 5 cell_5 T cells CD4 0.7036517 0.5133640 0.4664752</span></span>
-<span><span class="co">#&gt; 6 cell_6 T cells CD4 0.2542272 0.8739219 0.4545593</span></span></code></pre></div>
+<span><span class="co">#&gt;       ID   cell_type    spikes      add_1      add_2</span></span>
+<span><span class="co">#&gt; 1 cell_1 T cells CD4 0.6045693 0.08854334 0.57737510</span></span>
+<span><span class="co">#&gt; 2 cell_2 T cells CD4 0.7130466 0.64204038 0.46480919</span></span>
+<span><span class="co">#&gt; 3 cell_3 T cells CD4 0.6044074 0.99668097 0.03256543</span></span>
+<span><span class="co">#&gt; 4 cell_4 T cells CD4 0.4189916 0.70331474 0.02771022</span></span>
+<span><span class="co">#&gt; 5 cell_5 T cells CD4 0.2612793 0.23441630 0.25704380</span></span>
+<span><span class="co">#&gt; 6 cell_6 T cells CD4 0.2723326 0.61536943 0.07431076</span></span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/dataset.html">dataset</a></span><span class="op">(</span></span>
 <span>  annotation <span class="op">=</span> <span class="va">annotation</span>,</span>
@@ -430,7 +430,7 @@ expressed genes (as shown above) as scaling factor.</p>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] SummarizedExperiment_1.26.1 SimBu_1.1.1                </span></span>
 <span><span class="co">#&gt;  [3] xfun_0.36                   bslib_0.4.2                </span></span>
-<span><span class="co">#&gt;  [5] purrr_1.0.0                 lattice_0.20-45            </span></span>
+<span><span class="co">#&gt;  [5] purrr_1.0.1                 lattice_0.20-45            </span></span>
 <span><span class="co">#&gt;  [7] vctrs_0.5.1                 htmltools_0.5.4            </span></span>
 <span><span class="co">#&gt;  [9] stats4_4.2.2                yaml_2.3.6                 </span></span>
 <span><span class="co">#&gt; [11] rlang_1.0.6                 pkgdown_2.0.7              </span></span>
@@ -447,12 +447,12 @@ expressed genes (as shown above) as scaling factor.</p>
 <span><span class="co">#&gt; [33] parallel_4.2.2              Rcpp_1.0.9                 </span></span>
 <span><span class="co">#&gt; [35] cachem_1.0.6                DelayedArray_0.22.0        </span></span>
 <span><span class="co">#&gt; [37] desc_1.4.2                  S4Vectors_0.34.0           </span></span>
-<span><span class="co">#&gt; [39] RcppParallel_5.1.5          jsonlite_1.8.4             </span></span>
+<span><span class="co">#&gt; [39] RcppParallel_5.1.6          jsonlite_1.8.4             </span></span>
 <span><span class="co">#&gt; [41] XVector_0.36.0              systemfonts_1.0.4          </span></span>
 <span><span class="co">#&gt; [43] fs_1.5.2                    textshaping_0.3.6          </span></span>
 <span><span class="co">#&gt; [45] digest_0.6.31               stringi_1.7.8              </span></span>
 <span><span class="co">#&gt; [47] GenomicRanges_1.48.0        grid_4.2.2                 </span></span>
-<span><span class="co">#&gt; [49] rprojroot_2.0.3             cli_3.5.0                  </span></span>
+<span><span class="co">#&gt; [49] rprojroot_2.0.3             cli_3.6.0                  </span></span>
 <span><span class="co">#&gt; [51] tools_4.2.2                 bitops_1.0-7               </span></span>
 <span><span class="co">#&gt; [53] magrittr_2.0.3              sass_0.4.4                 </span></span>
 <span><span class="co">#&gt; [55] RCurl_1.98-1.9              Matrix_1.5-1               </span></span>
