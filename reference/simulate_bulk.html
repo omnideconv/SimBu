@@ -14,7 +14,7 @@ scaling_factor on how the read counts will be transformed proir to the simulatio
     
     <a class="navbar-brand me-2" href="../index.html">SimBu</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,7 +77,7 @@ will be sampled for the simulation. Also a <code>scenario</code> has to be selec
 <span>  custom_scenario_data <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  custom_scaling_vector <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  balance_even_mirror_scenario <span class="op">=</span> <span class="fl">0.01</span>,</span>
-<span>  remove_bias_in_counts <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  remove_bias_in_counts <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  remove_bias_in_counts_method <span class="op">=</span> <span class="st">"read-number"</span>,</span>
 <span>  norm_counts <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  nsamples <span class="op">=</span> <span class="fl">100</span>,</span>
@@ -133,7 +133,7 @@ will be sampled for the simulation. Also a <code>scenario</code> has to be selec
 
 
 <dt>remove_bias_in_counts</dt>
-<dd><p>boolean; if TRUE (default) the internal mRNA bias that is present in count data will be <em>removed</em> using the number of reads mapped to each cell</p></dd>
+<dd><p>boolean; if TRUE the internal mRNA bias that is present in count data will be <em>removed</em> using the number of reads mapped to each cell. Default to FALSE</p></dd>
 
 
 <dt>remove_bias_in_counts_method</dt>

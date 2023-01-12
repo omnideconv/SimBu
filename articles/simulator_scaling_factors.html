@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">SimBu</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -308,13 +308,13 @@ weight or size for example. Lets pretend, <code>add_1</code> and
 dataset and we can use them as scaling factor as well:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">annotation</span><span class="op">)</span></span>
-<span><span class="co">#&gt;       ID   cell_type    spikes      add_1      add_2</span></span>
-<span><span class="co">#&gt; 1 cell_1 T cells CD4 0.6045693 0.08854334 0.57737510</span></span>
-<span><span class="co">#&gt; 2 cell_2 T cells CD4 0.7130466 0.64204038 0.46480919</span></span>
-<span><span class="co">#&gt; 3 cell_3 T cells CD4 0.6044074 0.99668097 0.03256543</span></span>
-<span><span class="co">#&gt; 4 cell_4 T cells CD4 0.4189916 0.70331474 0.02771022</span></span>
-<span><span class="co">#&gt; 5 cell_5 T cells CD4 0.2612793 0.23441630 0.25704380</span></span>
-<span><span class="co">#&gt; 6 cell_6 T cells CD4 0.2723326 0.61536943 0.07431076</span></span></code></pre></div>
+<span><span class="co">#&gt;       ID   cell_type     spikes      add_1      add_2</span></span>
+<span><span class="co">#&gt; 1 cell_1 T cells CD4 0.40657765 0.76067853 0.38851651</span></span>
+<span><span class="co">#&gt; 2 cell_2 T cells CD4 0.05753751 0.63228889 0.46670333</span></span>
+<span><span class="co">#&gt; 3 cell_3 T cells CD4 0.31509907 0.09490008 0.03745777</span></span>
+<span><span class="co">#&gt; 4 cell_4 T cells CD4 0.15313496 0.40636332 0.82603701</span></span>
+<span><span class="co">#&gt; 5 cell_5 T cells CD4 0.70358548 0.11428061 0.49347860</span></span>
+<span><span class="co">#&gt; 6 cell_6 T cells CD4 0.26395058 0.73693672 0.28457749</span></span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/dataset.html">dataset</a></span><span class="op">(</span></span>
 <span>  annotation <span class="op">=</span> <span class="va">annotation</span>,</span>
@@ -428,7 +428,7 @@ expressed genes (as shown above) as scaling factor.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
-<span><span class="co">#&gt;  [1] SummarizedExperiment_1.26.1 SimBu_1.1.1                </span></span>
+<span><span class="co">#&gt;  [1] SummarizedExperiment_1.26.1 SimBu_1.1.2                </span></span>
 <span><span class="co">#&gt;  [3] xfun_0.36                   bslib_0.4.2                </span></span>
 <span><span class="co">#&gt;  [5] purrr_1.0.1                 lattice_0.20-45            </span></span>
 <span><span class="co">#&gt;  [7] vctrs_0.5.1                 htmltools_0.5.4            </span></span>

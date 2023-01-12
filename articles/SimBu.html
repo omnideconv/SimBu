@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">SimBu</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -297,10 +297,33 @@ pseudo-bulk dataset(s) stored in the <code>assays</code>. They can be
 accessed like this:</li>
 </ul>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">simulation</span><span class="op">$</span><span class="va">bulk</span><span class="op">)</span><span class="op">[[</span><span class="st">"bulk_counts"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 1000   10</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">simulation</span><span class="op">$</span><span class="va">bulk</span><span class="op">)</span><span class="op">[[</span><span class="st">"bulk_tpm"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 1000   10</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">simulation</span><span class="op">$</span><span class="va">bulk</span><span class="op">)</span><span class="op">[[</span><span class="st">"bulk_counts"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 6 x 10 sparse Matrix of class "dgCMatrix"</span></span>
+<span><span class="co">#&gt;    [[ suppressing 10 column names 'random_sample1', 'random_sample2', 'random_sample3' ... ]]</span></span>
+<span><span class="co">#&gt;                                               </span></span>
+<span><span class="co">#&gt; gene_1 442 469 515 488 473 491 488 494 471 467</span></span>
+<span><span class="co">#&gt; gene_2 481 529 477 457 508 496 498 471 494 472</span></span>
+<span><span class="co">#&gt; gene_3 478 485 469 461 463 495 464 457 502 486</span></span>
+<span><span class="co">#&gt; gene_4 509 449 502 442 515 485 476 455 516 464</span></span>
+<span><span class="co">#&gt; gene_5 507 472 502 444 492 494 481 473 522 490</span></span>
+<span><span class="co">#&gt; gene_6 544 497 505 486 513 489 416 509 478 535</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu">SummarizedExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">simulation</span><span class="op">$</span><span class="va">bulk</span><span class="op">)</span><span class="op">[[</span><span class="st">"bulk_tpm"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 6 x 10 sparse Matrix of class "dgCMatrix"</span></span>
+<span><span class="co">#&gt;    [[ suppressing 10 column names 'random_sample1', 'random_sample2', 'random_sample3' ... ]]</span></span>
+<span><span class="co">#&gt;                                                                             </span></span>
+<span><span class="co">#&gt; gene_1  878.2147  999.2958  954.6566  952.3135 1003.4593  984.8311  976.4807</span></span>
+<span><span class="co">#&gt; gene_2 1030.5966 1036.6864 1019.4323  997.9396  989.0136 1106.9226  996.3526</span></span>
+<span><span class="co">#&gt; gene_3  993.6969 1015.8091  968.2074  988.6927 1011.9091  992.0947 1009.2798</span></span>
+<span><span class="co">#&gt; gene_4 1099.0943 1014.1081  967.7066 1055.1633 1022.7422 1104.0135 1016.4982</span></span>
+<span><span class="co">#&gt; gene_5 1002.7697 1072.4697 1008.9865  965.0745 1056.6146 1156.0924  996.5869</span></span>
+<span><span class="co">#&gt; gene_6 1022.7173 1059.2803  904.8776 1091.4226 1021.8523 1026.3899  948.3862</span></span>
+<span><span class="co">#&gt;                                     </span></span>
+<span><span class="co">#&gt; gene_1  911.0891  912.2869  966.0955</span></span>
+<span><span class="co">#&gt; gene_2 1121.3749 1067.7653 1066.9981</span></span>
+<span><span class="co">#&gt; gene_3  977.6709 1022.7002  965.8793</span></span>
+<span><span class="co">#&gt; gene_4 1042.1854 1135.9204 1027.1262</span></span>
+<span><span class="co">#&gt; gene_5 1002.4829  978.0802 1041.6898</span></span>
+<span><span class="co">#&gt; gene_6 1064.5134 1056.2366 1046.9414</span></span></code></pre></div>
 <p>If only a single matrix was given to the dataset initially, only one
 assay is filled.</p>
 <ul>
@@ -379,7 +402,7 @@ to be included in your simulation.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] SimBu_1.1.1</span></span>
+<span><span class="co">#&gt; [1] SimBu_1.1.2</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] MatrixGenerics_1.8.1        Biobase_2.56.0             </span></span>
