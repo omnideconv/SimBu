@@ -72,7 +72,6 @@ simulate_sample <- function(data,
       cells <- cells[["cell_ID"]]
     }
 
-
     return(cells)
   })
 
@@ -158,7 +157,7 @@ simulate_sample <- function(data,
 #' @param custom_scenario_data dataframe; needs to be of size \code{nsamples} x number_of_cell_types, where each sample is a row and each entry is the cell-type fraction. Rows need to sum up to 1.
 #' @param custom_scaling_vector named vector with custom scaling values for cell-types. Cell-types that do not occur in this vector but are present in the dataset will be set to 1; mandatory for \code{custom} scaling factor
 #' @param balance_even_mirror_scenario balancing value for the \code{uniform} and \code{mirror_db} scenarios: increasing it will result in more diverse simulated fractions. To get the same fractions in each sample, set to 0. Default is 0.01.
-#' @param remove_bias_in_counts boolean; if TRUE (default) the internal mRNA bias that is present in count data will be *removed* using the number of reads mapped to each cell
+#' @param remove_bias_in_counts boolean; if TRUE the internal mRNA bias that is present in count data will be *removed* using the number of reads mapped to each cell. Default to FALSE
 #' @param remove_bias_in_counts_method 'read-number' (default) or 'gene-number'; method with which the mRNA bias in counts will be removed
 #' @param norm_counts boolean; if TRUE the samples simulated with counts will be normalized to CPMs, default is FALSE
 #' @param nsamples numeric; number of samples in pseudo-bulk RNAseq dataset (default = 100)
@@ -259,7 +258,7 @@ simulate_bulk <- function(data,
                           custom_scenario_data = NULL,
                           custom_scaling_vector = NULL,
                           balance_even_mirror_scenario = 0.01,
-                          remove_bias_in_counts = TRUE,
+                          remove_bias_in_counts = FALSE,
                           remove_bias_in_counts_method = "read-number",
                           norm_counts = FALSE,
                           nsamples = 100,

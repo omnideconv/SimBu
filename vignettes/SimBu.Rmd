@@ -176,8 +176,8 @@ The `simulation` object contains three named entries: \
 * `bulk`: a SummarizedExperiment object with the pseudo-bulk dataset(s) stored in the `assays`. They can be accessed like this:
 
 ```{r}
-dim(SummarizedExperiment::assays(simulation$bulk)[["bulk_counts"]])
-dim(SummarizedExperiment::assays(simulation$bulk)[["bulk_tpm"]])
+head(SummarizedExperiment::assays(simulation$bulk)[["bulk_counts"]])
+head(SummarizedExperiment::assays(simulation$bulk)[["bulk_tpm"]])
 ```
 
 If only a single matrix was given to the dataset initially, only one assay is filled.

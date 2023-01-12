@@ -57,4 +57,4 @@ simulation <- simulate_bulk(data = dataset, scenario = "random", scaling_factor 
 
 For more detailed usage instructions, check out [Getting started](http://omnideconv.org/SimBu/articles/simulator_documentation.html). 
 
-You can find more information on the simulation setup and mRNA bias in our [SimBu preprint](https://doi.org/10.1101/2022.05.06.490889). 
+You can find more information on the simulation setup and mRNA bias in our [SimBu publication](https://doi.org/10.1093/bioinformatics/btac499). 
