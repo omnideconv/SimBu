@@ -506,6 +506,10 @@ dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, 
   if (!cell_type_col %in% colnames(annotation)) {
     stop("Did not find cell_type_col in Seurat metadata.")
   }
+  
+  # change custom cell_type and cell ID column names to 'cell_type' and 'ID'
+  colnames(annotation)[which(colnames(annotation) == cell_id_col)] <- 'ID'
+  colnames(annotation)[which(colnames(annotation) == cell_type_col)] <- 'cell_type'
 
 
   tryCatch(
