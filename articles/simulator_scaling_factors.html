@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">SimBu</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.3</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -308,13 +308,13 @@ weight or size for example. Lets pretend, <code>add_1</code> and
 dataset and we can use them as scaling factor as well:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">annotation</span><span class="op">)</span></span>
-<span><span class="co">#&gt;       ID   cell_type     spikes      add_1      add_2</span></span>
-<span><span class="co">#&gt; 1 cell_1 T cells CD4 0.40657765 0.76067853 0.38851651</span></span>
-<span><span class="co">#&gt; 2 cell_2 T cells CD4 0.05753751 0.63228889 0.46670333</span></span>
-<span><span class="co">#&gt; 3 cell_3 T cells CD4 0.31509907 0.09490008 0.03745777</span></span>
-<span><span class="co">#&gt; 4 cell_4 T cells CD4 0.15313496 0.40636332 0.82603701</span></span>
-<span><span class="co">#&gt; 5 cell_5 T cells CD4 0.70358548 0.11428061 0.49347860</span></span>
-<span><span class="co">#&gt; 6 cell_6 T cells CD4 0.26395058 0.73693672 0.28457749</span></span></code></pre></div>
+<span><span class="co">#&gt;       ID   cell_type     spikes      add_1     add_2</span></span>
+<span><span class="co">#&gt; 1 cell_1 T cells CD4 0.89475166 0.88682796 0.7284483</span></span>
+<span><span class="co">#&gt; 2 cell_2 T cells CD4 0.04663393 0.24709539 0.9082861</span></span>
+<span><span class="co">#&gt; 3 cell_3 T cells CD4 0.96088972 0.24125420 0.7144967</span></span>
+<span><span class="co">#&gt; 4 cell_4 T cells CD4 0.65376279 0.07960769 0.8193607</span></span>
+<span><span class="co">#&gt; 5 cell_5 T cells CD4 0.40067818 0.24641773 0.7833587</span></span>
+<span><span class="co">#&gt; 6 cell_6 T cells CD4 0.82733350 0.05651637 0.4403225</span></span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/dataset.html">dataset</a></span><span class="op">(</span></span>
 <span>  annotation <span class="op">=</span> <span class="va">annotation</span>,</span>
@@ -428,35 +428,35 @@ expressed genes (as shown above) as scaling factor.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
-<span><span class="co">#&gt;  [1] SummarizedExperiment_1.26.1 SimBu_1.1.2                </span></span>
+<span><span class="co">#&gt;  [1] SummarizedExperiment_1.28.0 SimBu_1.1.3                </span></span>
 <span><span class="co">#&gt;  [3] xfun_0.36                   bslib_0.4.2                </span></span>
 <span><span class="co">#&gt;  [5] purrr_1.0.1                 lattice_0.20-45            </span></span>
-<span><span class="co">#&gt;  [7] vctrs_0.5.1                 htmltools_0.5.4            </span></span>
-<span><span class="co">#&gt;  [9] stats4_4.2.2                yaml_2.3.6                 </span></span>
+<span><span class="co">#&gt;  [7] vctrs_0.5.2                 htmltools_0.5.4            </span></span>
+<span><span class="co">#&gt;  [9] stats4_4.2.2                yaml_2.3.7                 </span></span>
 <span><span class="co">#&gt; [11] rlang_1.0.6                 pkgdown_2.0.7              </span></span>
 <span><span class="co">#&gt; [13] jquerylib_0.1.4             glue_1.6.2                 </span></span>
-<span><span class="co">#&gt; [15] BiocParallel_1.30.4         BiocGenerics_0.42.0        </span></span>
-<span><span class="co">#&gt; [17] matrixStats_0.63.0          GenomeInfoDbData_1.2.8     </span></span>
+<span><span class="co">#&gt; [15] BiocParallel_1.32.5         BiocGenerics_0.44.0        </span></span>
+<span><span class="co">#&gt; [17] matrixStats_0.63.0          GenomeInfoDbData_1.2.9     </span></span>
 <span><span class="co">#&gt; [19] lifecycle_1.0.3             stringr_1.5.0              </span></span>
-<span><span class="co">#&gt; [21] MatrixGenerics_1.8.1        zlibbioc_1.42.0            </span></span>
-<span><span class="co">#&gt; [23] ragg_1.2.4                  proxyC_0.3.3               </span></span>
+<span><span class="co">#&gt; [21] MatrixGenerics_1.10.0       zlibbioc_1.44.0            </span></span>
+<span><span class="co">#&gt; [23] ragg_1.2.5                  proxyC_0.3.3               </span></span>
 <span><span class="co">#&gt; [25] codetools_0.2-18            memoise_2.0.1              </span></span>
-<span><span class="co">#&gt; [27] evaluate_0.19               Biobase_2.56.0             </span></span>
-<span><span class="co">#&gt; [29] knitr_1.41                  IRanges_2.30.1             </span></span>
-<span><span class="co">#&gt; [31] fastmap_1.1.0               GenomeInfoDb_1.32.4        </span></span>
-<span><span class="co">#&gt; [33] parallel_4.2.2              Rcpp_1.0.9                 </span></span>
-<span><span class="co">#&gt; [35] cachem_1.0.6                DelayedArray_0.22.0        </span></span>
-<span><span class="co">#&gt; [37] desc_1.4.2                  S4Vectors_0.34.0           </span></span>
+<span><span class="co">#&gt; [27] evaluate_0.20               Biobase_2.58.0             </span></span>
+<span><span class="co">#&gt; [29] knitr_1.42                  IRanges_2.32.0             </span></span>
+<span><span class="co">#&gt; [31] fastmap_1.1.0               GenomeInfoDb_1.34.7        </span></span>
+<span><span class="co">#&gt; [33] parallel_4.2.2              Rcpp_1.0.10                </span></span>
+<span><span class="co">#&gt; [35] cachem_1.0.6                DelayedArray_0.24.0        </span></span>
+<span><span class="co">#&gt; [37] desc_1.4.2                  S4Vectors_0.36.1           </span></span>
 <span><span class="co">#&gt; [39] RcppParallel_5.1.6          jsonlite_1.8.4             </span></span>
-<span><span class="co">#&gt; [41] XVector_0.36.0              systemfonts_1.0.4          </span></span>
-<span><span class="co">#&gt; [43] fs_1.5.2                    textshaping_0.3.6          </span></span>
-<span><span class="co">#&gt; [45] digest_0.6.31               stringi_1.7.8              </span></span>
-<span><span class="co">#&gt; [47] GenomicRanges_1.48.0        grid_4.2.2                 </span></span>
+<span><span class="co">#&gt; [41] XVector_0.38.0              systemfonts_1.0.4          </span></span>
+<span><span class="co">#&gt; [43] fs_1.6.0                    textshaping_0.3.6          </span></span>
+<span><span class="co">#&gt; [45] digest_0.6.31               stringi_1.7.12             </span></span>
+<span><span class="co">#&gt; [47] GenomicRanges_1.50.2        grid_4.2.2                 </span></span>
 <span><span class="co">#&gt; [49] rprojroot_2.0.3             cli_3.6.0                  </span></span>
 <span><span class="co">#&gt; [51] tools_4.2.2                 bitops_1.0-7               </span></span>
-<span><span class="co">#&gt; [53] magrittr_2.0.3              sass_0.4.4                 </span></span>
-<span><span class="co">#&gt; [55] RCurl_1.98-1.9              Matrix_1.5-1               </span></span>
-<span><span class="co">#&gt; [57] sparseMatrixStats_1.8.0     rmarkdown_2.19             </span></span>
+<span><span class="co">#&gt; [53] magrittr_2.0.3              sass_0.4.5                 </span></span>
+<span><span class="co">#&gt; [55] RCurl_1.98-1.10             Matrix_1.5-1               </span></span>
+<span><span class="co">#&gt; [57] sparseMatrixStats_1.10.0    rmarkdown_2.20             </span></span>
 <span><span class="co">#&gt; [59] R6_2.5.1                    compiler_4.2.2</span></span></code></pre></div>
 </div>
 </div>
