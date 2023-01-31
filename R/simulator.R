@@ -68,7 +68,11 @@ simulate_sample <- function(data,
       cells <- c()
     } else {
       # how many cells of this type do we need?
-      cells <- dplyr::slice_sample(cells_of_type_x, n = total_cells * simulation_vector[x], replace = TRUE)
+      n <- round(total_cells * simulation_vector[x])
+      if(n == 0){
+        n <- 1
+      }
+      cells <- dplyr::slice_sample(cells_of_type_x, n = n, replace = TRUE)
       cells <- cells[["cell_ID"]]
     }
 
