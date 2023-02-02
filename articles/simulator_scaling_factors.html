@@ -308,13 +308,13 @@ weight or size for example. Lets pretend, <code>add_1</code> and
 dataset and we can use them as scaling factor as well:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">annotation</span><span class="op">)</span></span>
-<span><span class="co">#&gt;       ID   cell_type    spikes     add_1      add_2</span></span>
-<span><span class="co">#&gt; 1 cell_1 T cells CD4 0.8868611 0.7193247 0.76336066</span></span>
-<span><span class="co">#&gt; 2 cell_2 T cells CD4 0.6711769 0.9906033 0.94837717</span></span>
-<span><span class="co">#&gt; 3 cell_3 T cells CD4 0.5990885 0.9815746 0.88988267</span></span>
-<span><span class="co">#&gt; 4 cell_4 T cells CD4 0.5635159 0.4046006 0.07318759</span></span>
-<span><span class="co">#&gt; 5 cell_5 T cells CD4 0.1021795 0.2172213 0.30944567</span></span>
-<span><span class="co">#&gt; 6 cell_6 T cells CD4 0.5013826 0.1530086 0.01586149</span></span></code></pre></div>
+<span><span class="co">#&gt;       ID   cell_type     spikes     add_1     add_2</span></span>
+<span><span class="co">#&gt; 1 cell_1 T cells CD4 0.88355327 0.4600306 0.9687797</span></span>
+<span><span class="co">#&gt; 2 cell_2 T cells CD4 0.34217010 0.9120423 0.7603569</span></span>
+<span><span class="co">#&gt; 3 cell_3 T cells CD4 0.68063122 0.7794714 0.9079956</span></span>
+<span><span class="co">#&gt; 4 cell_4 T cells CD4 0.05713771 0.2673066 0.7971905</span></span>
+<span><span class="co">#&gt; 5 cell_5 T cells CD4 0.91547290 0.5265628 0.1414878</span></span>
+<span><span class="co">#&gt; 6 cell_6 T cells CD4 0.30309584 0.2458685 0.6088319</span></span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/dataset.html">dataset</a></span><span class="op">(</span></span>
 <span>  annotation <span class="op">=</span> <span class="va">annotation</span>,</span>
@@ -429,7 +429,7 @@ expressed genes (as shown above) as scaling factor.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] SummarizedExperiment_1.28.0 SimBu_1.1.3                </span></span>
-<span><span class="co">#&gt;  [3] xfun_0.36                   bslib_0.4.2                </span></span>
+<span><span class="co">#&gt;  [3] xfun_0.37                   bslib_0.4.2                </span></span>
 <span><span class="co">#&gt;  [5] purrr_1.0.1                 lattice_0.20-45            </span></span>
 <span><span class="co">#&gt;  [7] vctrs_0.5.2                 htmltools_0.5.4            </span></span>
 <span><span class="co">#&gt;  [9] stats4_4.2.2                yaml_2.3.7                 </span></span>
