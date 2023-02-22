@@ -308,13 +308,13 @@ weight or size for example. Lets pretend, <code>add_1</code> and
 dataset and we can use them as scaling factor as well:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">annotation</span><span class="op">)</span></span>
-<span><span class="co">#&gt;       ID   cell_type    spikes     add_1      add_2</span></span>
-<span><span class="co">#&gt; 1 cell_1 T cells CD4 0.4029572 0.6728744 0.34221515</span></span>
-<span><span class="co">#&gt; 2 cell_2 T cells CD4 0.3970172 0.4974407 0.24422451</span></span>
-<span><span class="co">#&gt; 3 cell_3 T cells CD4 0.5550331 0.5716178 0.69584237</span></span>
-<span><span class="co">#&gt; 4 cell_4 T cells CD4 0.4986834 0.5205392 0.42225802</span></span>
-<span><span class="co">#&gt; 5 cell_5 T cells CD4 0.4513560 0.6983901 0.56126066</span></span>
-<span><span class="co">#&gt; 6 cell_6 T cells CD4 0.4694474 0.1556554 0.05306605</span></span></code></pre></div>
+<span><span class="co">#&gt;       ID   cell_type     spikes      add_1      add_2</span></span>
+<span><span class="co">#&gt; 1 cell_1 T cells CD4 0.79811982 0.60064584 0.06668708</span></span>
+<span><span class="co">#&gt; 2 cell_2 T cells CD4 0.43958472 0.76501072 0.60059475</span></span>
+<span><span class="co">#&gt; 3 cell_3 T cells CD4 0.83693699 0.58849011 0.51605962</span></span>
+<span><span class="co">#&gt; 4 cell_4 T cells CD4 0.07725989 0.99791003 0.37034373</span></span>
+<span><span class="co">#&gt; 5 cell_5 T cells CD4 0.37776410 0.07137655 0.44394758</span></span>
+<span><span class="co">#&gt; 6 cell_6 T cells CD4 0.11511148 0.66836597 0.85488984</span></span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu">SimBu</span><span class="fu">::</span><span class="fu"><a href="../reference/dataset.html">dataset</a></span><span class="op">(</span></span>
 <span>  annotation <span class="op">=</span> <span class="va">annotation</span>,</span>
