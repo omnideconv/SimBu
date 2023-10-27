@@ -308,7 +308,7 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col = N
 #' @export
 #'
 #' @examples
-#' #h5 <- system.file("extdata", "anndata.h5ad", package = "SimBu")
+#' # h5 <- system.file("extdata", "anndata.h5ad", package = "SimBu")
 #' # ds_h5ad <- SimBu::dataset_h5ad(
 #' #  h5ad_file_counts = h5,
 #' #  name = "h5ad_dataset",

@@ -69,7 +69,7 @@ simulate_sample <- function(data,
     } else {
       # how many cells of this type do we need?
       n <- round(total_cells * simulation_vector[x])
-      if(n == 0){
+      if (n == 0) {
         n <- 1
       }
       cells <- dplyr::slice_sample(cells_of_type_x, n = n, replace = TRUE)
