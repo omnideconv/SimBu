@@ -1,3 +1,4 @@
+
 Changes in version 1.1.2 (2023-01-12)
 + Bugfix in the dataset_seurat function, where custom names for the parameters `cell_id_col` and `cell_type_col` did not work (thanks to @orange-whale for bringing this up)
 + Changed default `remove_bias_in_counts` parameter of function `simulate_bulk` to FALSE after discussion with @ZheFrench

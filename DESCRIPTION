@@ -37,7 +37,8 @@ Suggests:
     knitr,
     matrixStats,
     rmarkdown,
-    Seurat,
+    Seurat (>= 5.0.0),
+    SeuratObject (>= 5.0.0),
     testthat (>= 3.0.0)
 URL: https://github.com/omnideconv/SimBu
 BugReports: https://github.com/omnideconv/SimBu/issues

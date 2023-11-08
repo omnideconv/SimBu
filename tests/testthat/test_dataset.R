@@ -61,12 +61,12 @@ test_that("can create dataset from seurat object", {
     row.names = paste0("cell_", rep(1:300))
   )
 
-  seurat_obj <- Seurat::CreateSeuratObject(counts = counts, assay = "counts", meta.data = annotation)
-  tpm_assay <- Seurat::CreateAssayObject(counts = tpm)
-  seurat_obj[["tpm"]] <- tpm_assay
+  seurat_obj <- Seurat::CreateSeuratObject(counts = counts, assay = "gene_expression", meta.data = annotation)
+  # store normalized matrix in the 'data' layer
+  SeuratObject::LayerData(seurat_obj, assay = "gene_expression", layer = "data") <- tpm
 
-  testthat::expect_s4_class(SimBu::dataset_seurat(seurat_obj = seurat_obj, count_assay = "counts", cell_id_col = "ID", cell_type_col = "cell_type", tpm_assay = "tpm", name = "seurat_dataset"), "SummarizedExperiment")
-  testthat::expect_s4_class(SimBu::dataset_seurat(seurat_obj = seurat_obj, count_assay = "counts", cell_id_col = "ID", cell_type_col = "cell_type", name = "seurat_dataset"), "SummarizedExperiment")
+  testthat::expect_s4_class(SimBu::dataset_seurat(seurat_obj = seurat_obj, counts_layer = "counts", cell_id_col = "ID", cell_type_col = "cell_type", tpm_layer = "data", name = "seurat_dataset"), "SummarizedExperiment")
+  testthat::expect_s4_class(SimBu::dataset_seurat(seurat_obj = seurat_obj, counts_layer = "counts", cell_id_col = "ID", cell_type_col = "cell_type", name = "seurat_dataset"), "SummarizedExperiment")
 })
 
 
