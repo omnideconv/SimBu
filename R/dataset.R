@@ -428,10 +428,11 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = "
 #' Build \link[SummarizedExperiment]{SummarizedExperiment} using a \link[Seurat]{Seurat} object
 #'
 #' @param seurat_obj (mandatory) \link[Seurat]{Seurat} object with TPM counts
-#' @param count_assay (mandatory) name of assay in Seurat object which contains count data in 'counts' slot
+#' @param counts_layer (mandatory) name of assay in Seurat object which contains count data in 'counts' slot
 #' @param cell_id_col (mandatory) name of column in Seurat meta.data with unique cell ids
 #' @param cell_type_col (mandatory) name of column in Seurat meta.data with cell type name
-#' @param tpm_assay name of assay in Seurat object which contains TPM data in 'counts' slot
+#' @param assay name of the Seurat objecy assay that should be used. If NULL (default), the currently active assay is used
+#' @param tpm_layer name of assay in Seurat object which contains TPM data in 'counts' slot
 #' @param name name of the dataset; will be used for new unique IDs of cells
 #' @param spike_in_col which column in annotation contains information on spike_in counts, which can be used to re-scale counts; mandatory for spike_in scaling factor in simulation
 #' @param additional_cols list of column names in annotation, that should be stored as well in dataset object
@@ -466,31 +467,36 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = "
 #'   row.names = paste0("cell-", rep(1:300))
 #' )
 #'
-#' seurat_obj <- Seurat::CreateSeuratObject(counts = counts, assay = "counts", meta.data = annotation)
-#' tpm_assay <- Seurat::CreateAssayObject(counts = tpm)
-#' seurat_obj[["tpm"]] <- tpm_assay
+#' seurat_obj <- Seurat::CreateSeuratObject(counts = counts, assay = "gene_expression", meta.data = annotation)
+#' LayerData(seurat_obj, assay = "gene_expression", layer = "data") <- tpm
 #'
 #' ds_seurat <- SimBu::dataset_seurat(
 #'   seurat_obj = seurat_obj,
-#'   count_assay = "counts",
+#'   counts_layer = "counts",
 #'   cell_id_col = "ID",
 #'   cell_type_col = "cell_type",
-#'   tpm_assay = "tpm",
+#'   tpm_layer = "tpm",
 #'   name = "seurat_dataset"
 #' )
-dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, tpm_assay = NULL, name = "SimBu_dataset",
+dataset_seurat <- function(seurat_obj, counts_layer, cell_id_col, cell_type_col, assay = NULL, tpm_layer = NULL, name = "SimBu_dataset",
                            spike_in_col = NULL, additional_cols = NULL, filter_genes = TRUE, variance_cutoff = 0, type_abundance_cutoff = 0, scale_tpm = TRUE) {
-  if (is.null(count_assay)) {
-    stop("You have to provide the name of the assay in the Seurat object which contains count data.")
+  if (is.null(counts_layer)) {
+    stop("You have to provide the name of the layer in the Seurat object that contains count data.")
+  }
+  if(!is.null(assay)){
+    message(paste('Changing default assay to', assay))
+    Seurat::DefaultAssay(seurat_obj) <- assay
+  }
+  active_assay <- Seurat::DefaultAssay(seurat_obj)
+  layers <- SeuratObject::Layers(seurat_obj)
+
+  if (!counts_layer %in% layers) {
+    stop("The provided counts_layer name was not found in the Seurat object using the active assay.")
   }
 
-  if (!count_assay %in% names(seurat_obj@assays)) {
-    stop("The provided count_assay name was not found in the Seurat object.")
-  }
-
-  if (!is.null(tpm_assay)) {
+  if (!is.null(tpm_layer)) {
     if (!count_assay %in% names(seurat_obj@assays)) {
-      stop("The provided count_assay name was not found in the Seurat object.")
+      stop("The provided tpm_layer name was not found in the Seurat object using the active assay.")
     }
   }
 
@@ -510,7 +516,7 @@ dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, 
 
   tryCatch(
     {
-      count_matrix <- seurat_obj@assays[[count_assay]]@counts
+      count_matrix <- SeuratObject::LayerData(seurat_obj, layer = 'counts')
     },
     error = function(e) {
       em <- paste("Could not access count matrix from Seurat object (counts): ", e)
@@ -523,7 +529,7 @@ dataset_seurat <- function(seurat_obj, count_assay, cell_id_col, cell_type_col, 
   if (!is.null(tpm_assay)) {
     tryCatch(
       {
-        tpm_matrix <- seurat_obj@assays[[tpm_assay]]@counts
+        tpm_matrix <- SeuratObject::LayerData(seurat_obj, layer = 'data')
       },
       error = function(e) {
         em <- paste("Could not access count matrix from Seurat object (tpm): ", e)

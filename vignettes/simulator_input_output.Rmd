@@ -61,9 +61,9 @@ annotation <- data.frame(
   ),
   row.names = paste0("cell-", rep(1:300))
 )
-seurat_obj <- Seurat::CreateSeuratObject(counts = counts, assay = "counts", meta.data = annotation)
-tpm_assay <- Seurat::CreateAssayObject(counts = tpm)
-seurat_obj[["tpm"]] <- tpm_assay
+seurat_obj <- Seurat::CreateSeuratObject(counts = counts, assay = "gene_expression", meta.data = annotation)
+# store normalized matrix in the 'data' layer
+LayerData(seurat_obj, assay = "gene_expression", layer = "data") <- tpm
 seurat_obj
 ```
 
@@ -75,10 +75,10 @@ It is possible to use a Seurat object to build a dataset; give the name of the a
 ```{r}
 ds_seurat <- SimBu::dataset_seurat(
   seurat_obj = seurat_obj,
-  count_assay = "counts",
+  counts_layer = "counts",
   cell_id_col = "ID",
   cell_type_col = "cell_type",
-  tpm_assay = "tpm",
+  tpm_layer = "tpm",
   name = "seurat_dataset"
 )
 ```

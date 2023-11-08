@@ -6,10 +6,11 @@
 \usage{
 dataset_seurat(
   seurat_obj,
-  count_assay,
+  counts_layer,
   cell_id_col,
   cell_type_col,
-  tpm_assay = NULL,
+  assay = NULL,
+  tpm_layer = NULL,
   name = "SimBu_dataset",
   spike_in_col = NULL,
   additional_cols = NULL,
@@ -22,13 +23,15 @@ dataset_seurat(
 \arguments{
 \item{seurat_obj}{(mandatory) \link[Seurat]{Seurat} object with TPM counts}
 
-\item{count_assay}{(mandatory) name of assay in Seurat object which contains count data in 'counts' slot}
+\item{counts_layer}{(mandatory) name of assay in Seurat object which contains count data in 'counts' slot}
 
 \item{cell_id_col}{(mandatory) name of column in Seurat meta.data with unique cell ids}
 
 \item{cell_type_col}{(mandatory) name of column in Seurat meta.data with cell type name}
 
-\item{tpm_assay}{name of assay in Seurat object which contains TPM data in 'counts' slot}
+\item{assay}{name of the Seurat objecy assay that should be used. If NULL (default), the currently active assay is used}
+
+\item{tpm_layer}{name of assay in Seurat object which contains TPM data in 'counts' slot}
 
 \item{name}{name of the dataset; will be used for new unique IDs of cells}
 
@@ -73,16 +76,15 @@ annotation <- data.frame(
   row.names = paste0("cell-", rep(1:300))
 )
 
-seurat_obj <- Seurat::CreateSeuratObject(counts = counts, assay = "counts", meta.data = annotation)
-tpm_assay <- Seurat::CreateAssayObject(counts = tpm)
-seurat_obj[["tpm"]] <- tpm_assay
+seurat_obj <- Seurat::CreateSeuratObject(counts = counts, assay = "gene_expression", meta.data = annotation)
+LayerData(seurat_obj, assay = "gene_expression", layer = "data") <- tpm
 
 ds_seurat <- SimBu::dataset_seurat(
   seurat_obj = seurat_obj,
-  count_assay = "counts",
+  counts_layer = "counts",
   cell_id_col = "ID",
   cell_type_col = "cell_type",
-  tpm_assay = "tpm",
+  tpm_layer = "tpm",
   name = "seurat_dataset"
 )
 }
