@@ -468,14 +468,14 @@ dataset_h5ad <- function(h5ad_file_counts, h5ad_file_tpm = NULL, cell_id_col = "
 #' )
 #'
 #' seurat_obj <- Seurat::CreateSeuratObject(counts = counts, assay = "gene_expression", meta.data = annotation)
-#' LayerData(seurat_obj, assay = "gene_expression", layer = "data") <- tpm
+#' SeuratObject::LayerData(seurat_obj, assay = "gene_expression", layer = "data") <- tpm
 #'
 #' ds_seurat <- SimBu::dataset_seurat(
 #'   seurat_obj = seurat_obj,
 #'   counts_layer = "counts",
 #'   cell_id_col = "ID",
 #'   cell_type_col = "cell_type",
-#'   tpm_layer = "tpm",
+#'   tpm_layer = "data",
 #'   name = "seurat_dataset"
 #' )
 dataset_seurat <- function(seurat_obj, counts_layer, cell_id_col, cell_type_col, assay = NULL, tpm_layer = NULL, name = "SimBu_dataset",
@@ -487,7 +487,7 @@ dataset_seurat <- function(seurat_obj, counts_layer, cell_id_col, cell_type_col,
     message(paste("Changing default assay to", assay))
     Seurat::DefaultAssay(seurat_obj) <- assay
   }
-  active_assay <- Seurat::DefaultAssay(seurat_obj)
+
   layers <- SeuratObject::Layers(seurat_obj)
 
   if (!counts_layer %in% layers) {
@@ -495,7 +495,7 @@ dataset_seurat <- function(seurat_obj, counts_layer, cell_id_col, cell_type_col,
   }
 
   if (!is.null(tpm_layer)) {
-    if (!count_assay %in% names(seurat_obj@assays)) {
+    if (!tpm_layer %in% layers) {
       stop("The provided tpm_layer name was not found in the Seurat object using the active assay.")
     }
   }
@@ -526,7 +526,7 @@ dataset_seurat <- function(seurat_obj, counts_layer, cell_id_col, cell_type_col,
   )
 
 
-  if (!is.null(tpm_assay)) {
+  if (!is.null(tpm_layer)) {
     tryCatch(
       {
         tpm_matrix <- SeuratObject::LayerData(seurat_obj, layer = "data")

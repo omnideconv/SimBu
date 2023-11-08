@@ -77,14 +77,14 @@ annotation <- data.frame(
 )
 
 seurat_obj <- Seurat::CreateSeuratObject(counts = counts, assay = "gene_expression", meta.data = annotation)
-LayerData(seurat_obj, assay = "gene_expression", layer = "data") <- tpm
+SeuratObject::LayerData(seurat_obj, assay = "gene_expression", layer = "data") <- tpm
 
 ds_seurat <- SimBu::dataset_seurat(
   seurat_obj = seurat_obj,
   counts_layer = "counts",
   cell_id_col = "ID",
   cell_type_col = "cell_type",
-  tpm_layer = "tpm",
+  tpm_layer = "data",
   name = "seurat_dataset"
 )
 }
