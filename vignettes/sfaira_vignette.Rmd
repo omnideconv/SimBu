@@ -82,5 +82,5 @@ SimBu::dataset_sfaira(
 
 
 ```{r}
-sessionInfo()
+utils::sessionInfo()
 ```

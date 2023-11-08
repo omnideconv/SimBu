@@ -176,8 +176,8 @@ The `simulation` object contains three named entries: \
 * `bulk`: a SummarizedExperiment object with the pseudo-bulk dataset(s) stored in the `assays`. They can be accessed like this:
 
 ```{r}
-head(SummarizedExperiment::assays(simulation$bulk)[["bulk_counts"]])
-head(SummarizedExperiment::assays(simulation$bulk)[["bulk_tpm"]])
+utils::head(SummarizedExperiment::assays(simulation$bulk)[["bulk_counts"]])
+utils::head(SummarizedExperiment::assays(simulation$bulk)[["bulk_tpm"]])
 ```
 
 If only a single matrix was given to the dataset initially, only one assay is filled.
@@ -234,7 +234,7 @@ In the same way, you can also provide a `blacklist` parameter, where you name th
 cell-types you **don't** want to be included in your simulation.
 
 ```{r}
-sessionInfo()
+utils::sessionInfo()
 ```
 
 # References

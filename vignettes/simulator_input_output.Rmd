@@ -42,8 +42,8 @@ Additionally, an annotation table is needed, with the cell-type annotations. It 
 Here is some example data:
 
 ```{r}
-counts <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol = 300), sparse = TRUE)
-tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol = 300), sparse = TRUE)
+counts <- Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol = 300), sparse = TRUE)
+tpm <- Matrix::Matrix(matrix(stats::rpois(3e5, 5), ncol = 300), sparse = TRUE)
 tpm <- Matrix::t(1e6 * Matrix::t(tpm) / Matrix::colSums(tpm))
 colnames(counts) <- paste0("cell-", rep(1:300))
 colnames(tpm) <- paste0("cell-", rep(1:300))
@@ -146,5 +146,5 @@ If only the count matrix was given to the dataset initially, only the `bulk_coun
 * `scaling_vector`: a named list, with the used scaling value for each cell from the single cell dataset. \
 
 ```{r}
-sessionInfo()
+utils::sessionInfo()
 ```
