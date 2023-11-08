@@ -1,0 +1,5 @@
+library(knitr)
+knit("vignettes/SimBu.Rmd.orig", "vignettes/SimBu.Rmd")
+knit("vignettes/sfaira_vignette.Rmd.orig", "vignettes/sfaira_vignette.Rmd")
+knit("vignettes/simulator_input_output.Rmd.orig", "vignettes/simulator_input_output.Rmd")
+knit("vignettes/simulator_scaling_factors.Rmd.orig", "vignettes/simulator_scaling_factors.Rmd")
