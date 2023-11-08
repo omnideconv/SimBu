@@ -1,4 +1,3 @@
-
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 # SimBu
@@ -10,6 +9,7 @@
 [![docs](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://omnideconv.github.io/SimBu)
 [![Codecov test
 coverage](https://codecov.io/gh/omnideconv/SimBu/branch/master/graph/badge.svg)](https://app.codecov.io/gh/omnideconv/SimBu?branch=master)
+
 <!-- badges: end -->
 
 The goal of SimBu is to simulate pseudo-bulk RNAseq datasets with
@@ -20,14 +20,14 @@ RNAseq datasets.
 
 To install the developmental version of the package, run:
 
-``` r
+```r
 install.packages("devtools")
 devtools::install_github("omnideconv/SimBu")
 ```
 
 To install from Bioconductor:
 
-``` r
+```r
 if (!require("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager")
 }
@@ -40,7 +40,7 @@ BiocManager::install("SimBu")
 Create a dataset-object with local data and simulate a pseudo-bulk
 dataset
 
-``` r
+```r
 library(SimBu)
 # use local data to build dataset
 dataset <- dataset(annotation = annotation_dataframe, count_matrix = expression_matrix, name = "test_dataset")

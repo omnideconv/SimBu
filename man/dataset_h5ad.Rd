@@ -51,7 +51,7 @@ Return a \link[SummarizedExperiment]{SummarizedExperiment} object
 Build \link[SummarizedExperiment]{SummarizedExperiment} using a h5ad file for the counts
 }
 \examples{
-#h5 <- system.file("extdata", "anndata.h5ad", package = "SimBu")
+# h5 <- system.file("extdata", "anndata.h5ad", package = "SimBu")
 # ds_h5ad <- SimBu::dataset_h5ad(
 #  h5ad_file_counts = h5,
 #  name = "h5ad_dataset",

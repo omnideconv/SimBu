@@ -308,7 +308,7 @@ dataset_merge <- function(dataset_list, name = "SimBu_dataset", spike_in_col = N
 #' @export
 #'
 #' @examples
-#' #h5 <- system.file("extdata", "anndata.h5ad", package = "SimBu")
+#' # h5 <- system.file("extdata", "anndata.h5ad", package = "SimBu")
 #' # ds_h5ad <- SimBu::dataset_h5ad(
 #' #  h5ad_file_counts = h5,
 #' #  name = "h5ad_dataset",
@@ -483,8 +483,8 @@ dataset_seurat <- function(seurat_obj, counts_layer, cell_id_col, cell_type_col,
   if (is.null(counts_layer)) {
     stop("You have to provide the name of the layer in the Seurat object that contains count data.")
   }
-  if(!is.null(assay)){
-    message(paste('Changing default assay to', assay))
+  if (!is.null(assay)) {
+    message(paste("Changing default assay to", assay))
     Seurat::DefaultAssay(seurat_obj) <- assay
   }
   active_assay <- Seurat::DefaultAssay(seurat_obj)
@@ -516,7 +516,7 @@ dataset_seurat <- function(seurat_obj, counts_layer, cell_id_col, cell_type_col,
 
   tryCatch(
     {
-      count_matrix <- SeuratObject::LayerData(seurat_obj, layer = 'counts')
+      count_matrix <- SeuratObject::LayerData(seurat_obj, layer = "counts")
     },
     error = function(e) {
       em <- paste("Could not access count matrix from Seurat object (counts): ", e)
@@ -529,7 +529,7 @@ dataset_seurat <- function(seurat_obj, counts_layer, cell_id_col, cell_type_col,
   if (!is.null(tpm_assay)) {
     tryCatch(
       {
-        tpm_matrix <- SeuratObject::LayerData(seurat_obj, layer = 'data')
+        tpm_matrix <- SeuratObject::LayerData(seurat_obj, layer = "data")
       },
       error = function(e) {
         em <- paste("Could not access count matrix from Seurat object (tpm): ", e)
