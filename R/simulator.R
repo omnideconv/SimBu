@@ -38,6 +38,7 @@ NULL
 #' @param remove_bias_in_counts boolean; if TRUE (default) the internal mRNA bias that is present in count data will be *removed* using the number of reads mapped to each cell
 #' @param remove_bias_in_counts_method 'read-number' (default) or 'gene-number'; method with which the mRNA bias in counts will be removed
 #' @param norm_counts boolean; if TRUE the samples simulated with counts will be normalized to CPMs, default is FALSE
+#' @param seed numeric; fix this value if you want the same cells to be sampled
 #'
 #' @return returns two vectors (one based on counts, one based on tpm; depends on which matrices are present in data) with expression values for all genes in the provided dataset
 #'
@@ -49,7 +50,8 @@ simulate_sample <- function(data,
                             total_read_counts,
                             remove_bias_in_counts,
                             remove_bias_in_counts_method,
-                            norm_counts) {
+                            norm_counts,
+                            seed) {
   if (!all(names(simulation_vector) %in% unique(SummarizedExperiment::colData(data)[["cell_type"]]))) {
     stop("Some cell-types in the provided simulation vector are not in the annotation.")
   }
@@ -71,6 +73,10 @@ simulate_sample <- function(data,
       n <- round(total_cells * simulation_vector[x])
       if (n == 0) {
         n <- 1
+      }
+      if(!is.na(seed)){
+        # fix seed for random selection of cells
+        set.seed(seed)
       }
       cells <- dplyr::slice_sample(cells_of_type_x, n = n, replace = TRUE)
       cells <- cells[["cell_ID"]]
@@ -169,6 +175,7 @@ simulate_sample <- function(data,
 #' @param total_read_counts numeric; sets the total read count value for each sample
 #' @param whitelist list; give a list of cell-types you want to keep for the simulation; if NULL, all are used
 #' @param blacklist list; give a list of cell-types you want to remove for the simulation; if NULL, all are used; is applied after whitelist
+#' @param seed numeric; specifiy a seed for RNG. This effects cell sampling; with a fixed seed you will always sample the same cells for each sample (seed value is incrased by 1 for each sample). Default = NA (two simulation runs will sample different cells).
 #' @param BPPARAM BiocParallel::bpparam() by default; if specific number of threads x want to be used, insert: BiocParallel::MulticoreParam(workers = x)
 #' @param run_parallel boolean, decide if multi-threaded calculation will be run. FALSE by default
 #'
@@ -270,6 +277,7 @@ simulate_bulk <- function(data,
                           total_read_counts = NULL,
                           whitelist = NULL,
                           blacklist = NULL,
+                          seed = NA,
                           BPPARAM = BiocParallel::bpparam(),
                           run_parallel = FALSE) {
   # switch multi-threading on/off
@@ -428,19 +436,22 @@ simulate_bulk <- function(data,
   ##### generate the samples #####
 
   # sample cells and generate pseudo-bulk profiles
-  all_samples <- BiocParallel::bplapply(simulation_vector_list, function(x) {
-    samples <- simulate_sample(
+  all_samples <- BiocParallel::bplapply(seq_along(simulation_vector_list), function(i) {
+    
+    simulation_vector <- simulation_vector_list[[i]]
+    sample <- simulate_sample(
       data = data,
       scaling_vector = scaling_vector,
-      simulation_vector = x,
+      simulation_vector = simulation_vector,
       total_cells = ncells,
       total_read_counts = total_read_counts,
       remove_bias_in_counts = remove_bias_in_counts,
       remove_bias_in_counts_method = remove_bias_in_counts_method,
-      norm_counts = norm_counts
+      norm_counts = norm_counts,
+      seed = ifelse(is.na(seed), seed, seed + i) # ensure that samples still are different if seed is set
     )
 
-    return(samples)
+    return(sample)
   }, BPPARAM = BPPARAM)
 
   bulk_counts <- Matrix::Matrix(vapply(

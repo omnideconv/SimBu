@@ -12,7 +12,8 @@ simulate_sample(
   total_read_counts,
   remove_bias_in_counts,
   remove_bias_in_counts_method,
-  norm_counts
+  norm_counts,
+  seed
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ simulate_sample(
 \item{remove_bias_in_counts_method}{'read-number' (default) or 'gene-number'; method with which the mRNA bias in counts will be removed}
 
 \item{norm_counts}{boolean; if TRUE the samples simulated with counts will be normalized to CPMs, default is FALSE}
+
+\item{seed}{numeric; fix this value if you want the same cells to be sampled}
 }
 \value{
 returns two vectors (one based on counts, one based on tpm; depends on which matrices are present in data) with expression values for all genes in the provided dataset

@@ -1,3 +1,6 @@
+Changes in version 1.5.2 (2023-11-21)
++ Added 'seed' parameter to simulation 
+
 Changes in version 1.5.2 (2023-11-08)
 + Updated SimBu to be compatibel with Seurat v5
 

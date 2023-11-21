@@ -24,6 +24,7 @@ simulate_bulk(
   total_read_counts = NULL,
   whitelist = NULL,
   blacklist = NULL,
+  seed = NA,
   BPPARAM = BiocParallel::bpparam(),
   run_parallel = FALSE
 )
@@ -64,6 +65,8 @@ simulate_bulk(
 \item{whitelist}{list; give a list of cell-types you want to keep for the simulation; if NULL, all are used}
 
 \item{blacklist}{list; give a list of cell-types you want to remove for the simulation; if NULL, all are used; is applied after whitelist}
+
+\item{seed}{numeric; specifiy a seed for RNG. This effects cell sampling; with a fixed seed you will always sample the same cells for each sample (seed value is incrased by 1 for each sample). Default = NA (two simulation runs will sample different cells).}
 
 \item{BPPARAM}{BiocParallel::bpparam() by default; if specific number of threads x want to be used, insert: BiocParallel::MulticoreParam(workers = x)}
 
