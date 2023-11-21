@@ -39,6 +39,7 @@ test_that("can generate different simulation scenarios & check multi threads", {
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = "weighted", weighted_cell_type = "T cells CD4", weighted_amount = .5, scaling_factor = "NONE", nsamples = 10, ncells = 100, run_parallel = FALSE)[["bulk"]], "SummarizedExperiment")
 
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = "even", scaling_factor = "NONE", nsamples = 10, ncells = 100, BPPARAM = BiocParallel::MulticoreParam(workers = 2), run_parallel = FALSE)[["bulk"]], "SummarizedExperiment")
+  testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = "even", scaling_factor = "NONE", nsamples = 10, ncells = 100, total_read_counts = 100000, BPPARAM = BiocParallel::MulticoreParam(workers = 2), run_parallel = FALSE)[["bulk"]], "SummarizedExperiment")
 })
 
 test_that("test RNG", {
