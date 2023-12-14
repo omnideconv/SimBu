@@ -41,8 +41,6 @@ test_that("can generate different simulation scenarios & check multi threads", {
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = "even", scaling_factor = "NONE", nsamples = 10, ncells = 100, BPPARAM = BiocParallel::MulticoreParam(workers = 2), run_parallel = FALSE)[["bulk"]], "SummarizedExperiment")
 })
 
-<<<<<<< HEAD
-=======
 test_that("test RNG", {
   # use even scenario with no variance between samples
   # with fixed seed, both simulations have exactly the same count values
@@ -59,7 +57,6 @@ test_that("test RNG", {
   testthat::expect_false(all(assays(sample1)[['bulk_counts']] == assays(sample2)[['bulk_counts']]))
 
 })
->>>>>>> f6de93e (use correct function in test)
 
 test_that("test different scaling factor calculations + mRNA bias removal from counts", {
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = "random", scaling_factor = "census", nsamples = 10, ncells = 100, run_parallel = FALSE)[["bulk"]], "SummarizedExperiment")
