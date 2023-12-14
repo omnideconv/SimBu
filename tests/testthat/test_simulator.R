@@ -41,6 +41,25 @@ test_that("can generate different simulation scenarios & check multi threads", {
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = "even", scaling_factor = "NONE", nsamples = 10, ncells = 100, BPPARAM = BiocParallel::MulticoreParam(workers = 2), run_parallel = FALSE)[["bulk"]], "SummarizedExperiment")
 })
 
+<<<<<<< HEAD
+=======
+test_that("test RNG", {
+  # use even scenario with no variance between samples
+  # with fixed seed, both simulations have exactly the same count values
+  seed <- 123
+  sim1 <- SimBu::simulate_bulk(data = dataset, scenario = "even", scaling_factor = "NONE", balance_even_mirror_scenario = 0, nsamples = 10, ncells = 100, run_parallel = FALSE, seed = seed)
+  sim2 <- SimBu::simulate_bulk(data = dataset, scenario = "even", scaling_factor = "NONE", balance_even_mirror_scenario = 0, nsamples = 10, ncells = 100, run_parallel = FALSE, seed = seed)
+  x1 <- Matrix::rowSums(assays(sim1$bulk)[['bulk_counts']])
+  x2 <- Matrix::rowSums(assays(sim2$bulk)[['bulk_counts']])
+  testthat::expect_equal(x1,x2)
+  
+  # test that samples inside one simulation still are different
+  sample1 <- sim1$bulk[,1]
+  sample2 <- sim1$bulk[,2]
+  testthat::expect_false(all(assays(sample1)[['bulk_counts']] == assays(sample2)[['bulk_counts']]))
+
+})
+>>>>>>> f6de93e (use correct function in test)
 
 test_that("test different scaling factor calculations + mRNA bias removal from counts", {
   testthat::expect_s4_class(SimBu::simulate_bulk(data = dataset, scenario = "random", scaling_factor = "census", nsamples = 10, ncells = 100, run_parallel = FALSE)[["bulk"]], "SummarizedExperiment")
