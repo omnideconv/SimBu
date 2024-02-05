@@ -1,4 +1,3 @@
-
 #' Applies the Census count transformation on a count matrix
 #'
 #' needs a sparse matrix with cells in columns and genes in rows. You can find the detailed explaination here:
