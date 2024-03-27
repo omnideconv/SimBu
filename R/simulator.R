@@ -74,7 +74,7 @@ simulate_sample <- function(data,
       if (n == 0) {
         n <- 1
       }
-      if(!is.na(seed)){
+      if (!is.na(seed)) {
         # fix seed for random selection of cells
         set.seed(seed)
       }
@@ -437,7 +437,6 @@ simulate_bulk <- function(data,
 
   # sample cells and generate pseudo-bulk profiles
   all_samples <- BiocParallel::bplapply(seq_along(simulation_vector_list), function(i) {
-    
     simulation_vector <- simulation_vector_list[[i]]
     sample <- simulate_sample(
       data = data,
