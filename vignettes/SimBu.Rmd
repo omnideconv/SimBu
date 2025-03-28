@@ -3,8 +3,8 @@ title: "Getting started with SimBu"
 author: "Alexander Dietrich"
 bibliography: references.bib
 biblio-style: apalike
-link-citations: yes
-colorlinks: yes
+link-citations: true
+colorlinks: true
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Getting started}

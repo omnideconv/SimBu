@@ -4,8 +4,8 @@ author: "Alexander Dietrich"
 date: "11/29/2021"
 bibliography: references.bib
 biblio-style: apalike
-link-citations: yes
-colorlinks: yes
+link-citations: true
+colorlinks: true
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Introducing mRNA bias into simulations with scaling factors}
