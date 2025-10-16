@@ -74,7 +74,7 @@ simulate_sample <- function(data,
       if (n == 0) {
         n <- 1
       }
-      if(!is.na(seed)){
+      if (!is.na(seed)) {
         # fix seed for random selection of cells
         set.seed(seed)
       }
@@ -437,7 +437,6 @@ simulate_bulk <- function(data,
 
   # sample cells and generate pseudo-bulk profiles
   all_samples <- BiocParallel::bplapply(seq_along(simulation_vector_list), function(i) {
-    
     simulation_vector <- simulation_vector_list[[i]]
     sample <- simulate_sample(
       data = data,
@@ -454,22 +453,24 @@ simulate_bulk <- function(data,
     return(sample)
   }, BPPARAM = BPPARAM)
 
-  bulk_counts <- Matrix::Matrix(vapply(
-    X = all_samples,
-    FUN = "[[",
-    ... = 1,
-    FUN.VALUE = double(dim(SummarizedExperiment::assays(data)[["counts"]])[1])
-  ),
-  sparse = TRUE
-  )
-  if ("tpm" %in% names(SummarizedExperiment::assays(data))) {
-    bulk_tpm <- Matrix::Matrix(vapply(
+  bulk_counts <- Matrix::Matrix(
+    vapply(
       X = all_samples,
       FUN = "[[",
-      ... = 2,
-      FUN.VALUE = double(dim(SummarizedExperiment::assays(data)[["tpm"]])[1])
+      ... = 1,
+      FUN.VALUE = double(dim(SummarizedExperiment::assays(data)[["counts"]])[1])
     ),
     sparse = TRUE
+  )
+  if ("tpm" %in% names(SummarizedExperiment::assays(data))) {
+    bulk_tpm <- Matrix::Matrix(
+      vapply(
+        X = all_samples,
+        FUN = "[[",
+        ... = 2,
+        FUN.VALUE = double(dim(SummarizedExperiment::assays(data)[["tpm"]])[1])
+      ),
+      sparse = TRUE
     )
     assays <- list(bulk_counts = bulk_counts, bulk_tpm = bulk_tpm)
   } else {
