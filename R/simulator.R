@@ -192,13 +192,13 @@ simulate_sample <- function(data,
         # Generate TPM profile if available
         if ("tpm" %in% names(SummarizedExperiment::assays(data))) {
           celltype_tpm_profile_raw <- Matrix::rowSums(Matrix::t(Matrix::t(SummarizedExperiment::assays(celltype_data)[["tpm"]]) * celltype_scaling))
-          # Store raw TPM values 
+          # Store raw TPM values
           celltype_tpm_profiles[[celltype]] <- celltype_tpm_profile_raw
         }
       }
     }
 
-    # Scale cell-type TPM profiles 
+    # Scale cell-type TPM profiles
     if ("tpm" %in% names(SummarizedExperiment::assays(data)) && !is.null(simulated_tpm_vector)) {
       # Calculate the total raw TPM across all cell types
       total_raw_tpm <- sum(sapply(celltype_tpm_profiles, sum))
@@ -594,7 +594,7 @@ simulate_bulk <- function(data,
             return(x[[celltype]])
           }
         }, double(nrow(se_bulk)))
-        
+
         # Convert to matrix
         celltype_matrix <- Matrix::Matrix(celltype_profiles_counts, sparse = TRUE)
         colnames(celltype_matrix) <- sample_names
@@ -617,7 +617,7 @@ simulate_bulk <- function(data,
               return(x[[celltype]])
             }
           }, double(nrow(se_bulk)))
-          
+
           # Convert to matrix
           celltype_matrix <- Matrix::Matrix(celltype_profiles_tpm, sparse = TRUE)
           colnames(celltype_matrix) <- sample_names
