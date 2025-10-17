@@ -39,8 +39,9 @@ NULL
 #' @param remove_bias_in_counts_method 'read-number' (default) or 'gene-number'; method with which the mRNA bias in counts will be removed
 #' @param norm_counts boolean; if TRUE the samples simulated with counts will be normalized to CPMs, default is FALSE
 #' @param seed numeric; fix this value if you want the same cells to be sampled
+#' @param generate_celltype_profiles boolean; if TRUE, generate cell-type specific expression profiles in addition to bulk profile, default is FALSE
 #'
-#' @return returns two vectors (one based on counts, one based on tpm; depends on which matrices are present in data) with expression values for all genes in the provided dataset
+#' @return returns a list containing simulated_count_vector, simulated_tpm_vector, and optionally celltype_count_profiles and celltype_tpm_profiles (when generate_celltype_profiles is TRUE)
 #'
 #' @keywords internal
 simulate_sample <- function(data,
@@ -51,7 +52,8 @@ simulate_sample <- function(data,
                             remove_bias_in_counts,
                             remove_bias_in_counts_method,
                             norm_counts,
-                            seed) {
+                            seed,
+                            generate_celltype_profiles = FALSE) {
   if (!all(names(simulation_vector) %in% unique(SummarizedExperiment::colData(data)[["cell_type"]]))) {
     stop("Some cell-types in the provided simulation vector are not in the annotation.")
   }
@@ -86,7 +88,7 @@ simulate_sample <- function(data,
   })
 
   # annotation
-  # names(sampled_cells) <- names(simulation_vector)
+  names(sampled_cells) <- names(simulation_vector)
   # simulated_annotation <- utils::stack(sampled_cells)
 
   # get the corresponding columns from the data
@@ -106,7 +108,7 @@ simulate_sample <- function(data,
     SummarizedExperiment::assays(data_sampled)[["counts"]] <- count_matrix_removed_bias
   }
 
-  # apply scaling vector on the sampled cells in the matrices
+  ## apply scaling vector on the sampled cells in the matrices
   scaling_vector <- scaling_vector[unlist(sampled_cells)]
 
   simulated_count_vector <- NULL
@@ -124,7 +126,7 @@ simulate_sample <- function(data,
 
     if (sum_counts > total_read_counts) {
       tmp_phylo <- phyloseq::otu_table(data.frame(simulated_count_vector), taxa_are_rows = TRUE)
-      tmp_vec <- data.frame(phyloseq::rarefy_even_depth(physeq = tmp_phylo, sample.size = total_read_counts, trimOTUs = FALSE, ))[, 1]
+      tmp_vec <- data.frame(phyloseq::rarefy_even_depth(physeq = tmp_phylo, sample.size = total_read_counts, trimOTUs = FALSE, rngseed = seed))[, 1]
       names(tmp_vec) <- names(simulated_count_vector)
       simulated_count_vector <- tmp_vec
     } else if (sum_counts < total_read_counts) {
@@ -138,15 +140,81 @@ simulate_sample <- function(data,
   }
 
   # only generate simulation based on TPM if tpm assay is present
+  simulated_tpm_vector <- NULL
   if ("tpm" %in% names(SummarizedExperiment::assays(data))) {
-    simulated_tpm_vector <- Matrix::rowSums(Matrix::t(Matrix::t(SummarizedExperiment::assays(data_sampled)[["tpm"]]) * scaling_vector))
+    simulated_tpm_vector_raw <- Matrix::rowSums(Matrix::t(Matrix::t(SummarizedExperiment::assays(data_sampled)[["tpm"]]) * scaling_vector))
     # normalize tpm based sample to 1e6
-    simulated_tpm_vector <- (simulated_tpm_vector / sum(simulated_tpm_vector)) * 1e6
+    simulated_tpm_vector <- (simulated_tpm_vector_raw / sum(simulated_tpm_vector_raw)) * 1e6
+  }
+
+  ## Generate cell-type specific profiles if requested
+  celltype_count_profiles <- NULL
+  celltype_tpm_profiles <- NULL
+
+  if (generate_celltype_profiles) {
+    celltype_count_profiles <- list()
+    celltype_tpm_profiles <- list()
+
+    for (celltype in names(sampled_cells)) {
+      if (length(sampled_cells[[celltype]]) > 0) {
+        # Get cells for this cell type
+        celltype_cells <- sampled_cells[[celltype]]
+        celltype_data <- data[, celltype_cells]
+        celltype_scaling <- scaling_vector[celltype_cells]
+
+        # Generate cell-type specific count profile
+        celltype_count_profile <- Matrix::rowSums(Matrix::t(Matrix::t(SummarizedExperiment::assays(celltype_data)[["counts"]]) * celltype_scaling))
+
+        # Apply total_read_counts proportionally if specified
+        if (!is.null(total_read_counts)) {
+          # Calculate this cell type's proportion of total reads
+          celltype_fraction <- simulation_vector[celltype]
+          celltype_target_reads <- total_read_counts * celltype_fraction
+
+          # Scale to target
+          current_sum <- sum(celltype_count_profile)
+          if (current_sum > 0) {
+            if (current_sum > celltype_target_reads) {
+              # Use rarefaction for downsampling
+              tmp_phylo <- phyloseq::otu_table(data.frame(celltype_count_profile), taxa_are_rows = TRUE)
+              tmp_vec <- data.frame(phyloseq::rarefy_even_depth(physeq = tmp_phylo, sample.size = celltype_target_reads, trimOTUs = FALSE, rngseed = seed))[, 1]
+              names(tmp_vec) <- names(celltype_count_profile)
+              celltype_count_profile <- tmp_vec
+            } else {
+              # Scale up proportionally
+              celltype_count_profile <- celltype_count_profile * (celltype_target_reads / current_sum)
+            }
+          }
+        }
+
+        celltype_count_profiles[[celltype]] <- celltype_count_profile
+
+        # Generate TPM profile if available
+        if ("tpm" %in% names(SummarizedExperiment::assays(data))) {
+          celltype_tpm_profile_raw <- Matrix::rowSums(Matrix::t(Matrix::t(SummarizedExperiment::assays(celltype_data)[["tpm"]]) * celltype_scaling))
+          # Store raw TPM values 
+          celltype_tpm_profiles[[celltype]] <- celltype_tpm_profile_raw
+        }
+      }
+    }
+
+    # Scale cell-type TPM profiles 
+    if ("tpm" %in% names(SummarizedExperiment::assays(data)) && !is.null(simulated_tpm_vector)) {
+      # Calculate the total raw TPM across all cell types
+      total_raw_tpm <- sum(sapply(celltype_tpm_profiles, sum))
+      if (total_raw_tpm > 0) {
+        # Apply the same scaling to each cell-type profile
+        normalization_factor <- 1e6 / total_raw_tpm
+        celltype_tpm_profiles <- lapply(celltype_tpm_profiles, function(x) x * normalization_factor)
+      }
+    }
   }
 
   return(list(
     simulated_count_vector = simulated_count_vector,
-    simulated_tpm_vector = simulated_tpm_vector
+    simulated_tpm_vector = simulated_tpm_vector,
+    celltype_count_profiles = celltype_count_profiles,
+    celltype_tpm_profiles = celltype_tpm_profiles
   ))
 }
 
@@ -178,11 +246,13 @@ simulate_sample <- function(data,
 #' @param seed numeric; specifiy a seed for RNG. This effects cell sampling; with a fixed seed you will always sample the same cells for each sample (seed value is incrased by 1 for each sample). Default = NA (two simulation runs will sample different cells).
 #' @param BPPARAM BiocParallel::bpparam() by default; if specific number of threads x want to be used, insert: BiocParallel::MulticoreParam(workers = x)
 #' @param run_parallel boolean, decide if multi-threaded calculation will be run. FALSE by default
+#' @param generate_celltype_profiles boolean; if TRUE, generate cell-type specific expression profiles in addition to bulk profiles, default is FALSE
 #'
 #'
 #' @return named list; \code{bulk} a \link[SummarizedExperiment]{SummarizedExperiment} object, where the assays store the simulated bulk RNAseq datasets. Can hold either one or two assays, depending on how many matrices were present in the dataset
 #' \code{cell-fractions} is a dataframe with the simulated cell-fractions per sample;
-#' \code{scaling_vector} scaling value for each cell in dataset
+#' \code{scaling_vector} scaling value for each cell in dataset;
+#' \code{celltype_profiles} (optional) when generate_celltype_profiles is TRUE, contains a list with 'counts' and 'tpm' elements, each containing cell-type specific expression profiles
 #' @export
 #'
 #' @examples
@@ -279,7 +349,8 @@ simulate_bulk <- function(data,
                           blacklist = NULL,
                           seed = NA,
                           BPPARAM = BiocParallel::bpparam(),
-                          run_parallel = FALSE) {
+                          run_parallel = FALSE,
+                          generate_celltype_profiles = FALSE) {
   # switch multi-threading on/off
   if (!run_parallel) {
     BPPARAM <- BiocParallel::MulticoreParam(workers = 1)
@@ -447,7 +518,8 @@ simulate_bulk <- function(data,
       remove_bias_in_counts = remove_bias_in_counts,
       remove_bias_in_counts_method = remove_bias_in_counts_method,
       norm_counts = norm_counts,
-      seed = ifelse(is.na(seed), seed, seed + i) # ensure that samples still are different if seed is set
+      seed = ifelse(is.na(seed), seed, seed + i), # ensure that samples still are different if seed is set
+      generate_celltype_profiles = generate_celltype_profiles
     )
 
     return(sample)
@@ -491,13 +563,79 @@ simulate_bulk <- function(data,
   # cell_fractions for all simulated samples
   cell_fractions <- data.frame(t(data.frame(simulation_vector_list)), check.names = FALSE)
 
-  message("Finished simulation.")
-
-  return(list(
+  # Process cell-type specific profiles if generated
+  result <- list(
     bulk = se_bulk,
     cell_fractions = cell_fractions,
     scaling_vector = scaling_vector
-  ))
+  )
+
+  if (generate_celltype_profiles) {
+    # Extract all cell-type profiles from all samples
+    all_celltype_counts <- vapply(all_samples, function(x) list(x[["celltype_count_profiles"]]), list(NULL))
+    all_celltype_tpm <- vapply(all_samples, function(x) list(x[["celltype_tpm_profiles"]]), list(NULL))
+
+    # Get all unique cell types across samples
+    all_celltypes <- unique(unlist(lapply(all_celltype_counts, names)))
+    all_celltypes <- all_celltypes[!is.null(all_celltypes)]
+
+    if (length(all_celltypes) > 0) {
+      # Create matrices for each cell type - counts
+      celltype_bulk_counts <- list()
+      for (celltype in all_celltypes) {
+        # Extract profiles for this cell type across all samples
+        celltype_profiles_counts <- vapply(all_celltype_counts, function(x) {
+          if (is.null(x) || is.null(x[[celltype]])) {
+            # Return zero vector if cell type not present in this sample
+            zero_vec <- rep(0, nrow(se_bulk))
+            names(zero_vec) <- rownames(se_bulk)
+            return(zero_vec)
+          } else {
+            return(x[[celltype]])
+          }
+        }, double(nrow(se_bulk)))
+        
+        # Convert to matrix
+        celltype_matrix <- Matrix::Matrix(celltype_profiles_counts, sparse = TRUE)
+        colnames(celltype_matrix) <- sample_names
+        rownames(celltype_matrix) <- rownames(se_bulk)
+        celltype_bulk_counts[[celltype]] <- celltype_matrix
+      }
+
+      # Create matrices for each cell type - TPM (if available)
+      celltype_bulk_tpm <- list()
+      if ("tpm" %in% names(SummarizedExperiment::assays(data))) {
+        for (celltype in all_celltypes) {
+          # Extract profiles for this cell type across all samples
+          celltype_profiles_tpm <- vapply(all_celltype_tpm, function(x) {
+            if (is.null(x) || is.null(x[[celltype]])) {
+              # Return zero vector if cell type not present in this sample
+              zero_vec <- rep(0, nrow(se_bulk))
+              names(zero_vec) <- rownames(se_bulk)
+              return(zero_vec)
+            } else {
+              return(x[[celltype]])
+            }
+          }, double(nrow(se_bulk)))
+          
+          # Convert to matrix
+          celltype_matrix <- Matrix::Matrix(celltype_profiles_tpm, sparse = TRUE)
+          colnames(celltype_matrix) <- sample_names
+          rownames(celltype_matrix) <- rownames(se_bulk)
+          celltype_bulk_tpm[[celltype]] <- celltype_matrix
+        }
+      }
+
+      result$celltype_profiles <- list(
+        counts = celltype_bulk_counts,
+        tpm = celltype_bulk_tpm
+      )
+    }
+  }
+
+  message("Finished simulation.")
+
+  return(result)
 }
 
 
