@@ -13,7 +13,8 @@ simulate_sample(
   remove_bias_in_counts,
   remove_bias_in_counts_method,
   norm_counts,
-  seed
+  seed,
+  generate_celltype_profiles = FALSE
 )
 }
 \arguments{
@@ -34,9 +35,11 @@ simulate_sample(
 \item{norm_counts}{boolean; if TRUE the samples simulated with counts will be normalized to CPMs, default is FALSE}
 
 \item{seed}{numeric; fix this value if you want the same cells to be sampled}
+
+\item{generate_celltype_profiles}{boolean; if TRUE, generate cell-type specific expression profiles in addition to bulk profile, default is FALSE}
 }
 \value{
-returns two vectors (one based on counts, one based on tpm; depends on which matrices are present in data) with expression values for all genes in the provided dataset
+returns a list containing simulated_count_vector, simulated_tpm_vector, and optionally celltype_count_profiles and celltype_tpm_profiles (when generate_celltype_profiles is TRUE)
 }
 \description{
 function to sample cells according to given cell-type fractions. This creates a single pseudo-bulk sample by calculating the
