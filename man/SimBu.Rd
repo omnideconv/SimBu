@@ -2,6 +2,7 @@
 % Please edit documentation in R/simulator.R
 \docType{package}
 \name{SimBu}
+\alias{SimBu-package}
 \alias{SimBu}
 \title{SimBu: Bias-aware simulation of bulk RNA-seq data with variable cell type composition}
 \description{
@@ -31,3 +32,15 @@ adapt the cell type fractions in each sample by changing the scenario parameter.
 Inspect the cell type composition of your simulations with the plot_simulation() function.
 }
 
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/omnideconv/SimBu}
+  \item Report bugs at \url{https://github.com/omnideconv/SimBu/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Alexander Dietrich \email{alex.dietrich@tum.de}
+
+}
