@@ -26,7 +26,8 @@ simulate_bulk(
   blacklist = NULL,
   seed = NA,
   BPPARAM = BiocParallel::bpparam(),
-  run_parallel = FALSE
+  run_parallel = FALSE,
+  generate_celltype_profiles = FALSE
 )
 }
 \arguments{
@@ -71,11 +72,14 @@ simulate_bulk(
 \item{BPPARAM}{BiocParallel::bpparam() by default; if specific number of threads x want to be used, insert: BiocParallel::MulticoreParam(workers = x)}
 
 \item{run_parallel}{boolean, decide if multi-threaded calculation will be run. FALSE by default}
+
+\item{generate_celltype_profiles}{boolean; if TRUE, generate cell-type specific expression profiles in addition to bulk profiles, default is FALSE}
 }
 \value{
 named list; \code{bulk} a \link[SummarizedExperiment]{SummarizedExperiment} object, where the assays store the simulated bulk RNAseq datasets. Can hold either one or two assays, depending on how many matrices were present in the dataset
 \code{cell-fractions} is a dataframe with the simulated cell-fractions per sample;
-\code{scaling_vector} scaling value for each cell in dataset
+\code{scaling_vector} scaling value for each cell in dataset;
+\code{celltype_profiles} (optional) when generate_celltype_profiles is TRUE, contains a list with 'counts' and 'tpm' elements, each containing cell-type specific expression profiles
 }
 \description{
 This function allows you to create a full pseudo-bulk RNAseq dataset. You need to provide a \link[SummarizedExperiment]{SummarizedExperiment} from which the cells
