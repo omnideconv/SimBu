@@ -837,7 +837,6 @@ merge_simulations <- function(simulation_list) {
 }
 
 
-
 #' Create scaling vector from custom or pre-defined scaling factor
 #'
 #' @param data dataset

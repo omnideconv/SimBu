@@ -76,8 +76,6 @@ test_that("test different scaling factor calculations + mRNA bias removal from c
 })
 
 
-
-
 test_that("test census", {
   tpm <- Matrix::Matrix(matrix(rpois(3e5, 5), ncol = 300), sparse = TRUE)
   tpm <- Matrix::t(1e6 * Matrix::t(tpm) / Matrix::colSums(tpm))

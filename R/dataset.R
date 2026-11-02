@@ -151,8 +151,6 @@ generate_summarized_experiment <- function(annotation, count_matrix, tpm_matrix,
 }
 
 
-
-
 #' Build \link[SummarizedExperiment]{SummarizedExperiment} using local annotation and count matrix R objects
 #'
 #' @param annotation (mandatory) dataframe; needs columns 'ID' and 'cell_type'; 'ID' needs to be equal with cell_names in count_matrix
