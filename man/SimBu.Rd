@@ -43,4 +43,9 @@ Useful links:
 \author{
 \strong{Maintainer}: Alexander Dietrich \email{alex.dietrich@tum.de}
 
+Authors:
+\itemize{
+  \item Alexander Dietrich \email{alex.dietrich@tum.de}
+}
+
 }
